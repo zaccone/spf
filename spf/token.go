@@ -88,6 +88,6 @@ type Token struct {
 }
 
 func (tok Token) Stringer() string {
-	return fmt.Sprintf("M: %s, Q:%s, V: %s", tok.Mechanism, tok.Qualifier,
-		tok.Value)
+	return fmt.Sprintf("Mechanism: %d, Q:%d, V:%s",
+		tok.Mechanism, tok.Qualifier, tok.Value)
 }
