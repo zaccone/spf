@@ -10,21 +10,6 @@ type LexerTest struct {
 	tokens []*Token
 }
 
-func _TestLexer(t *testing.T) {
-	testcases := []LexerTest{
-		{"a:127.0.0.1", []*Token{&Token{tA, qPlus, "127.0.0.1"}}},
-		{"mx:octogan.net", []*Token{&Token{tMX, qPlus, "octogan.net"}}},
-		{"~all", []*Token{&Token{tAll, qTilde, ""}}}}
-	for _, testcase := range testcases {
-		result := Lex(testcase.input)
-		if reflect.DeepEqual(result, testcase.tokens) == false {
-			t.Error("Expected ", testcase.tokens, " got ",
-				result)
-		}
-	}
-
-}
-
 func TestLexerNext(t *testing.T) {
 	spfRecord := "a:127.0.0.1"
 	lexer := &Lexer{0, 0, 0, len(spfRecord), spfRecord}
@@ -57,15 +42,19 @@ func TestLexerScanIdent(t *testing.T) {
 
 	testpairs := []TestPair{
 		TestPair{"a:127.0.0.1", &Token{tA, qPlus, "127.0.0.1"}},
+		TestPair{"a", &Token{tA, qPlus, ""}},
 		TestPair{"a:127.0.0.1 ", &Token{tA, qPlus, "127.0.0.1"}},
 		TestPair{"?a:127.0.0.1   ", &Token{tA, qQuestionMark, "127.0.0.1"}},
+		TestPair{"?ip6:2001::43   ", &Token{tIp6, qQuestionMark, "2001::43"}},
 		TestPair{"-all", &Token{tAll, qMinus, ""}},
 		TestPair{"-all ", &Token{tAll, qMinus, ""}},
 		TestPair{"~all", &Token{tAll, qTilde, ""}},
 		TestPair{"-mx:localhost", &Token{tMX, qMinus, "localhost"}},
+		TestPair{"mx", &Token{tMX, qPlus, ""}},
+		TestPair{"a:", &Token{tErr, qError, ""}},
 		TestPair{"?mx:localhost", &Token{tMX, qQuestionMark, "localhost"}},
-		TestPair{"?random:localhost", &Token{tEOF, tEOF, ""}},
-		TestPair{"-:localhost", &Token{tEOF, tEOF, ""}},
+		TestPair{"?random:localhost", &Token{tErr, qError, ""}},
+		TestPair{"-:localhost", &Token{tErr, qError, ""}},
 	}
 
 	for _, testpair := range testpairs {
@@ -80,7 +69,7 @@ func TestLexerScanIdent(t *testing.T) {
 	}
 }
 
-func TestLexerLex(t *testing.T) {
+func TestLexFunc(t *testing.T) {
 	type TestPair struct {
 		Record string
 		Tokens []*Token

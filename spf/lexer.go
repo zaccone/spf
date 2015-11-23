@@ -1,82 +1,9 @@
 package spf
 
 import (
-	"fmt"
+	"strings"
 	"unicode/utf8"
 )
-
-type tokenType int
-
-const (
-	tEOF tokenType = iota
-
-	mechanism_beg
-
-	tVersion  // used only for v=spf1 starter
-	tAll      // all
-	tA        // a
-	tIp4      // ip4
-	tIp6      // ip6
-	tMX       // mx
-	tPTR      // ptr
-	tInclude  // include
-	tRedirect // redirect
-	tExists   // exists
-	tExp      // explanation
-
-	mechanism_end
-
-	qualifier_beg
-
-	qEmpty
-	qPlus
-	qMinus
-	qTilde
-	qQuestionMark
-	qError
-
-	qualifier_end
-)
-
-var qualifiers = map[rune]tokenType{
-	'+': qPlus,
-	'-': qMinus,
-	'?': qQuestionMark,
-	'~': qTilde,
-}
-
-func tokenTypeFromString(s string) tokenType {
-	switch s {
-	case "all":
-		return tAll
-	case "a":
-		return tA
-	case "ip4":
-		return tIp4
-	case "ip6":
-		return tIp6
-	case "mx":
-		return tMX
-	case "ptr":
-		return tPTR
-	case "include":
-		return tInclude
-	case "redirect":
-		return tRedirect
-	case "exists":
-		return tExists
-	case "explanation":
-		return tExp
-	default:
-		return tEOF
-	}
-}
-
-type Token struct {
-	Mechanism tokenType // all, include, a, mx, ptr, ip4, ip6, exists etc.
-	Qualifier tokenType // +, -, ~, ?, defaults to +
-	Value     string    // value for a mechanism
-}
 
 type Lexer struct {
 	start  int
@@ -84,11 +11,6 @@ type Lexer struct {
 	prev   int
 	length int
 	input  string
-}
-
-func (tok Token) Stringer() string {
-	return fmt.Sprintf("M: %s, Q:%s, V: %s", tok.Mechanism, tok.Qualifier,
-		tok.Value)
 }
 
 // Lex reads SPF record and returns list of Tokens along with
@@ -113,7 +35,8 @@ func Lex(input string) []*Token {
 func (l *Lexer) Scan() *Token {
 
 	for {
-		if r, eof := l.next(); eof == true {
+		r, eof := l.next()
+		if eof {
 			return &Token{tEOF, tEOF, ""}
 		} else if isWhitespace(r) || l.eof() { // we just scanned some meaningful data
 			token := l.scanIdent()
@@ -166,51 +89,38 @@ func (l *Lexer) scanWhitespaces() {
 	}
 }
 
-// scanIdent does actual scanning between [l.start:l.pos) positions.
 func (l *Lexer) scanIdent() *Token {
-	t := &Token{tEOF, qPlus, ""}
+	t := &Token{tErr, qPlus, ""}
 	cursor := l.start
-	for cursor <= l.pos {
+	for cursor < l.pos {
 		ch, size := utf8.DecodeRuneInString(l.input[cursor:])
 		cursor += size
+
 		if isQualifier(ch) {
-			var ok bool
-			if t.Qualifier, ok = qualifiers[ch]; ok == false {
-				t.Qualifier = qPlus
-			}
+			t.Qualifier, _ = qualifiers[ch]
 			l.start = cursor
-		} else if isDelimiter(ch) {
+			continue
+		} else if isDelimiter(ch) { // add error handling
 			t.Mechanism = tokenTypeFromString(l.input[l.start : cursor-size])
-			if t.Mechanism == tEOF {
-				t.Qualifier = tEOF
-				return t
+			if t.Value = strings.TrimSpace(l.input[cursor:l.pos]); t.Value == "" {
+				t.Qualifier = qError
+				t.Mechanism = tErr
 			}
-			l.start = cursor
-		} else if (isWhitespace(ch)) && t.Mechanism.isEOF() == false {
-			t.Value = l.input[l.start : cursor-size]
-			return t
-		} else if cursor >= l.pos && t.Mechanism.isEOF() == false {
-			t.Value = string(l.input[l.start:cursor])
-			return t
-		} else if isWhitespace(ch) {
-			t.Mechanism = tokenTypeFromString(l.input[l.start : cursor-size])
-			return t
-		} else if cursor >= l.pos {
-			t.Mechanism = tokenTypeFromString(l.input[l.start:cursor])
-			return t
+
+			break
 		}
-	} // for
+	}
 
-	return t // should not happen
+	if t.Mechanism.isErr() {
+		t.Mechanism = tokenTypeFromString(
+			strings.TrimSpace(l.input[l.start:cursor]))
+		if t.Mechanism.isErr() {
+			t.Qualifier = qError
+			t.Value = ""
+		}
+	}
+	return t
 }
-
-// isMechanism return true when token is SPF mechanism, false otherwise
-func (tok tokenType) isMechanism() bool { return tok > mechanism_beg && tok < mechanism_end }
-
-// isQalifier return true when token is SPF qualifier, false otherwise
-func (tok tokenType) isQualifier() bool { return tok > qualifier_beg && tok < qualifier_end }
-
-func (tok tokenType) isEOF() bool { return tok == tEOF }
 
 // isWhitespace returns true if the rune is a space, tab, or newline.
 func isWhitespace(ch rune) bool { return ch == ' ' || ch == '\t' || ch == '\n' }
