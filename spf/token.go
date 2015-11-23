@@ -34,7 +34,7 @@ const (
 
 	qualifier_end
 
-	qError
+	qErr
 )
 
 var qualifiers = map[rune]tokenType{

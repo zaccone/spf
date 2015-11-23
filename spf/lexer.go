@@ -27,7 +27,6 @@ func Lex(input string) []*Token {
 		}
 		tokens = append(tokens, token)
 	}
-
 	return tokens
 }
 
@@ -48,9 +47,7 @@ func (l *Lexer) Scan() *Token {
 }
 
 // Lexer.eof() return true when scanned record has ended, false otherwise
-func (l *Lexer) eof() bool {
-	return l.pos >= l.length
-}
+func (l *Lexer) eof() bool { return l.pos >= l.length }
 
 // Lexer.next() returns next read rune and boolean indicator whether scanned
 // record has ended. Method also moves `pos` value to size (length of read rune),
@@ -68,14 +65,10 @@ func (l *Lexer) next() (rune, bool) {
 
 // Lexer.moveon() sets Lexer.start to Lexer.pos. This is usually done once the
 // ident has been scanned.
-func (l *Lexer) moveon() {
-	l.start = l.pos
-}
+func (l *Lexer) moveon() { l.start = l.pos }
 
 // Lexer.back() moves back current Lexer.pos to a previous position.
-func (l *Lexer) back() {
-	l.pos = l.prev
-}
+func (l *Lexer) back() { l.pos = l.prev }
 
 // scanWhitespaces moves position to a first rune which is not a
 // whitespace or tab
@@ -110,7 +103,7 @@ func (l *Lexer) scanIdent() *Token {
 			t.Mechanism = tokenTypeFromString(l.input[l.start : cursor-size])
 			t.Value = strings.TrimSpace(l.input[cursor:l.pos])
 			if isEmpty(&t.Value) {
-				t.Qualifier = qError
+				t.Qualifier = qErr
 				t.Mechanism = tErr
 			}
 
@@ -122,7 +115,7 @@ func (l *Lexer) scanIdent() *Token {
 		t.Mechanism = tokenTypeFromString(
 			strings.TrimSpace(l.input[l.start:cursor]))
 		if t.Mechanism.isErr() {
-			t.Qualifier = qError
+			t.Qualifier = qErr
 			t.Value = ""
 		}
 	}
