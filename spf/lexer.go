@@ -77,14 +77,6 @@ func (l *Lexer) back() {
 	l.pos = l.prev
 }
 
-// Lexer.peek() returns next rune without effectively moving the Lexer.pos
-// forward
-func (l *Lexer) peek() (rune, bool) {
-	ch, eof := l.next()
-	l.back()
-	return ch, eof
-}
-
 // scanWhitespaces moves position to a first rune which is not a
 // whitespace or tab
 func (l *Lexer) scanWhitespaces() {
