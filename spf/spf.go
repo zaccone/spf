@@ -1,11 +1,9 @@
 package spf
 
 import (
-	"log"
 	"net"
 
-	"github.com/zaccone/goSPF/mail"
-	"github.com/zaccone/goSPF/spf"
+	"github.com/zaccone/goSPF/dns"
 )
 
 type SPFResult int
@@ -26,26 +24,22 @@ const (
 )
 
 func (spf *SPFResult) String() string {
-	var str string = nil
-	switch spf {
+	switch *spf {
 	case None:
-		str = "None"
+		return "None"
 	case Neutral:
-		str = "Neutral"
+		return "Neutral"
 	case Pass:
-		str = "Pass"
+		return "Pass"
 	case Fail:
-		str = "Fail"
+		return "Fail"
 	case Temperror:
-		str = "Temperror"
+		return "Temperror"
 	case Permerror:
-		str = "Permerror"
+		return "Permerror"
 	default:
-		str = "Permerror"
+		return "Permerror"
 	}
-
-	return str
-
 }
 
 // CheckHost is a main entrypoint function evaluating e-mail with regard to SPF
@@ -58,7 +52,8 @@ func (spf *SPFResult) String() string {
 // function can focus on the core part.
 func checkHost(ip, domain, sender string) (SPFResult, error) {
 
-	spfRecord, dnsErr = spf.LookupSPF(domain)
+	// TODO(zaccone) s/_/spfRecord/
+	_, dnsErr := dns.LookupSPF(domain)
 
 	if dnsErr != nil {
 		switch dnsErr.(type) {
@@ -71,5 +66,5 @@ func checkHost(ip, domain, sender string) (SPFResult, error) {
 
 		}
 	}
-
+	return Neutral, nil
 }

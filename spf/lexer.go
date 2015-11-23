@@ -1,8 +1,7 @@
 package spf
 
 import (
-	"strings"
-	"unicode"
+	"fmt"
 	"unicode/utf8"
 )
 
@@ -29,6 +28,7 @@ const (
 
 	qualifier_beg
 
+	qEmpty
 	qPlus
 	qMinus
 	qTilde
@@ -45,7 +45,7 @@ var qualifiers = map[rune]tokenType{
 	'~': qTilde,
 }
 
-func tokenTypeFromString(s *string) tokenType {
+func tokenTypeFromString(s string) tokenType {
 	switch s {
 	case "all":
 		return tAll
@@ -86,13 +86,18 @@ type Lexer struct {
 	input  string
 }
 
+func (tok Token) Stringer() string {
+	return fmt.Sprintf("M: %s, Q:%s, V: %s", tok.Mechanism, tok.Qualifier,
+		tok.Value)
+}
+
 // Lex reads SPF record and returns list of Tokens along with
 // their modifiers and values. Parser should parse the Tokens and execute
 // relevant actions
 func Lex(input string) []*Token {
 
-	tokens := make([]Token)
-	lexer = &Lexer{0, 0, len(input), input}
+	tokens := make([]*Token, 0)
+	lexer := &Lexer{0, 0, 0, len(input), input}
 	for {
 		token := lexer.Scan()
 		if token.Mechanism == tEOF {
@@ -110,16 +115,16 @@ func (l *Lexer) Scan() *Token {
 	for {
 		if r, eof := l.next(); eof == true {
 			return &Token{tEOF, tEOF, ""}
-		} else if isWhitespace(r) { // this means we just scanned some meaningful data
+		} else if isWhitespace(r) || l.eof() { // we just scanned some meaningful data
 			token := l.scanIdent()
-			l.scanWhiteSpaces()
+			l.scanWhitespaces()
 			l.moveon()
 			return token
 		}
 	}
 }
 
-func (l *Lexer) eof() {
+func (l *Lexer) eof() bool {
 	return l.pos >= l.length
 }
 
@@ -148,13 +153,13 @@ func (l *Lexer) peek() (rune, bool) {
 	return ch, eof
 }
 
-// scanWhiteSpaces moves position to a first rune which is not a whitespace or tab
+// scanWhitespaces moves position to a first rune which is not a
+// whitespace or tab
 func (l *Lexer) scanWhitespaces() {
 	for {
-		if _, eof := l.next(); eof == true {
+		if ch, eof := l.next(); eof == true {
 			return
-		}
-		if isWhitespace(ch) == false {
+		} else if isWhitespace(ch) == false {
 			l.back()
 			return
 		}
@@ -163,31 +168,40 @@ func (l *Lexer) scanWhitespaces() {
 
 // scanIdent does actual scanning between [l.start:l.pos) positions.
 func (l *Lexer) scanIdent() *Token {
-	t := &Token(tEOF, qPlus, "")
+	t := &Token{tEOF, qPlus, ""}
 	cursor := l.start
-	for {
+	for cursor <= l.pos {
 		ch, size := utf8.DecodeRuneInString(l.input[cursor:])
 		cursor += size
-
 		if isQualifier(ch) {
+			var ok bool
 			if t.Qualifier, ok = qualifiers[ch]; ok == false {
 				t.Qualifier = qPlus
 			}
+			l.start = cursor
 		} else if isDelimiter(ch) {
-			t.Mechanism = tokenTypeFromString(l.input[l.start:cursor])
+			t.Mechanism = tokenTypeFromString(l.input[l.start : cursor-size])
 			if t.Mechanism == tEOF {
+				t.Qualifier = tEOF
 				return t
 			}
-			t.start = cursor
-		} else if isWhitespace(ch) {
-			t.Value = l.input[l.start:cursor]
+			l.start = cursor
+		} else if (isWhitespace(ch)) && t.Mechanism.isEOF() == false {
+			t.Value = l.input[l.start : cursor-size]
 			return t
-		} else {
-		} // means it's a anyother char
-	}
+		} else if cursor >= l.pos && t.Mechanism.isEOF() == false {
+			t.Value = string(l.input[l.start:cursor])
+			return t
+		} else if isWhitespace(ch) {
+			t.Mechanism = tokenTypeFromString(l.input[l.start : cursor-size])
+			return t
+		} else if cursor >= l.pos {
+			t.Mechanism = tokenTypeFromString(l.input[l.start:cursor])
+			return t
+		}
+	} // for
 
 	return t // should not happen
-
 }
 
 // isMechanism return true when token is SPF mechanism, false otherwise
@@ -195,6 +209,8 @@ func (tok tokenType) isMechanism() bool { return tok > mechanism_beg && tok < me
 
 // isQalifier return true when token is SPF qualifier, false otherwise
 func (tok tokenType) isQualifier() bool { return tok > qualifier_beg && tok < qualifier_end }
+
+func (tok tokenType) isEOF() bool { return tok == tEOF }
 
 // isWhitespace returns true if the rune is a space, tab, or newline.
 func isWhitespace(ch rune) bool { return ch == ' ' || ch == '\t' || ch == '\n' }
