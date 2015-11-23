@@ -13,8 +13,8 @@ type Email struct {
 }
 
 func SplitEmails(sender, helo string) (*Email, error) {
-	if sender == nil || sender == "" {
-		return &Email{postmaster, helo}
+	if sender == "" {
+		return &Email{postmaster, helo}, nil
 	}
 
 	fields := strings.SplitN(sender, "@", 2)
@@ -25,7 +25,7 @@ func SplitEmails(sender, helo string) (*Email, error) {
 	if len(fields) == 2 {
 		return &Email{fields[0], fields[1]}, nil
 	} else {
-		return &Email{postmaster, sender}
+		return &Email{postmaster, sender}, nil
 	}
 
 	return nil, errors.New("error parsing sender and helo parameters")
