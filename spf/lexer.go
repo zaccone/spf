@@ -47,10 +47,14 @@ func (l *Lexer) Scan() *Token {
 	}
 }
 
+// Lexer.eof() return true when scanned record has ended, false otherwise
 func (l *Lexer) eof() bool {
 	return l.pos >= l.length
 }
 
+// Lexer.next() returns next read rune and boolean indicator whether scanned
+// record has ended. Method also moves `pos` value to size (length of read rune),
+// and `prev` to previous `pos` location.
 func (l *Lexer) next() (rune, bool) {
 	if l.eof() {
 		return 0, true
@@ -62,14 +66,19 @@ func (l *Lexer) next() (rune, bool) {
 	return r, false
 }
 
+// Lexer.moveon() sets Lexer.start to Lexer.pos. This is usually done once the
+// ident has been scanned.
 func (l *Lexer) moveon() {
 	l.start = l.pos
 }
 
+// Lexer.back() moves back current Lexer.pos to a previous position.
 func (l *Lexer) back() {
 	l.pos = l.prev
 }
 
+// Lexer.peek() returns next rune without effectively moving the Lexer.pos
+// forward
 func (l *Lexer) peek() (rune, bool) {
 	ch, eof := l.next()
 	l.back()
@@ -89,6 +98,11 @@ func (l *Lexer) scanWhitespaces() {
 	}
 }
 
+// scanIdent is a Lexer method executed after an ident was found.
+// It operates on a slice with constraints [l.start:l.pos).
+// A cursor tries to find delimiters and set proper `mechanism`, `qualifier`
+// and value itself.
+// The default token has `mechanism` set to tErr, that is, error state.
 func (l *Lexer) scanIdent() *Token {
 	t := &Token{tErr, qPlus, ""}
 	cursor := l.start
@@ -126,14 +140,17 @@ func (l *Lexer) scanIdent() *Token {
 // isWhitespace returns true if the rune is a space, tab, or newline.
 func isWhitespace(ch rune) bool { return ch == ' ' || ch == '\t' || ch == '\n' }
 
+// isEmpty returns true if a string is an empty string
 func isEmpty(s *string) bool { return *s == "" }
 
 // isLetter returns true if the rune is a letter.
 func isLetter(ch rune) bool { return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') }
 
+// isDelimiter returns true if rune equals to ':' or '=', false otherwise
 func isDelimiter(ch rune) bool { return ch == ':' || ch == '=' }
 
-// isDigit returns true if the rune is a digit.
+// isDigit returns true if the rune is a digit [0:9]
 func isDigit(ch rune) bool { return (ch >= '0' && ch <= '9') }
 
+// isQualifier returns true if rune is a SPF delimiter (+,-,!,?)
 func isQualifier(ch rune) bool { return ch == '+' || ch == '-' || ch == '~' || ch == '?' }
