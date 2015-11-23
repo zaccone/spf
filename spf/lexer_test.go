@@ -55,6 +55,8 @@ func TestLexerScanIdent(t *testing.T) {
 		TestPair{"?mx:localhost", &Token{tMX, qQuestionMark, "localhost"}},
 		TestPair{"?random:localhost", &Token{tErr, qError, ""}},
 		TestPair{"-:localhost", &Token{tErr, qError, ""}},
+		TestPair{"", &Token{tErr, qError, ""}},
+		TestPair{"qowie", &Token{tErr, qError, ""}},
 	}
 
 	for _, testpair := range testpairs {
