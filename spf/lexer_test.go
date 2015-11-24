@@ -87,16 +87,41 @@ func TestLexFunc(t *testing.T) {
 			[]*Token{
 				version_token,
 				&Token{tA, qPlus, "127.0.0.1"}}},
-		TestPair{"v=spf1 a:127.0.0.1 -all",
+		TestPair{"v=spf1 ip4:127.0.0.1 -all",
 			[]*Token{
 				version_token,
-				&Token{tA, qPlus, "127.0.0.1"},
+				&Token{tIp4, qPlus, "127.0.0.1"},
 				&Token{tAll, qMinus, ""}}},
-		TestPair{"v=spf1  a:127.0.0.1   -all  ",
+		TestPair{"v=spf1  -ptr:arpa.1.0.0.127   -all  ",
 			[]*Token{
 				version_token,
-				&Token{tA, qPlus, "127.0.0.1"},
+				&Token{tPTR, qMinus, "arpa.1.0.0.127"},
 				&Token{tAll, qMinus, ""}}},
+		TestPair{"v=spf1  ~ip6:2001:db8::cd30 ?all  ",
+			[]*Token{
+				version_token,
+				&Token{tIp6, qTilde, "2001:db8::cd30"},
+				&Token{tAll, qQuestionMark, ""}}},
+		TestPair{"v=spf1  include=example.org -all  ",
+			[]*Token{
+				version_token,
+				&Token{tInclude, qPlus, "example.org"},
+				&Token{tAll, qMinus, ""}}},
+		TestPair{"v=spf1  exists:%{ir}.%{l1r+-}._spf.%{d} +all",
+			[]*Token{
+				version_token,
+				&Token{tExists, qPlus, "%{ir}.%{l1r+-}._spf.%{d}"},
+				&Token{tAll, qPlus, ""}}},
+		TestPair{"v=spf1  redirect=_spf.example.org",
+			[]*Token{
+				version_token,
+				&Token{tRedirect, qPlus, "_spf.example.org"}}},
+		TestPair{"v=spf1 mx -all exp=explain._spf.%{d}",
+			[]*Token{
+				version_token,
+				&Token{tMX, qPlus, ""},
+				&Token{tAll, qMinus, ""},
+				&Token{tExp, qPlus, "explain._spf.%{d}"}}},
 	}
 
 	for _, testpair := range testpairs {
