@@ -17,7 +17,6 @@ type Lexer struct {
 // their modifiers and values. Parser should parse the Tokens and execute
 // relevant actions
 func Lex(input string) []*Token {
-
 	tokens := make([]*Token, 0)
 	lexer := &Lexer{0, 0, 0, len(input), input}
 	for {
@@ -32,7 +31,6 @@ func Lex(input string) []*Token {
 
 // Scan scans input and returns a Token structure
 func (l *Lexer) Scan() *Token {
-
 	for {
 		r, eof := l.next()
 		if eof {
@@ -128,14 +126,8 @@ func isWhitespace(ch rune) bool { return ch == ' ' || ch == '\t' || ch == '\n' }
 // isEmpty returns true if a string is an empty string
 func isEmpty(s *string) bool { return *s == "" }
 
-// isLetter returns true if the rune is a letter.
-func isLetter(ch rune) bool { return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') }
-
 // isDelimiter returns true if rune equals to ':' or '=', false otherwise
 func isDelimiter(ch rune) bool { return ch == ':' || ch == '=' }
-
-// isDigit returns true if the rune is a digit [0:9]
-func isDigit(ch rune) bool { return (ch >= '0' && ch <= '9') }
 
 // isQualifier returns true if rune is a SPF delimiter (+,-,!,?)
 func isQualifier(ch rune) bool { return ch == '+' || ch == '-' || ch == '~' || ch == '?' }

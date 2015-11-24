@@ -1,7 +1,5 @@
 package spf
 
-import "fmt"
-
 type tokenType int
 
 const (
@@ -73,23 +71,10 @@ func tokenTypeFromString(s string) tokenType {
 	}
 }
 
-// isMechanism return true when token is SPF mechanism, false otherwise
-func (tok tokenType) isMechanism() bool { return tok > mechanism_beg && tok < mechanism_end }
-
-// isQalifier return true when token is SPF qualifier, false otherwise
-func (tok tokenType) isQualifier() bool { return tok > qualifier_beg && tok < qualifier_end }
-
-func (tok tokenType) isEOF() bool { return tok == tEOF }
-
 func (tok tokenType) isErr() bool { return tok == tErr }
 
 type Token struct {
 	Mechanism tokenType // all, include, a, mx, ptr, ip4, ip6, exists etc.
 	Qualifier tokenType // +, -, ~, ?, defaults to +
 	Value     string    // value for a mechanism
-}
-
-func (tok Token) Stringer() string {
-	return fmt.Sprintf("Mechanism: %d, Q:%d, V:%s",
-		tok.Mechanism, tok.Qualifier, tok.Value)
 }
