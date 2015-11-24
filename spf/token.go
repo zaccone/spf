@@ -64,7 +64,7 @@ func tokenTypeFromString(s string) tokenType {
 		return tRedirect
 	case "exists":
 		return tExists
-	case "explanation":
+	case "explanation", "exp":
 		return tExp
 	default:
 		return tErr
