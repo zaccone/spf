@@ -46,6 +46,8 @@ var qualifiers = map[rune]tokenType{
 
 func tokenTypeFromString(s string) tokenType {
 	switch s {
+	case "v":
+		return tVersion
 	case "all":
 		return tAll
 	case "a":

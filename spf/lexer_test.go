@@ -41,6 +41,8 @@ func TestLexerScanIdent(t *testing.T) {
 	}
 
 	testpairs := []TestPair{
+		TestPair{"v=spf1", &Token{tVersion, qPlus, "spf1"}},
+		TestPair{"v=spf1 ", &Token{tVersion, qPlus, "spf1"}},
 		TestPair{"a:127.0.0.1", &Token{tA, qPlus, "127.0.0.1"}},
 		TestPair{"a", &Token{tA, qPlus, ""}},
 		TestPair{"a:127.0.0.1 ", &Token{tA, qPlus, "127.0.0.1"}},
@@ -78,14 +80,22 @@ func TestLexFunc(t *testing.T) {
 		Record string
 		Tokens []*Token
 	}
+	version_token := &Token{tVersion, qPlus, "spf1"}
 
 	testpairs := []TestPair{
-		TestPair{"a:127.0.0.1", []*Token{&Token{tA, qPlus, "127.0.0.1"}}},
-		TestPair{"a:127.0.0.1 -all",
-			[]*Token{&Token{tA, qPlus, "127.0.0.1"},
+		TestPair{"v=spf1 a:127.0.0.1",
+			[]*Token{
+				version_token,
+				&Token{tA, qPlus, "127.0.0.1"}}},
+		TestPair{"v=spf1 a:127.0.0.1 -all",
+			[]*Token{
+				version_token,
+				&Token{tA, qPlus, "127.0.0.1"},
 				&Token{tAll, qMinus, ""}}},
-		TestPair{"a:127.0.0.1   -all  ",
-			[]*Token{&Token{tA, qPlus, "127.0.0.1"},
+		TestPair{"v=spf1  a:127.0.0.1   -all  ",
+			[]*Token{
+				version_token,
+				&Token{tA, qPlus, "127.0.0.1"},
 				&Token{tAll, qMinus, ""}}},
 	}
 
