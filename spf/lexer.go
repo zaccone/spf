@@ -100,7 +100,8 @@ func (l *Lexer) scanIdent() *Token {
 		} else if isDelimiter(ch) { // add error handling
 			t.Mechanism = tokenTypeFromString(l.input[l.start : cursor-size])
 			t.Value = strings.TrimSpace(l.input[cursor:l.pos])
-			if isEmpty(&t.Value) {
+
+			if isEmpty(&t.Value) || checkTokenSyntax(t, ch) == false {
 				t.Qualifier = qErr
 				t.Mechanism = tErr
 			}

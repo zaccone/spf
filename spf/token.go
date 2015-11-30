@@ -8,19 +8,24 @@ const (
 
 	mechanism_beg
 
-	tVersion  // used only for v=spf1 starter
-	tAll      // all
-	tA        // a
-	tIp4      // ip4
-	tIp6      // ip6
-	tMX       // mx
-	tPTR      // ptr
-	tInclude  // include
-	tRedirect // redirect
-	tExists   // exists
-	tExp      // explanation
+	tVersion // used only for v=spf1 starter
+	tAll     // all
+	tA       // a
+	tIp4     // ip4
+	tIp6     // ip6
+	tMX      // mx
+	tPTR     // ptr
+	tInclude // include
+	tExists  // exists
 
 	mechanism_end
+
+	modifier_beg
+
+	tRedirect // redirect
+	tExp      // explanation
+
+	modifier_end
 
 	qualifier_beg
 
@@ -72,6 +77,39 @@ func tokenTypeFromString(s string) tokenType {
 }
 
 func (tok tokenType) isErr() bool { return tok == tErr }
+
+func (tok tokenType) isMechanism() bool {
+	return tok > mechanism_beg && tok < mechanism_end
+}
+
+func (tok tokenType) isModifier() bool {
+	return tok > modifier_beg && tok < modifier_end
+}
+
+func checkTokenSyntax(token *Token, delimiter rune) bool {
+	if token == nil {
+		return false
+	}
+
+	if token.Mechanism == tErr && token.Qualifier == qErr {
+		return true // syntax is ok
+	}
+
+	// special case for v=spf1 token
+
+	if token.Mechanism == tVersion {
+		return true
+	}
+
+	if token.Mechanism.isModifier() && delimiter != '=' {
+		return false
+	}
+	if token.Mechanism.isMechanism() && delimiter != ':' {
+		return false
+	}
+
+	return true
+}
 
 type Token struct {
 	Mechanism tokenType // all, include, a, mx, ptr, ip4, ip6, exists etc.

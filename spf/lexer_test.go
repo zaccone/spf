@@ -102,10 +102,15 @@ func TestLexFunc(t *testing.T) {
 				version_token,
 				&Token{tIp6, qTilde, "2001:db8::cd30"},
 				&Token{tAll, qQuestionMark, ""}}},
-		TestPair{"v=spf1  include=example.org -all  ",
+		TestPair{"v=spf1  include:example.org -all  ",
 			[]*Token{
 				version_token,
 				&Token{tInclude, qPlus, "example.org"},
+				&Token{tAll, qMinus, ""}}},
+		TestPair{"v=spf1  include=example.org -all  ",
+			[]*Token{
+				version_token,
+				&Token{tErr, qErr, ""},
 				&Token{tAll, qMinus, ""}}},
 		TestPair{"v=spf1  exists:%{ir}.%{l1r+-}._spf.%{d} +all",
 			[]*Token{
