@@ -66,5 +66,10 @@ func checkHost(ip, domain, sender string) (SPFResult, error) {
 
 		}
 	}
+	query = "v=spf1 a -all"
+	parser := NewParser(query)
+	for _,token : = range parser.Parse() {
+	}
+
 	return Neutral, nil
 }

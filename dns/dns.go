@@ -44,5 +44,4 @@ func LookupSPF(domain string) ([]string, error) {
 	}
 
 	return spfRecords, nil
-
 }
