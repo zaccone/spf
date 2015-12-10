@@ -67,8 +67,8 @@ func checkHost(ip, domain, sender string) (SPFResult, error) {
 		}
 	}
 	query := "v=spf1 a -all"
-
-	parser := NewParser(sender, domain, ip, query)
+	ipAddr := net.ParseIP(ip)
+	parser := NewParser(sender, domain, ipAddr, query)
 
 	var result SPFResult = Neutral
 	var err error
