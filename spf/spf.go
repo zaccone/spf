@@ -66,10 +66,25 @@ func checkHost(ip, domain, sender string) (SPFResult, error) {
 
 		}
 	}
-	query = "v=spf1 a -all"
-	parser := NewParser(query)
-	for _,token : = range parser.Parse() {
+	query := "v=spf1 a -all"
+
+	parser := NewParser(sender, domain, ip, query)
+
+	var result SPFResult = Neutral
+	var err error
+
+	if result, err = parser.Parse(); err != nil {
+		// handle error, something went wrong.
+		// Let's set PermError for now.
+		return Permerror, nil
 	}
 
-	return Neutral, nil
+	// check if there is redirect and recursively call check_host with redirect
+	// as domain
+	if parser.Redirect != nil {
+		result, err = checkHost(ip, domain, sender)
+	}
+
+	// return SPF evaluation result
+	return result, nil
 }
