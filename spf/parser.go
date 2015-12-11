@@ -78,7 +78,9 @@ func (p *Parser) Parse() (SPFResult, error) {
 func (p *Parser) sortTokens(tokens []*Token) error {
 	all := false
 	for _, token := range tokens {
-		if token.Mechanism.isMechanism() && all == false {
+		if token.Mechanism.isErr() {
+			return errors.New("Token syntax error")
+		} else if token.Mechanism.isMechanism() && all == false {
 			p.Mechanisms = append(p.Mechanisms, token)
 
 			if token.Mechanism == tAll {
