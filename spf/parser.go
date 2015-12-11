@@ -36,7 +36,7 @@ type Parser struct {
 }
 
 func NewParser(sender, domain string, ip net.IP, query string) *Parser {
-	return &Parser{sender, domain, ip, query, nil, nil, nil}
+	return &Parser{sender, domain, ip, query, make([]*Token, 0, 10), nil, nil}
 }
 
 func (p *Parser) Parse() (SPFResult, error) {
