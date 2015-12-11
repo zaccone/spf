@@ -74,30 +74,36 @@ func (p *Parser) Parse() (SPFResult, error) {
 }
 
 func (p *Parser) sortTokens(tokens []*Token) error {
-
+	all := false
 	for _, token := range tokens {
-		if token.Mechanism.isMechanism() {
+		if token.Mechanism.isMechanism() && all == false {
 			p.Mechanisms = append(p.Mechanisms, token)
 
 			if token.Mechanism == tAll {
-				p.Redirect = nil // cleaning just in case
-				return nil
+				all = true
 			}
 		} else {
 
-			if token.Mechanism == tRedirect && p.Redirect != nil {
-				return errors.New("Modifier redirect musn't appear more than once")
-			} else {
-				p.Redirect = token
-			}
-
-			if token.Mechanism == tExp && p.Explanation != nil {
-				return errors.New("Modifier exp/explanation musn't appear more than once")
-			} else {
-				p.Explanation = token
+			if token.Mechanism == tRedirect {
+				if p.Redirect == nil {
+					p.Redirect = token
+				} else {
+					return errors.New("Modifier redirect musn't appear more than once")
+				}
+			} else if token.Mechanism == tExp {
+				if p.Explanation == nil {
+					p.Explanation = token
+				} else {
+					return errors.New("Modifier exp/explanation musn't appear more than once")
+				}
 			}
 		}
 	}
+
+	if all {
+		p.Redirect = nil
+	}
+
 	return nil
 }
 
