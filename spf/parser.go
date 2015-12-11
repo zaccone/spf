@@ -12,17 +12,19 @@ func matchingResult(qualifier tokenType) (SPFResult, error) {
 		return SPFEnd, errors.New("Not a Qualifier")
 	}
 
+	var result SPFResult
+
 	switch qualifier {
 	case qPlus:
-		return Pass, nil
+		result = Pass
 	case qMinus:
-		return Fail, nil
+		result = Fail
 	case qQuestionMark:
-		return Neutral, nil
+		result = Neutral
 	case qTilde:
-		return Softfail, nil
+		result = Softfail
 	}
-	return Permerror, nil
+	return result, nil
 }
 
 type Parser struct {
@@ -128,7 +130,10 @@ func (p *Parser) parseIp4(t *Token) (bool, SPFResult) {
 	if _, ipnet, err := net.ParseCIDR(t.Value); err == nil {
 		return ipnet.Contains(p.Ip), result
 	} else {
-		ip := net.ParseIP(t.Value)
-		return ip.Equal(p.Ip), result
+		if ip := net.ParseIP(t.Value); ip == nil {
+			return true, Permerror
+		} else {
+			return ip.Equal(p.Ip), result
+		}
 	}
 }
