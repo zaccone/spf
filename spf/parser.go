@@ -143,3 +143,22 @@ func (p *Parser) parseIp4(t *Token) (bool, SPFResult) {
 		}
 	}
 }
+
+// TODO(marek): This function will not detect that address is v4 instead of v6
+func (p *Parser) parseIp6(t *Token) (bool, SPFResult) {
+	result, _ := matchingResult(t.Qualifier)
+
+	if ip, ipnet, err := net.ParseCIDR(t.Value); err == nil {
+		if ip.To16() == nil {
+			return true, Permerror
+		} else {
+			return ipnet.Contains(p.Ip), result
+		}
+	} else {
+		if ip := net.ParseIP(t.Value).To16(); ip == nil {
+			return true, Permerror
+		} else {
+			return ip.Equal(p.Ip), result
+		}
+	}
+}
