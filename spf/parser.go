@@ -129,10 +129,14 @@ func (p *Parser) parseAll(t *Token) (bool, SPFResult) {
 func (p *Parser) parseIp4(t *Token) (bool, SPFResult) {
 	result, _ := matchingResult(t.Qualifier)
 
-	if _, ipnet, err := net.ParseCIDR(t.Value); err == nil {
-		return ipnet.Contains(p.Ip), result
+	if ip, ipnet, err := net.ParseCIDR(t.Value); err == nil {
+		if ip.To4() == nil {
+			return true, Permerror
+		} else {
+			return ipnet.Contains(p.Ip), result
+		}
 	} else {
-		if ip := net.ParseIP(t.Value); ip == nil {
+		if ip := net.ParseIP(t.Value).To4(); ip == nil {
 			return true, Permerror
 		} else {
 			return ip.Equal(p.Ip), result
