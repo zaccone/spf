@@ -3,6 +3,7 @@ package spf
 import (
 	"errors"
 	"net"
+	"sync"
 )
 
 const spfPrefix = "spf1"
@@ -161,4 +162,65 @@ func (p *Parser) parseIp6(t *Token) (bool, SPFResult) {
 			return ip.Equal(p.Ip), result
 		}
 	}
+}
+
+func (p *Parser) parseA(t *Token) (bool, SPFResult) {
+	result, _ := matchingResult(t.Qualifier)
+
+	var host string
+	if !isEmpty(&t.Value) {
+		host = t.Value
+	} else {
+		host = p.Domain
+	}
+
+	if ips, err := net.LookupIP(host); err != nil {
+		//TODO(marek): Handle error here
+		panic(err)
+	} else {
+		var wg sync.WaitGroup
+		wg.Add(len(ips))
+		for _, address := range ips {
+			if p.Ip.Equal(address) {
+				return true, result
+			}
+		}
+	}
+	return false, result
+}
+
+func (p *Parser) parseMX(t *Token) (bool, SPFResult) {
+	result, _ := matchingResult(t.Qualifier)
+
+	domain := t.Value
+	if isEmpty(&domain) {
+		domain = p.Domain
+	}
+
+	mxs, _ := net.LookupMX(domain)
+	var wg sync.WaitGroup
+
+	pipe := make(chan bool)
+
+	for _, mx := range mxs {
+		go func() {
+			ips, _ := net.LookupIP(mx.Host)
+			wg.Add(len(ips))
+			for _, ip := range ips {
+				pipe <- p.Ip.Equal(ip)
+				wg.Done()
+			}
+		}()
+	}
+
+	go func() {
+		wg.Wait()
+		close(pipe)
+	}()
+
+	verdict := false
+	for subverdict := range pipe {
+		verdict = verdict || subverdict
+	}
+	return verdict, result
 }
