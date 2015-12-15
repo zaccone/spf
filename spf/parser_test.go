@@ -7,6 +7,7 @@ import (
 )
 
 var ip net.IP = net.IP{127, 0, 0, 1}
+var ipv6 net.IP = net.ParseIP("2001:4860:0:2001::68")
 
 const stub string = "stub"
 
@@ -266,6 +267,8 @@ func TestParseIp4(t *testing.T) {
 		TokenTestCase{&Token{tIp4, qMinus, "192.168.1.5/16"}, Fail, false},
 
 		TokenTestCase{&Token{tIp4, qMinus, "random string"}, Permerror, true},
+		TokenTestCase{&Token{tIp4, qMinus, "2001:4860:0:2001::68"}, Permerror, true},
+		TokenTestCase{&Token{tIp4, qMinus, "2001:4860:0:2001::68/48"}, Permerror, true},
 	}
 
 	var match bool
@@ -278,6 +281,58 @@ func TestParseIp4(t *testing.T) {
 		}
 		if testcase.Result != result {
 			t.Error("Result mismatch")
+		}
+	}
+}
+
+func TestParseIp6(t *testing.T) {
+	p := NewParser(stub, stub, ipv6, stub)
+
+	testcases := []TokenTestCase{
+		TokenTestCase{&Token{tIp6, qPlus, "2001:4860:0:2001::68"}, Pass, true},
+		TokenTestCase{&Token{tIp6, qMinus, "2001:4860:0:2001::68"}, Fail, true},
+		TokenTestCase{&Token{tIp6, qQuestionMark, "2001:4860:0:2001::68"}, Neutral, true},
+		TokenTestCase{&Token{tIp6, qTilde, "2001:4860:0:2001::68"}, Softfail, true},
+
+		TokenTestCase{&Token{tIp6, qTilde, "2001:4860:0:2001::68/64"}, Softfail, true},
+
+		TokenTestCase{&Token{tIp6, qTilde, "::1"}, Softfail, false},
+		TokenTestCase{&Token{tIp6, qMinus, "2002::/16"}, Fail, false},
+
+		TokenTestCase{&Token{tIp6, qMinus, "random string"}, Permerror, true},
+	}
+
+	var match bool
+	var result SPFResult
+
+	for _, testcase := range testcases {
+		match, result = p.parseIp6(testcase.Input)
+		if testcase.Match != match {
+			t.Error("Match mismatch, expected ", testcase.Match, " got ", match)
+		}
+		if testcase.Result != result {
+			t.Error("Result mismatch, expected ", testcase.Result, " got ", result)
+		}
+	}
+}
+
+func TestParseIp6WithIp4(t *testing.T) {
+	p := NewParser(stub, stub, ip, stub)
+
+	testcases := []TokenTestCase{
+		TokenTestCase{&Token{tIp6, qPlus, "127.0.0.1"}, Pass, true},
+	}
+
+	var match bool
+	var result SPFResult
+
+	for _, testcase := range testcases {
+		match, result = p.parseIp6(testcase.Input)
+		if testcase.Match != match {
+			t.Error("Match mismatch, expected ", testcase.Match, " got ", match)
+		}
+		if testcase.Result != result {
+			t.Error("Result mismatch, expected ", testcase.Result, " got ", result)
 		}
 	}
 }
