@@ -336,3 +336,59 @@ func TestParseIp6WithIp4(t *testing.T) {
 		}
 	}
 }
+
+func TestParseMX(t *testing.T) {
+
+	ip := net.IP{172, 18, 0, 2}
+	domain := "matching.com"
+	p := NewParser(domain, domain, ip, stub)
+
+	testcases := []TokenTestCase{
+		TokenTestCase{&Token{tMX, qPlus, "matching.com"}, Pass, true},
+		TokenTestCase{&Token{tMX, qPlus, ""}, Pass, true},
+		TokenTestCase{&Token{tMX, qPlus, "onet.pl"}, Pass, false},
+		TokenTestCase{&Token{tMX, qMinus, ""}, Fail, true},
+		TokenTestCase{&Token{tMX, qPlus, "idontexist"}, Fail, true},
+	}
+
+	var match bool
+	var result SPFResult
+
+	for _, testcase := range testcases {
+		match, result = p.parseMX(testcase.Input)
+		if testcase.Match != match {
+			t.Error("Match mismatch, expected ", testcase.Match, " got ", match)
+		}
+		if testcase.Result != result {
+			t.Error("Result mismatch, expected ", testcase.Result, " got ", result)
+		}
+	}
+}
+
+func TestParseMXNegativeTests(t *testing.T) {
+
+	ip := net.IP{127, 0, 0, 1}
+	domain := "matching.com"
+	p := NewParser(domain, domain, ip, stub)
+
+	testcases := []TokenTestCase{
+		TokenTestCase{&Token{tMX, qPlus, "matching.com"}, Pass, false},
+		TokenTestCase{&Token{tMX, qPlus, ""}, Pass, false},
+		TokenTestCase{&Token{tMX, qPlus, "onet.pl"}, Pass, false},
+		TokenTestCase{&Token{tMX, qPlus, "idontexist"}, Fail, true},
+		TokenTestCase{&Token{tMX, qMinus, "matching.com"}, Fail, false},
+	}
+
+	var match bool
+	var result SPFResult
+
+	for _, testcase := range testcases {
+		match, result = p.parseMX(testcase.Input)
+		if testcase.Match != match {
+			t.Error("Match mismatch, expected ", testcase.Match, " got ", match)
+		}
+		if testcase.Result != result {
+			t.Error("Result mismatch, expected ", testcase.Result, " got ", result)
+		}
+	}
+}

@@ -43,33 +43,37 @@ func NewParser(sender, domain string, ip net.IP, query string) *Parser {
 }
 
 func (p *Parser) Parse() (SPFResult, error) {
-	var result SPFResult
+	var result SPFResult = None
 	tokens := Lex(p.Query)
 
 	if err := p.sortTokens(tokens); err != nil {
 		return Permerror, err
 	}
-
+	var matches bool
 	for _, token := range p.Mechanisms {
 		switch token.Mechanism {
-		/*
-			case tVersion:
-				result = p.parseVersion(token)
-			case tAll:
-				result = p.parseAll(token)
-			case tA:
-				result = p.parseA(token)
-			case tIp4:
-				result = p.parseIp4(token)
-			case tIp6:
-				result = p.parseIp6(token)
-			case tMX:
-				result = p.parseMX(token)
-			case tPTR:
-				result = p.parsePTR(token)
+
+		case tVersion:
+			matches, result = p.parseVersion(token)
+		case tAll:
+			matches, result = p.parseAll(token)
+		case tA:
+			matches, result = p.parseA(token)
+		case tIp4:
+			matches, result = p.parseIp4(token)
+		case tIp6:
+			matches, result = p.parseIp6(token)
+		case tMX:
+			matches, result = p.parseMX(token)
+			/* case tPTR:
+			result = p.parsePTR(token)
 			case tInclude:
-				result = p.parseInclude(token)
-		*/
+				matches, result = p.parseInclude(token)
+			*/
+		}
+
+		if matches {
+			return result, nil
 		}
 
 	}
@@ -200,25 +204,36 @@ func (p *Parser) parseA(t *Token) (bool, SPFResult) {
 func (p *Parser) parseMX(t *Token) (bool, SPFResult) {
 	result, _ := matchingResult(t.Qualifier)
 
-	domain := t.Value
-	if isEmpty(&domain) {
-		domain = p.Domain
+	domain := p.setDomain(t)
+
+	var err error
+	var mxs []*net.MX
+
+	if mxs, err = net.LookupMX(domain); err != nil {
+		// TODO(marek): confirm SPFResult
+		return true, Fail
 	}
 
-	mxs, _ := net.LookupMX(domain)
 	var wg sync.WaitGroup
 
 	pipe := make(chan bool)
 
-	for _, mx := range mxs {
-		go func() {
-			ips, _ := net.LookupIP(mx.Host)
-			wg.Add(len(ips))
-			for _, ip := range ips {
-				pipe <- p.Ip.Equal(ip)
-				wg.Done()
+	wg.Add(len(mxs))
+
+	for _, mmx := range mxs {
+		go func(mx *net.MX) {
+			defer wg.Done()
+
+			if ips, err := net.LookupIP(mx.Host); err != nil {
+				//TODO(marek): Log DNS lookup error
+				return
+			} else {
+				for _, ip := range ips {
+					pipe <- p.Ip.Equal(ip)
+
+				}
 			}
-		}()
+		}(mmx)
 	}
 
 	go func() {
