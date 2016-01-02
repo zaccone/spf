@@ -112,6 +112,14 @@ func (p *Parser) sortTokens(tokens []*Token) error {
 	return nil
 }
 
+func (p *Parser) setDomain(t *Token) string {
+	if !isEmpty(&t.Value) {
+		return t.Value
+	} else {
+		return p.Domain
+	}
+}
+
 func (p *Parser) parseVersion(t *Token) (bool, SPFResult) {
 	if t.Value == spfPrefix {
 		return true, None
