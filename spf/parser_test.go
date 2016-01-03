@@ -253,6 +253,34 @@ func TestParseAll(t *testing.T) {
 	}
 }
 
+func TestParseA(t *testing.T) {
+	ip := net.IP{172, 18, 0, 2}
+	domain := "matching.com"
+	p := NewParser(domain, domain, ip, stub)
+	testcases := []TokenTestCase{
+		TokenTestCase{&Token{tA, qPlus, "positive.matching.com"}, Pass, true},
+		TokenTestCase{&Token{tA, qPlus, "negative.matching.com"}, Pass, false},
+		TokenTestCase{&Token{tA, qPlus, "range.matching.com"}, Pass, false},
+		TokenTestCase{&Token{tA, qPlus, "idontexist"}, Fail, true},
+		TokenTestCase{&Token{tA, qPlus, "#%$%^"}, Fail, true},
+		TokenTestCase{&Token{tA, qMinus, ""}, Fail, true},
+	}
+
+	var match bool
+	var result SPFResult
+
+	for _, testcase := range testcases {
+		match, result = p.parseA(testcase.Input)
+		if testcase.Match != match {
+			t.Error("Match mismatch")
+		}
+		if testcase.Result != result {
+			t.Error("Result mismatch")
+		}
+	}
+
+}
+
 func TestParseIp4(t *testing.T) {
 	p := NewParser(stub, stub, ip, stub)
 	testcases := []TokenTestCase{
