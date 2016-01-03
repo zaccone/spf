@@ -181,8 +181,8 @@ func (p *Parser) parseA(t *Token) (bool, SPFResult) {
 
 	domain := p.setDomain(t)
 	if ips, err := net.LookupIP(domain); err != nil {
-		//TODO(marek): Handle error here
-		panic(err)
+		//TODO(marek):  confirm SPFResult
+		return true, Fail
 	} else {
 		for _, address := range ips {
 			if p.Ip.Equal(address) {
