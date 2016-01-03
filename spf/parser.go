@@ -179,19 +179,11 @@ func (p *Parser) parseIp6(t *Token) (bool, SPFResult) {
 func (p *Parser) parseA(t *Token) (bool, SPFResult) {
 	result, _ := matchingResult(t.Qualifier)
 
-	var host string
-	if !isEmpty(&t.Value) {
-		host = t.Value
-	} else {
-		host = p.Domain
-	}
-
-	if ips, err := net.LookupIP(host); err != nil {
+	domain := p.setDomain(t)
+	if ips, err := net.LookupIP(domain); err != nil {
 		//TODO(marek): Handle error here
 		panic(err)
 	} else {
-		var wg sync.WaitGroup
-		wg.Add(len(ips))
 		for _, address := range ips {
 			if p.Ip.Equal(address) {
 				return true, result
