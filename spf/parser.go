@@ -3,6 +3,8 @@ package spf
 import (
 	"errors"
 	"net"
+	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -177,15 +179,74 @@ func (p *Parser) parseIp6(t *Token) (bool, SPFResult) {
 }
 
 func (p *Parser) parseA(t *Token) (bool, SPFResult) {
-	result, _ := matchingResult(t.Qualifier)
 
+	SplitToHostNetwork := func(domain string, isIPv4 bool) (bool, string, *net.IPMask) {
+		var host string
+
+		addrLen := 128
+		ns := "128"
+
+		if isIPv4 {
+			addrLen = 32
+			ns = "32"
+		}
+
+		r := strings.SplitN(domain, "/", 2)
+
+		if len(r) == 2 {
+			host, ns = r[0], r[1]
+		} else {
+			host = r[0]
+		}
+
+		// if the network mask is invalid it means data provided in the SPF
+		//term is invalid and there is syntax error.
+		if n, err := strconv.Atoi(ns); err != nil {
+			return false, host, &net.IPMask{}
+		} else {
+
+			// network mask must be within [0, 32/128]
+			if n < 0 || n > addrLen {
+				return false, host, &net.IPMask{}
+			}
+
+			// looks like we are all OK
+			network := net.CIDRMask(n, addrLen)
+			return true, host, &network
+		}
+	}
+
+	result, _ := matchingResult(t.Qualifier)
 	domain := p.setDomain(t)
-	if ips, err := net.LookupIP(domain); err != nil {
+
+	var isIPv4 bool
+	if ok := p.Ip.To4(); ok != nil {
+		isIPv4 = true
+	}
+
+	var host string
+	var network *net.IPMask
+	var ok bool
+	ok, host, network = SplitToHostNetwork(domain, isIPv4)
+
+	// return Fail if there was syntax error
+	if !ok {
+		return true, Fail
+	}
+
+	if ips, err := net.LookupIP(host); err != nil {
 		//TODO(marek):  confirm SPFResult
 		return true, Fail
 	} else {
+		ipnet := net.IPNet{}
+		ipnet.Mask = *network
 		for _, address := range ips {
-			if p.Ip.Equal(address) {
+			// skip if Parser.Ip is IPv4 and tested isn't
+			if isIPv4 && address.To4() == nil {
+				continue
+			}
+			ipnet.IP = address
+			if ipnet.Contains(p.Ip) {
 				return true, result
 			}
 		}

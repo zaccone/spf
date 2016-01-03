@@ -259,11 +259,26 @@ func TestParseA(t *testing.T) {
 	p := NewParser(domain, domain, ip, stub)
 	testcases := []TokenTestCase{
 		TokenTestCase{&Token{tA, qPlus, "positive.matching.com"}, Pass, true},
+		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/32"}, Pass, true},
 		TokenTestCase{&Token{tA, qPlus, "negative.matching.com"}, Pass, false},
-		TokenTestCase{&Token{tA, qPlus, "range.matching.com"}, Pass, false},
+		TokenTestCase{&Token{tA, qPlus, "range.matching.com/16"}, Pass, true},
+		TokenTestCase{&Token{tA, qPlus, "range.matching.com/128"}, Fail, true},
 		TokenTestCase{&Token{tA, qPlus, "idontexist"}, Fail, true},
 		TokenTestCase{&Token{tA, qPlus, "#%$%^"}, Fail, true},
+		TokenTestCase{&Token{tA, qPlus, "lb.matching.com"}, Pass, true},
 		TokenTestCase{&Token{tA, qMinus, ""}, Fail, true},
+
+		// expect (Fail, true) results as a result of syntax errors
+		TokenTestCase{&Token{tA, qPlus, "range.matching.com/16/34"}, Fail, true},
+		TokenTestCase{&Token{tA, qPlus, "range.matching.com/wrongmask"}, Fail, true},
+		TokenTestCase{&Token{tA, qPlus, "range.matching.com/129"}, Fail, true},
+		TokenTestCase{&Token{tA, qPlus, "range.matching.com/-1"}, Fail, true},
+
+		// expect (Fail, true) due to wrong netmasks.
+		// It's a syntax error to specify a netmask over 32 bits for IPv4 addresses
+		TokenTestCase{&Token{tA, qPlus, "negative.matching.com/128"}, Fail, true},
+		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/128"}, Fail, true},
+		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/128"}, Fail, true},
 	}
 
 	var match bool
@@ -278,7 +293,6 @@ func TestParseA(t *testing.T) {
 			t.Error("Result mismatch")
 		}
 	}
-
 }
 
 func TestParseIp4(t *testing.T) {
