@@ -362,7 +362,8 @@ func TestParseIp6WithIp4(t *testing.T) {
 	p := NewParser(stub, stub, ip, stub)
 
 	testcases := []TokenTestCase{
-		TokenTestCase{&Token{tIp6, qPlus, "127.0.0.1"}, Pass, true},
+		TokenTestCase{&Token{tIp6, qPlus, "127.0.0.1"}, Permerror, true},
+		TokenTestCase{&Token{tIp6, qTilde, "127.0.0.1"}, Permerror, true},
 	}
 
 	var match bool
