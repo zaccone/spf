@@ -11,7 +11,7 @@ var ipv6 net.IP = net.ParseIP("2001:4860:0:2001::68")
 
 const stub string = "stub"
 
-func testNewParserFunction(t *testing.T) {
+func TestNewParserFunction(t *testing.T) {
 	//stub := "stub"
 	p := NewParser(stub, stub, ip, stub)
 
