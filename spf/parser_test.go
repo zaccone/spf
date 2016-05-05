@@ -382,9 +382,14 @@ func TestParseIp6WithIp4(t *testing.T) {
 
 func TestParseMX(t *testing.T) {
 
-	ip := net.IP{172, 18, 0, 2}
+	ips := []net.IP{
+		net.IP{172, 18, 0, 2},
+		net.IP{172, 20, 20, 20},
+		net.IP{172, 100, 0, 1},
+	}
+
 	domain := "matching.com"
-	p := NewParser(domain, domain, ip, stub)
+	p := NewParser(domain, domain, net.IP{0, 0, 0, 0}, stub)
 
 	testcases := []TokenTestCase{
 		TokenTestCase{&Token{tMX, qPlus, "matching.com"}, Pass, true},
@@ -398,12 +403,15 @@ func TestParseMX(t *testing.T) {
 	var result SPFResult
 
 	for _, testcase := range testcases {
-		match, result = p.parseMX(testcase.Input)
-		if testcase.Match != match {
-			t.Error("Match mismatch, expected ", testcase.Match, " got ", match)
-		}
-		if testcase.Result != result {
-			t.Error("Result mismatch, expected ", testcase.Result, " got ", result)
+		for _, ip := range ips {
+			p.Ip = ip
+			match, result = p.parseMX(testcase.Input)
+			if testcase.Match != match {
+				t.Error("Match mismatch, expected ", testcase.Match, " got ", match)
+			}
+			if testcase.Result != result {
+				t.Error("Result mismatch, expected ", testcase.Result, " got ", result)
+			}
 		}
 	}
 }
