@@ -35,12 +35,15 @@ func LookupSPF(domain string) ([]string, error) {
 	var spfRecords []string
 	var err error
 	if spfRecords, err = net.LookupTXT(domain); err != nil {
-		//TODO(zaccone): Handle DNS errors
+		/*
+			Note(zaccone): We need to handle DNS related errors in the upper layer, as depending on error type a SPF related
+			result/exception will be raised.
+		*/
 		return nil, err
 	}
 
 	if checkSPFVersion(spfRecords) == false {
-		return nil, errors.New("invalid SPF record")
+		return nil, errors.New(strings.Join([]string{"Invalid SPF record: ", strings.Join(spfRecords, " ")}, " "))
 	}
 
 	return spfRecords, nil
