@@ -23,7 +23,7 @@ const (
 	SPFEnd
 )
 
-func (spf *SPFResult) String() string {
+func (spf SPFResult) String() string {
 	switch *spf {
 	case None:
 		return "None"
