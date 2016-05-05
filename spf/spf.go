@@ -33,6 +33,8 @@ func (spf SPFResult) String() string {
 		return "Pass"
 	case Fail:
 		return "Fail"
+	case Softfail:
+		return "Softfail"
 	case Temperror:
 		return "Temperror"
 	case Permerror:
