@@ -79,7 +79,7 @@ func (p *Parser) Parse() (SPFResult, error) {
 		}
 
 	}
-	return result, nil
+	return None, nil
 }
 
 func (p *Parser) sortTokens(tokens []*Token) error {
@@ -128,7 +128,7 @@ func (p *Parser) setDomain(t *Token) string {
 
 func (p *Parser) parseVersion(t *Token) (bool, SPFResult) {
 	if t.Value == spfPrefix {
-		return true, None
+		return false, None
 	}
 	return true, Permerror
 }
