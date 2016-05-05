@@ -24,7 +24,7 @@ const (
 )
 
 func (spf SPFResult) String() string {
-	switch *spf {
+	switch spf {
 	case None:
 		return "None"
 	case Neutral:
