@@ -50,7 +50,7 @@ func (spf *SPFResult) String() string {
 // All the parameters should be parsed and dereferenced from real email fields.
 // This means domain should already be extracted from MAIL FROM field so this
 // function can focus on the core part.
-func checkHost(ip, domain, sender string) (SPFResult, error) {
+func checkHost(ip net.IP, domain, sender string) (SPFResult, error) {
 
 	// TODO(zaccone) s/_/spfRecord/
 	_, dnsErr := dns.LookupSPF(domain)
@@ -67,8 +67,7 @@ func checkHost(ip, domain, sender string) (SPFResult, error) {
 		}
 	}
 	query := "v=spf1 a -all"
-	ipAddr := net.ParseIP(ip)
-	parser := NewParser(sender, domain, ipAddr, query)
+	parser := NewParser(sender, domain, ip, query)
 
 	var result SPFResult = Neutral
 	var err error
