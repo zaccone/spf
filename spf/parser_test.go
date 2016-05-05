@@ -443,3 +443,40 @@ func TestParseMXNegativeTests(t *testing.T) {
 		}
 	}
 }
+
+/* parseInclude tests */
+
+// TestParse tests whole Parser.Parse() method
+func TestParse(t *testing.T) {
+
+	type ParseTestCase struct {
+		Query  string
+		Ip     net.IP
+		Result SPFResult
+	}
+
+	domain := "matching.com"
+
+	ParseTestCases := []ParseTestCase{
+		ParseTestCase{"v=spf1 -all", net.IP{127, 0, 0, 1}, Fail},
+		ParseTestCase{"v=spf1 mx -all", net.IP{172, 20, 20, 20}, Pass},
+		ParseTestCase{"v=spf1 ?mx -all", net.IP{172, 20, 20, 20}, Neutral},
+		ParseTestCase{"v=spf1 ~mx -all", net.IP{172, 20, 20, 20}, Softfail},
+		ParseTestCase{"v=spf1 a -mx -all", net.IP{172, 18, 0, 2}, Pass},
+		ParseTestCase{"v=spf1 -mx a -all", net.IP{172, 18, 0, 2}, Fail},
+		ParseTestCase{"v=spf1 +mx:matching.net -a -all", net.IP{173, 18, 0, 2}, Pass},
+		ParseTestCase{"v=spf1 a:matching.net -all", net.IP{172, 17, 0, 2}, Fail},
+		ParseTestCase{"v=spf1 a:matching.net -all", net.IP{173, 18, 0, 2}, Pass},
+	}
+
+	for _, testcase := range ParseTestCases {
+		p := NewParser(domain, domain, testcase.Ip, testcase.Query)
+
+		result, err := p.Parse()
+		if err != nil {
+			t.Error("Unexpected error while parsing: ", err)
+		} else if result != testcase.Result {
+			t.Error("Expected ", testcase.Result, " got ", result, " instead.")
+		}
+	}
+}
