@@ -465,8 +465,10 @@ func TestParse(t *testing.T) {
 		ParseTestCase{"v=spf1 a -mx -all", net.IP{172, 18, 0, 2}, Pass},
 		ParseTestCase{"v=spf1 -mx a -all", net.IP{172, 18, 0, 2}, Fail},
 		ParseTestCase{"v=spf1 +mx:matching.net -a -all", net.IP{173, 18, 0, 2}, Pass},
-		ParseTestCase{"v=spf1 a:matching.net -all", net.IP{172, 17, 0, 2}, Fail},
+		ParseTestCase{"v=spf1 +mx:matching.net -a -all", net.IP{172, 17, 0, 2}, Fail},
 		ParseTestCase{"v=spf1 a:matching.net -all", net.IP{173, 18, 0, 2}, Pass},
+		ParseTestCase{"v=spf1 +ip4:128.14.15.16 -all", net.IP{128, 14, 15, 16}, Pass},
+		ParseTestCase{"v=spf1 ~ip6:2001:56::2 -all", net.ParseIP("2001:56::2"), Softfail},
 	}
 
 	for _, testcase := range ParseTestCases {
