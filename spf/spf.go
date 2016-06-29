@@ -2,6 +2,7 @@ package spf
 
 import (
 	"net"
+	"strings"
 
 	"github.com/zaccone/goSPF/dns"
 )
@@ -45,7 +46,7 @@ func (spf SPFResult) String() string {
 }
 
 // CheckHost is a main entrypoint function evaluating e-mail with regard to SPF
-// As per RFC 7208 it will accept 3 parameters (strings):
+// As per RFC 7208 it will accept 3 parameters:
 // <ip> - IP{4,6} address of the connected client
 // <domain> - domain portion of the MAIL FROM or HELO identity
 // <sender> - MAIL FROM or HELO identity
@@ -54,12 +55,11 @@ func (spf SPFResult) String() string {
 // function can focus on the core part.
 func checkHost(ip net.IP, domain, sender string) (SPFResult, error) {
 
-	// TODO(zaccone) s/_/spfRecord/
-	_, dnsErr := dns.LookupSPF(domain)
+	query, dnsErr := dns.LookupSPF(domain)
 
 	if dnsErr != nil {
 		switch dnsErr.(type) {
-		// as per RFC7208 section 4.4, and DNS query errors result in Temperror
+		// as per RFC7208 section 4.4, DNS query errors result in Temperror
 		//result immediately
 		case *net.DNSError:
 			return Temperror, dnsErr
@@ -68,8 +68,9 @@ func checkHost(ip net.IP, domain, sender string) (SPFResult, error) {
 
 		}
 	}
-	query := "v=spf1 a -all"
-	parser := NewParser(sender, domain, ip, query)
+
+	spfQuery := strings.Join(query, " ")
+	parser := NewParser(sender, domain, ip, spfQuery)
 
 	var result SPFResult = Neutral
 	var err error
