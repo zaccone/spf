@@ -67,11 +67,8 @@ func (p *Parser) Parse() (SPFResult, error) {
 			matches, result = p.parseIp6(token)
 		case tMX:
 			matches, result = p.parseMX(token)
-			/* case tPTR:
-			result = p.parsePTR(token)
-			case tInclude:
-				matches, result = p.parseInclude(token)
-			*/
+		case tInclude:
+			matches, result = p.parseInclude(token)
 		}
 
 		if matches {
@@ -299,4 +296,36 @@ func (p *Parser) parseMX(t *Token) (bool, SPFResult) {
 		verdict = verdict || subverdict
 	}
 	return verdict, result
+}
+
+func (p *Parser) parseInclude(t *Token) (bool, SPFResult) {
+	result, _ := matchingResult(t.Qualifier)
+	domain := t.Value
+	if isEmpty(&domain) {
+		return true, Permerror
+	}
+	matchesInclude := false
+	if includeResult, err := checkHost(p.Ip, domain, p.Sender); err != nil {
+		return false, None
+	} else { // it's all fine
+		switch includeResult {
+		case Pass:
+			matchesInclude = true
+		case Fail, Softfail, Neutral:
+			matchesInclude = false
+		case Temperror:
+			matchesInclude = false
+			result = Temperror
+		case Permerror, None:
+			matchesInclude = false
+			result = Permerror
+		}
+	}
+
+	if matchesInclude {
+		return true, result
+	}
+
+	return false, None
+
 }

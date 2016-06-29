@@ -425,7 +425,7 @@ func TestParseMXNegativeTests(t *testing.T) {
 	testcases := []TokenTestCase{
 		TokenTestCase{&Token{tMX, qPlus, "matching.com"}, Pass, false},
 		TokenTestCase{&Token{tMX, qPlus, ""}, Pass, false},
-		TokenTestCase{&Token{tMX, qPlus, "onet.pl"}, Pass, false},
+		TokenTestCase{&Token{tMX, qPlus, "google.com"}, Pass, false},
 		TokenTestCase{&Token{tMX, qPlus, "idontexist"}, Fail, true},
 		TokenTestCase{&Token{tMX, qMinus, "matching.com"}, Fail, false},
 	}
@@ -445,6 +445,87 @@ func TestParseMXNegativeTests(t *testing.T) {
 }
 
 /* parseInclude tests */
+
+func TestParseInclude(t *testing.T) {
+
+	ips := []net.IP{
+		net.IP{172, 100, 100, 1},
+		net.IP{173, 20, 20, 1},
+		net.IP{173, 20, 21, 1},
+	}
+
+	domain := "matching.net"
+	p := NewParser(domain, domain, net.IP{0, 0, 0, 0}, stub)
+
+	testcases := []TokenTestCase{
+		TokenTestCase{&Token{tInclude, qPlus, "_spf.matching.net"}, Pass, true},
+		TokenTestCase{&Token{tInclude, qMinus, "_spf.matching.net"}, Fail, true},
+		TokenTestCase{&Token{tInclude, qTilde, "_spf.matching.net"}, Softfail, true},
+		TokenTestCase{&Token{tInclude, qQuestionMark, "_spf.matching.net"}, Neutral, true},
+	}
+
+	var match bool
+	var result SPFResult
+
+	for _, testcase := range testcases {
+		for _, ip := range ips {
+			p.Ip = ip
+			match, result = p.parseInclude(testcase.Input)
+			if testcase.Match != match {
+				t.Error("Match mismatch, expected ", testcase.Match, " got ", match)
+			}
+			if testcase.Result != result {
+				t.Error("Result mismatch, expected ", testcase.Result, " got ", result)
+			}
+		}
+	}
+
+}
+
+// TestParseIncludeNegative shows correct behavior of include qualifier.
+func TestParseIncludeNegative(t *testing.T) {
+	ips := []net.IP{
+		// completely random IP addres out of the net segment
+		net.IP{80, 81, 82, 83},
+		// ip addresses from failing negative.matching.net A records
+		net.IP{173, 18, 100, 100},
+		net.IP{173, 18, 100, 101},
+		net.IP{173, 18, 100, 102},
+		net.IP{173, 18, 100, 103},
+	}
+	domain := "matching.net"
+	p := NewParser(domain, domain, ip, stub)
+
+	testcases := []TokenTestCase{
+		TokenTestCase{&Token{tInclude, qMinus, "_spf.matching.net"}, None, false},
+		TokenTestCase{&Token{tInclude, qPlus, "_spf.matching.net"}, None, false},
+		TokenTestCase{&Token{tInclude, qPlus, "_errspf.matching.net"}, None, false},
+		TokenTestCase{&Token{tInclude, qPlus, "nospf.matching.net"}, None, false},
+		TokenTestCase{&Token{tInclude, qPlus, "idontexist.matching.net"}, None, false},
+
+		// empty input qualifier results in Permerror withour recursive calls
+		TokenTestCase{&Token{tInclude, qMinus, ""}, Permerror, true},
+	}
+
+	var match bool
+	var result SPFResult
+
+	for _, testcase := range testcases {
+
+		for _, ip := range ips {
+			p.Ip = ip
+			match, result = p.parseInclude(testcase.Input)
+			if testcase.Match != match {
+				t.Error("Match mismatch, expected ", testcase.Match, " got ", match)
+			}
+			if testcase.Result != result {
+				t.Error("Result mismatch, expected ", testcase.Result, " got ", result)
+			}
+		}
+
+	}
+
+}
 
 // TestParse tests whole Parser.Parse() method
 func TestParse(t *testing.T) {
@@ -469,6 +550,19 @@ func TestParse(t *testing.T) {
 		ParseTestCase{"v=spf1 a:matching.net -all", net.IP{173, 18, 0, 2}, Pass},
 		ParseTestCase{"v=spf1 +ip4:128.14.15.16 -all", net.IP{128, 14, 15, 16}, Pass},
 		ParseTestCase{"v=spf1 ~ip6:2001:56::2 -all", net.ParseIP("2001:56::2"), Softfail},
+		// Test will return SPFResult Fail as 172.20.20.1 does not result
+		// positively for domain _spf.matching.net
+		ParseTestCase{"v=spf1 ip4:127.0.0.1 +include:_spf.matching.net -all", net.IP{172, 20, 20, 1}, Fail},
+		// Test will return SPFResult Pass as 172.100.100.1 is withing
+		// positive.matching.net A records, that are marked as +a:
+		ParseTestCase{"v=spf1 ip4:127.0.0.1 +include:_spf.matching.net -all", net.IP{172, 100, 100, 1}, Pass},
+		// Test for syntax errors (include must have nonempty domain parameter)
+		ParseTestCase{"v=spf1 ip4:127.0.0.1 +include -all", net.IP{172, 100, 100, 1}, Permerror},
+		ParseTestCase{"v=spf1 ip4:127.0.0.1 ?include -all", net.IP{172, 100, 100, 1}, Permerror},
+		// Include didn't match domain:yyz and underneath returned Temperror,
+		// however parent Parse() exection path marked the result as not
+		// matching and proceeded to next term
+		ParseTestCase{"v=spf1 +include:yyz -all", net.IP{172, 100, 100, 1}, Fail},
 	}
 
 	for _, testcase := range ParseTestCases {
