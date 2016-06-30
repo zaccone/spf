@@ -105,6 +105,10 @@ func checkTokenSyntax(token *Token, delimiter rune) bool {
 		return true
 	}
 
+	//mechanism include must not have empty content
+	if token.Mechanism == tInclude && isEmpty(&token.Value) {
+		return false
+	}
 	if token.Mechanism.isModifier() && delimiter != '=' {
 		return false
 	}
