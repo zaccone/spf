@@ -591,6 +591,8 @@ func TestHandleRedirect(t *testing.T) {
 		ParseTestCase{"v=spf1 redirect=nospf.matching.net", net.IP{127, 0, 0, 1}, Permerror},
 		ParseTestCase{"v=spf1 +ip4:127.0.0.1 redirect=nospf.matching.net", net.IP{127, 0, 0, 1}, Pass},
 		ParseTestCase{"v=spf1 -ip4:127.0.0.1 redirect=nospf.matching.net", net.IP{127, 0, 0, 1}, Fail},
+		ParseTestCase{"v=spf1 +include:_spf.matching.net redirect=_spf.matching.net", net.IP{127, 0, 0, 1}, Fail},
+		ParseTestCase{"v=spf1 ~include:_spf.matching.net redirect=_spf.matching.net", net.IP{172, 100, 100, 1}, Softfail},
 	}
 
 	for _, testcase := range ParseTestCases {
