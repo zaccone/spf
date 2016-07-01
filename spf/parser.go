@@ -76,7 +76,10 @@ func (p *Parser) Parse() (SPFResult, error) {
 		}
 
 	}
-	return None, nil
+
+	result = p.handleRedirect(result)
+
+	return result, nil
 }
 
 func (p *Parser) sortTokens(tokens []*Token) error {
@@ -328,4 +331,27 @@ func (p *Parser) parseInclude(t *Token) (bool, SPFResult) {
 
 	return false, None
 
+}
+
+func (p *Parser) handleRedirect(oldResult SPFResult) SPFResult {
+	var err error
+	result := oldResult
+	if result != None || p.Redirect == nil {
+		return result
+	}
+
+	redirectDomain := p.Redirect.Value
+
+	if result, err = checkHost(p.Ip, redirectDomain, p.Sender); err != nil {
+		//TODO(zaccone): confirm result value
+		result = Permerror
+	} else if result == None || result == Permerror {
+		// See RFC7208, section 6.1
+		//
+		// if no SPF record is found, or if the <target-name> is malformed, the
+		// result is a "permerror" rather than "none".
+		result = Permerror
+	}
+
+	return result
 }

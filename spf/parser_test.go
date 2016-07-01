@@ -527,14 +527,14 @@ func TestParseIncludeNegative(t *testing.T) {
 
 }
 
+type ParseTestCase struct {
+	Query  string
+	Ip     net.IP
+	Result SPFResult
+}
+
 // TestParse tests whole Parser.Parse() method
 func TestParse(t *testing.T) {
-
-	type ParseTestCase struct {
-		Query  string
-		Ip     net.IP
-		Result SPFResult
-	}
 
 	domain := "matching.com"
 
@@ -568,6 +568,33 @@ func TestParse(t *testing.T) {
 	for _, testcase := range ParseTestCases {
 		p := NewParser(domain, domain, testcase.Ip, testcase.Query)
 
+		result, err := p.Parse()
+		if err != nil {
+			t.Error("Unexpected error while parsing: ", err)
+		} else if result != testcase.Result {
+			t.Error("Expected ", testcase.Result, " got ", result, " instead.")
+		}
+	}
+}
+
+// TestParseRedirect tests whole parsing behavior with a special testing of
+// redirect modifier
+func TestHandleRedirect(t *testing.T) {
+
+	const domain = "matching.com"
+	ParseTestCases := []ParseTestCase{
+		ParseTestCase{"v=spf1 -all redirect=_spf.matching.net", net.IP{172, 100, 100, 1}, Fail},
+		ParseTestCase{"v=spf1 redirect=_spf.matching.net -all", net.IP{172, 100, 100, 1}, Fail},
+		ParseTestCase{"v=spf1 redirect=_spf.matching.net", net.IP{172, 100, 100, 1}, Pass},
+		ParseTestCase{"v=spf1 redirect=malformed", net.IP{172, 100, 100, 1}, Permerror},
+		ParseTestCase{"v=spf1 redirect=_spf.matching.net", net.IP{127, 0, 0, 1}, Fail},
+		ParseTestCase{"v=spf1 redirect=nospf.matching.net", net.IP{127, 0, 0, 1}, Permerror},
+		ParseTestCase{"v=spf1 +ip4:127.0.0.1 redirect=nospf.matching.net", net.IP{127, 0, 0, 1}, Pass},
+		ParseTestCase{"v=spf1 -ip4:127.0.0.1 redirect=nospf.matching.net", net.IP{127, 0, 0, 1}, Fail},
+	}
+
+	for _, testcase := range ParseTestCases {
+		p := NewParser(domain, domain, testcase.Ip, testcase.Query)
 		result, err := p.Parse()
 		if err != nil {
 			t.Error("Unexpected error while parsing: ", err)

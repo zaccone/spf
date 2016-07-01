@@ -81,12 +81,6 @@ func checkHost(ip net.IP, domain, sender string) (SPFResult, error) {
 		return Permerror, nil
 	}
 
-	// check if there is redirect and recursively call check_host with redirect
-	// as domain
-	if parser.Redirect != nil {
-		result, err = checkHost(ip, domain, sender)
-	}
-
 	// return SPF evaluation result
 	return result, nil
 }
