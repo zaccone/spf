@@ -105,7 +105,7 @@ func (p *Parser) sortTokens(tokens []*Token) error {
 				if p.Explanation == nil {
 					p.Explanation = token
 				} else {
-					return errors.New("Modifier exp/explanation musn't appear more than once")
+					return errors.New("Modifier exp musn't appear more than once")
 				}
 			}
 		}
