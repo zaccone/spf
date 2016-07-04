@@ -55,6 +55,10 @@ func (spf SPFResult) String() string {
 // function can focus on the core part.
 func checkHost(ip net.IP, domain, sender string) (SPFResult, error) {
 
+	if !dns.IsDomainName(domain) {
+		return None, nil
+	}
+
 	query, dnsErr := dns.LookupSPF(domain)
 
 	if dnsErr != nil {
