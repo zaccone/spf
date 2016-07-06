@@ -242,9 +242,9 @@ func (p *Parser) parseA(t *Token) (bool, SPFResult) {
 
 	if ips, err := net.LookupIP(host); err != nil {
 		if dnsErr, ok := err.(*net.DNSError); ok {
-			if dnsErr.Err != dns.NoSuchHost || dnsErr.Timeout() {
+			if dnsErr.Err != dns.RCODE3 || dnsErr.Timeout() {
 				return true, Temperror
-			} else if dnsErr.Err == dns.NoSuchHost {
+			} else if dnsErr.Err == dns.RCODE3 {
 				return false, None
 			}
 		}
@@ -281,9 +281,9 @@ func (p *Parser) parseMX(t *Token) (bool, SPFResult) {
 	if mxs, err = net.LookupMX(domain); err != nil {
 
 		if dnsErr, ok := err.(*net.DNSError); ok {
-			if dnsErr.Err != dns.NoSuchHost || dnsErr.Timeout() {
+			if dnsErr.Err != dns.RCODE3 || dnsErr.Timeout() {
 				return true, Temperror
-			} else if dnsErr.Err == dns.NoSuchHost {
+			} else if dnsErr.Err == dns.RCODE3 {
 				return false, None
 			}
 		}
