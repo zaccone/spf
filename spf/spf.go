@@ -80,7 +80,7 @@ func checkHost(ip net.IP, domain, sender string) (SPFResult, error) {
 			* the result "none".
 			*
 			* Sadly, net.DNSError does not provide RCODE statuses, however
-			* reading it' implementation we can deduct that
+			* reading its implementation we can deduct that
 			* DNSError.Err string is set to "no such host" upon RCODE 3.
 			* See
 			* https://github.com/golang/go/blob/master/src/net/dnsclient.go#L43
@@ -92,11 +92,12 @@ func checkHost(ip net.IP, domain, sender string) (SPFResult, error) {
 			* error) or 3 or timeout occurs, check_host() should return
 			* Temperror which we handle too.
 			 */
-			if dnsErr.(*net.DNSError).Err == dns.RCODE3 {
-				return None, nil
-			} else {
+			if dnsErr.(*net.DNSError).Err != dns.RCODE3 ||
+				dnsErr.(*net.DNSError).Timeout() {
 				return Temperror, nil
 			}
+			return None, nil
+
 		default:
 			return Permerror, nil
 
