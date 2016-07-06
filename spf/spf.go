@@ -92,7 +92,7 @@ func checkHost(ip net.IP, domain, sender string) (SPFResult, error) {
 			* error) or 3 or timeout occurs, check_host() should return
 			* Temperror which we handle too.
 			 */
-			if dnsErr.(*net.DNSError).Err == "no such host" {
+			if dnsErr.(*net.DNSError).Err == dns.RCODE3 {
 				return None, nil
 			} else {
 				return Temperror, nil

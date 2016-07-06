@@ -6,8 +6,11 @@ import (
 	"strings"
 )
 
-const spfPrefix = "v=spf1 "
-const spfPrefixTrim = "v=spf1"
+const (
+	RCODE3        = "no such host"
+	spfPrefix     = "v=spf1 "
+	spfPrefixTrim = "v=spf1"
+)
 
 func checkSPFVersion(spf []string) bool {
 	if len(spf) == 0 {
