@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/zaccone/goSPF/dns"
 )
 
 const spfPrefix = "spf1"
@@ -199,6 +201,10 @@ func (p *Parser) parseA(t *Token) (bool, SPFResult) {
 			host = r[0]
 		}
 
+		if !dns.IsDomainName(host) {
+			return false, host, nil
+		}
+
 		// if the network mask is invalid it means data provided in the SPF
 		//term is invalid and there is syntax error.
 		if n, err := strconv.Atoi(ns); err != nil {
@@ -229,14 +235,21 @@ func (p *Parser) parseA(t *Token) (bool, SPFResult) {
 	var ok bool
 	ok, host, network = SplitToHostNetwork(domain, isIPv4)
 
-	// return Fail if there was syntax error
+	// return Permerror if there was syntax error
 	if !ok {
-		return true, Fail
+		return true, Permerror
 	}
 
 	if ips, err := net.LookupIP(host); err != nil {
-		//TODO(marek):  confirm SPFResult
-		return true, Fail
+		if dnsErr, ok := err.(*net.DNSError); ok {
+			if dnsErr.Err != dns.NoSuchHost || dnsErr.Timeout() {
+				return true, Temperror
+			} else if dnsErr.Err == dns.NoSuchHost {
+				return false, None
+			}
+		}
+		//TODO(marek): Apparently non DNS error, what shall we do then?
+		return false, None
 	} else {
 		ipnet := net.IPNet{}
 		ipnet.Mask = *network
@@ -258,13 +271,24 @@ func (p *Parser) parseMX(t *Token) (bool, SPFResult) {
 	result, _ := matchingResult(t.Qualifier)
 
 	domain := p.setDomain(t)
+	if !dns.IsDomainName(domain) {
+		return true, Permerror
+	}
 
 	var err error
 	var mxs []*net.MX
 
 	if mxs, err = net.LookupMX(domain); err != nil {
-		// TODO(marek): confirm SPFResult
-		return true, Fail
+
+		if dnsErr, ok := err.(*net.DNSError); ok {
+			if dnsErr.Err != dns.NoSuchHost || dnsErr.Timeout() {
+				return true, Temperror
+			} else if dnsErr.Err == dns.NoSuchHost {
+				return false, None
+			}
+		}
+
+		return false, None
 	}
 
 	var wg sync.WaitGroup

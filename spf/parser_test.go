@@ -262,23 +262,24 @@ func TestParseA(t *testing.T) {
 		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/32"}, Pass, true},
 		TokenTestCase{&Token{tA, qPlus, "negative.matching.com"}, Pass, false},
 		TokenTestCase{&Token{tA, qPlus, "range.matching.com/16"}, Pass, true},
-		TokenTestCase{&Token{tA, qPlus, "range.matching.com/128"}, Fail, true},
-		TokenTestCase{&Token{tA, qPlus, "idontexist"}, Fail, true},
-		TokenTestCase{&Token{tA, qPlus, "#%$%^"}, Fail, true},
+		TokenTestCase{&Token{tA, qPlus, "range.matching.com/128"}, Permerror, true},
+		TokenTestCase{&Token{tA, qPlus, "idontexist"}, None, false},
+		TokenTestCase{&Token{tA, qPlus, "#%$%^"}, Permerror, true},
 		TokenTestCase{&Token{tA, qPlus, "lb.matching.com"}, Pass, true},
 		TokenTestCase{&Token{tA, qMinus, ""}, Fail, true},
+		TokenTestCase{&Token{tA, qTilde, ""}, Softfail, true},
 
-		// expect (Fail, true) results as a result of syntax errors
-		TokenTestCase{&Token{tA, qPlus, "range.matching.com/16/34"}, Fail, true},
-		TokenTestCase{&Token{tA, qPlus, "range.matching.com/wrongmask"}, Fail, true},
-		TokenTestCase{&Token{tA, qPlus, "range.matching.com/129"}, Fail, true},
-		TokenTestCase{&Token{tA, qPlus, "range.matching.com/-1"}, Fail, true},
+		// expect (Permerror, true) results as a result of syntax errors
+		TokenTestCase{&Token{tA, qPlus, "range.matching.com/16/34"}, Permerror, true},
+		TokenTestCase{&Token{tA, qPlus, "range.matching.com/wrongmask"}, Permerror, true},
+		TokenTestCase{&Token{tA, qPlus, "range.matching.com/129"}, Permerror, true},
+		TokenTestCase{&Token{tA, qPlus, "range.matching.com/-1"}, Permerror, true},
 
-		// expect (Fail, true) due to wrong netmasks.
+		// expect (Permerror, true) due to wrong netmasks.
 		// It's a syntax error to specify a netmask over 32 bits for IPv4 addresses
-		TokenTestCase{&Token{tA, qPlus, "negative.matching.com/128"}, Fail, true},
-		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/128"}, Fail, true},
-		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/128"}, Fail, true},
+		TokenTestCase{&Token{tA, qPlus, "negative.matching.com/128"}, Permerror, true},
+		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/128"}, Permerror, true},
+		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/128"}, Permerror, true},
 	}
 
 	var match bool
@@ -394,9 +395,9 @@ func TestParseMX(t *testing.T) {
 	testcases := []TokenTestCase{
 		TokenTestCase{&Token{tMX, qPlus, "matching.com"}, Pass, true},
 		TokenTestCase{&Token{tMX, qPlus, ""}, Pass, true},
-		TokenTestCase{&Token{tMX, qPlus, "onet.pl"}, Pass, false},
 		TokenTestCase{&Token{tMX, qMinus, ""}, Fail, true},
-		TokenTestCase{&Token{tMX, qPlus, "idontexist"}, Fail, true},
+		TokenTestCase{&Token{tMX, qPlus, "onet.pl"}, Pass, false},
+		TokenTestCase{&Token{tMX, qPlus, "idontexist"}, None, false},
 	}
 
 	var match bool
@@ -426,7 +427,7 @@ func TestParseMXNegativeTests(t *testing.T) {
 		TokenTestCase{&Token{tMX, qPlus, "matching.com"}, Pass, false},
 		TokenTestCase{&Token{tMX, qPlus, ""}, Pass, false},
 		TokenTestCase{&Token{tMX, qPlus, "google.com"}, Pass, false},
-		TokenTestCase{&Token{tMX, qPlus, "idontexist"}, Fail, true},
+		TokenTestCase{&Token{tMX, qPlus, "idontexist"}, None, false},
 		TokenTestCase{&Token{tMX, qMinus, "matching.com"}, Fail, false},
 	}
 
