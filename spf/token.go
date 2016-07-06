@@ -6,28 +6,28 @@ const (
 	tEOF tokenType = iota
 	tErr
 
-	mechanism_beg
+	mechanismBeg
 
 	tVersion // used only for v=spf1 starter
 	tAll     // all
 	tA       // a
-	tIp4     // ip4
-	tIp6     // ip6
+	tIP4     // ip4
+	tIP6     // ip6
 	tMX      // mx
 	tPTR     // ptr
 	tInclude // include
 	tExists  // exists
 
-	mechanism_end
+	mechanismEnd
 
-	modifier_beg
+	modifierBeg
 
 	tRedirect // redirect
 	tExp      // explanation
 
-	modifier_end
+	modifierEnd
 
-	qualifier_beg
+	qualifierBeg
 
 	qEmpty
 	qPlus
@@ -35,7 +35,7 @@ const (
 	qTilde
 	qQuestionMark
 
-	qualifier_end
+	qualifierEnd
 
 	qErr
 )
@@ -56,9 +56,9 @@ func tokenTypeFromString(s string) tokenType {
 	case "a":
 		return tA
 	case "ip4":
-		return tIp4
+		return tIP4
 	case "ip6":
-		return tIp6
+		return tIP6
 	case "mx":
 		return tMX
 	case "ptr":
@@ -79,15 +79,15 @@ func tokenTypeFromString(s string) tokenType {
 func (tok tokenType) isErr() bool { return tok == tErr }
 
 func (tok tokenType) isMechanism() bool {
-	return tok > mechanism_beg && tok < mechanism_end
+	return tok > mechanismBeg && tok < mechanismEnd
 }
 
 func (tok tokenType) isModifier() bool {
-	return tok > modifier_beg && tok < modifier_end
+	return tok > modifierBeg && tok < modifierEnd
 }
 
 func (tok tokenType) isQualifier() bool {
-	return tok > qualifier_beg && tok < qualifier_end
+	return tok > qualifierBeg && tok < qualifierEnd
 }
 
 func checkTokenSyntax(token *Token, delimiter rune) bool {
@@ -119,6 +119,9 @@ func checkTokenSyntax(token *Token, delimiter rune) bool {
 	return true
 }
 
+// Token represents SPF term (modifier or mechanism) like all, include, a, mx,
+// ptr, ip4, ip6, exists, redirect etc.
+// It's a base structure later parsed by Parser.
 type Token struct {
 	Mechanism tokenType // all, include, a, mx, ptr, ip4, ip6, exists etc.
 	Qualifier tokenType // +, -, ~, ?, defaults to +

@@ -7,7 +7,10 @@ import (
 )
 
 const (
-	RCODE3        = "no such host"
+	// RCODE3 respresents string value set to net.DNSError.Err variable
+	// after underlying resolver returned RCODE 3.
+	RCODE3 = "no such host"
+	// SpfPrexif is a constant value for term indicating start of the SPF query
 	spfPrefix     = "v=spf1 "
 	spfPrefixTrim = "v=spf1"
 )

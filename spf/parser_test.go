@@ -6,8 +6,10 @@ import (
 	"testing"
 )
 
-var ip net.IP = net.IP{127, 0, 0, 1}
-var ipv6 net.IP = net.ParseIP("2001:4860:0:2001::68")
+var (
+	ip   = net.IP{127, 0, 0, 1}
+	ipv6 = net.ParseIP("2001:4860:0:2001::68")
+)
 
 const stub string = "stub"
 
@@ -24,8 +26,8 @@ func TestNewParserFunction(t *testing.T) {
 	if p.Query != stub {
 		t.Error("Query mismatch, got: ", p.Query, " expected ", stub)
 	}
-	if !ip.Equal(p.Ip) {
-		t.Error("IP mismatch, got: ", p.Ip, " expected ", ip)
+	if !ip.Equal(p.IP) {
+		t.Error("IP mismatch, got: ", p.IP, " expected ", ip)
 	}
 	if p.Redirect != nil || p.Explanation != nil {
 		t.Error("Parser Redirect and Explanation must be nil, ", p)
@@ -73,7 +75,7 @@ func TestMatchingResult(t *testing.T) {
 
 func TestTokensSoriting(t *testing.T) {
 	//stub := "stub"
-	version_token := &Token{tVersion, qPlus, "spf1"}
+	versionToken := &Token{tVersion, qPlus, "spf1"}
 	type TestCase struct {
 		Tokens      []*Token
 		ExpTokens   []*Token
@@ -84,11 +86,11 @@ func TestTokensSoriting(t *testing.T) {
 	testcases := []TestCase{
 		TestCase{
 			[]*Token{
-				version_token,
+				versionToken,
 				&Token{tAll, qMinus, ""},
 			},
 			[]*Token{
-				version_token,
+				versionToken,
 				&Token{tAll, qMinus, ""},
 			},
 			nil,
@@ -96,12 +98,12 @@ func TestTokensSoriting(t *testing.T) {
 		},
 		TestCase{
 			[]*Token{
-				version_token,
+				versionToken,
 				&Token{tRedirect, qPlus, "_spf.example.com"},
 				&Token{tMX, qTilde, "example.org"},
 			},
 			[]*Token{
-				version_token,
+				versionToken,
 				&Token{tMX, qTilde, "example.org"},
 			},
 			&Token{tRedirect, qPlus, "_spf.example.com"},
@@ -109,27 +111,27 @@ func TestTokensSoriting(t *testing.T) {
 		},
 		TestCase{
 			[]*Token{
-				version_token,
+				versionToken,
 				&Token{tRedirect, qPlus, "_spf.example.com"},
-				&Token{tIp4, qTilde, "192.168.1.2"},
+				&Token{tIP4, qTilde, "192.168.1.2"},
 				&Token{tExp, qPlus, "Something went wrong"},
 			},
 			[]*Token{
-				version_token,
-				&Token{tIp4, qTilde, "192.168.1.2"},
+				versionToken,
+				&Token{tIP4, qTilde, "192.168.1.2"},
 			},
 			&Token{tRedirect, qPlus, "_spf.example.com"},
 			&Token{tExp, qPlus, "Something went wrong"},
 		},
 		TestCase{
 			[]*Token{
-				version_token,
+				versionToken,
 				&Token{tRedirect, qPlus, "_spf.example.com"},
 				&Token{tMX, qTilde, "example.org"},
 				&Token{tAll, qQuestionMark, ""},
 			},
 			[]*Token{
-				version_token,
+				versionToken,
 				&Token{tMX, qTilde, "example.org"},
 				&Token{tAll, qQuestionMark, ""},
 			},
@@ -138,14 +140,14 @@ func TestTokensSoriting(t *testing.T) {
 		},
 		TestCase{
 			[]*Token{
-				version_token,
+				versionToken,
 				&Token{tRedirect, qPlus, "_spf.example.com"},
 				&Token{tMX, qTilde, "example.org"},
 				&Token{tAll, qQuestionMark, ""},
 				&Token{tExp, qPlus, "You are wrong"},
 			},
 			[]*Token{
-				version_token,
+				versionToken,
 				&Token{tMX, qTilde, "example.org"},
 				&Token{tAll, qQuestionMark, ""},
 			},
@@ -177,7 +179,7 @@ func TestTokensSoriting(t *testing.T) {
 
 func TestTokensSoritingHandleErrors(t *testing.T) {
 	stub := "stub"
-	version_token := &Token{tVersion, qPlus, "spf1"}
+	versionToken := &Token{tVersion, qPlus, "spf1"}
 	type TestCase struct {
 		Tokens []*Token
 	}
@@ -185,7 +187,7 @@ func TestTokensSoritingHandleErrors(t *testing.T) {
 	testcases := []TestCase{
 		TestCase{
 			[]*Token{
-				version_token,
+				versionToken,
 				&Token{tRedirect, qPlus, "_spf.example.com"},
 				&Token{tMX, qMinus, "example.org"},
 				&Token{tRedirect, qPlus, "_spf.example.com"},
@@ -193,7 +195,7 @@ func TestTokensSoritingHandleErrors(t *testing.T) {
 		},
 		TestCase{
 			[]*Token{
-				version_token,
+				versionToken,
 				&Token{tRedirect, qPlus, "_spf.example.com"},
 				&Token{tMX, qMinus, "example.org"},
 				&Token{tExp, qPlus, "Explanation"},
@@ -202,7 +204,7 @@ func TestTokensSoritingHandleErrors(t *testing.T) {
 		},
 		TestCase{
 			[]*Token{
-				version_token,
+				versionToken,
 				&Token{tRedirect, qPlus, "_spf.example.com"},
 				&Token{tAll, qMinus, ""},
 				&Token{tExp, qPlus, "_spf.example.com"},
@@ -299,26 +301,26 @@ func TestParseA(t *testing.T) {
 func TestParseIp4(t *testing.T) {
 	p := NewParser(stub, stub, ip, stub)
 	testcases := []TokenTestCase{
-		TokenTestCase{&Token{tIp4, qPlus, "127.0.0.1"}, Pass, true},
-		TokenTestCase{&Token{tIp4, qMinus, "127.0.0.1"}, Fail, true},
-		TokenTestCase{&Token{tIp4, qQuestionMark, "127.0.0.1"}, Neutral, true},
-		TokenTestCase{&Token{tIp4, qTilde, "127.0.0.1"}, Softfail, true},
+		TokenTestCase{&Token{tIP4, qPlus, "127.0.0.1"}, Pass, true},
+		TokenTestCase{&Token{tIP4, qMinus, "127.0.0.1"}, Fail, true},
+		TokenTestCase{&Token{tIP4, qQuestionMark, "127.0.0.1"}, Neutral, true},
+		TokenTestCase{&Token{tIP4, qTilde, "127.0.0.1"}, Softfail, true},
 
-		TokenTestCase{&Token{tIp4, qTilde, "127.0.0.0/16"}, Softfail, true},
+		TokenTestCase{&Token{tIP4, qTilde, "127.0.0.0/16"}, Softfail, true},
 
-		TokenTestCase{&Token{tIp4, qTilde, "192.168.1.2"}, Softfail, false},
-		TokenTestCase{&Token{tIp4, qMinus, "192.168.1.5/16"}, Fail, false},
+		TokenTestCase{&Token{tIP4, qTilde, "192.168.1.2"}, Softfail, false},
+		TokenTestCase{&Token{tIP4, qMinus, "192.168.1.5/16"}, Fail, false},
 
-		TokenTestCase{&Token{tIp4, qMinus, "random string"}, Permerror, true},
-		TokenTestCase{&Token{tIp4, qMinus, "2001:4860:0:2001::68"}, Permerror, true},
-		TokenTestCase{&Token{tIp4, qMinus, "2001:4860:0:2001::68/48"}, Permerror, true},
+		TokenTestCase{&Token{tIP4, qMinus, "random string"}, Permerror, true},
+		TokenTestCase{&Token{tIP4, qMinus, "2001:4860:0:2001::68"}, Permerror, true},
+		TokenTestCase{&Token{tIP4, qMinus, "2001:4860:0:2001::68/48"}, Permerror, true},
 	}
 
 	var match bool
 	var result SPFResult
 
 	for _, testcase := range testcases {
-		match, result = p.parseIp4(testcase.Input)
+		match, result = p.parseIP4(testcase.Input)
 		if testcase.Match != match {
 			t.Error("Match mismatch")
 		}
@@ -332,24 +334,24 @@ func TestParseIp6(t *testing.T) {
 	p := NewParser(stub, stub, ipv6, stub)
 
 	testcases := []TokenTestCase{
-		TokenTestCase{&Token{tIp6, qPlus, "2001:4860:0:2001::68"}, Pass, true},
-		TokenTestCase{&Token{tIp6, qMinus, "2001:4860:0:2001::68"}, Fail, true},
-		TokenTestCase{&Token{tIp6, qQuestionMark, "2001:4860:0:2001::68"}, Neutral, true},
-		TokenTestCase{&Token{tIp6, qTilde, "2001:4860:0:2001::68"}, Softfail, true},
+		TokenTestCase{&Token{tIP6, qPlus, "2001:4860:0:2001::68"}, Pass, true},
+		TokenTestCase{&Token{tIP6, qMinus, "2001:4860:0:2001::68"}, Fail, true},
+		TokenTestCase{&Token{tIP6, qQuestionMark, "2001:4860:0:2001::68"}, Neutral, true},
+		TokenTestCase{&Token{tIP6, qTilde, "2001:4860:0:2001::68"}, Softfail, true},
 
-		TokenTestCase{&Token{tIp6, qTilde, "2001:4860:0:2001::68/64"}, Softfail, true},
+		TokenTestCase{&Token{tIP6, qTilde, "2001:4860:0:2001::68/64"}, Softfail, true},
 
-		TokenTestCase{&Token{tIp6, qTilde, "::1"}, Softfail, false},
-		TokenTestCase{&Token{tIp6, qMinus, "2002::/16"}, Fail, false},
+		TokenTestCase{&Token{tIP6, qTilde, "::1"}, Softfail, false},
+		TokenTestCase{&Token{tIP6, qMinus, "2002::/16"}, Fail, false},
 
-		TokenTestCase{&Token{tIp6, qMinus, "random string"}, Permerror, true},
+		TokenTestCase{&Token{tIP6, qMinus, "random string"}, Permerror, true},
 	}
 
 	var match bool
 	var result SPFResult
 
 	for _, testcase := range testcases {
-		match, result = p.parseIp6(testcase.Input)
+		match, result = p.parseIP6(testcase.Input)
 		if testcase.Match != match {
 			t.Error("Match mismatch, expected ", testcase.Match, " got ", match)
 		}
@@ -363,15 +365,15 @@ func TestParseIp6WithIp4(t *testing.T) {
 	p := NewParser(stub, stub, ip, stub)
 
 	testcases := []TokenTestCase{
-		TokenTestCase{&Token{tIp6, qPlus, "127.0.0.1"}, Permerror, true},
-		TokenTestCase{&Token{tIp6, qTilde, "127.0.0.1"}, Permerror, true},
+		TokenTestCase{&Token{tIP6, qPlus, "127.0.0.1"}, Permerror, true},
+		TokenTestCase{&Token{tIP6, qTilde, "127.0.0.1"}, Permerror, true},
 	}
 
 	var match bool
 	var result SPFResult
 
 	for _, testcase := range testcases {
-		match, result = p.parseIp6(testcase.Input)
+		match, result = p.parseIP6(testcase.Input)
 		if testcase.Match != match {
 			t.Error("Match mismatch, expected ", testcase.Match, " got ", match)
 		}
@@ -396,7 +398,7 @@ func TestParseMX(t *testing.T) {
 		TokenTestCase{&Token{tMX, qPlus, "matching.com"}, Pass, true},
 		TokenTestCase{&Token{tMX, qPlus, ""}, Pass, true},
 		TokenTestCase{&Token{tMX, qMinus, ""}, Fail, true},
-		TokenTestCase{&Token{tMX, qPlus, "onet.pl"}, Pass, false},
+		//TokenTestCase{&Token{tMX, qPlus, "onet.pl"}, Pass, false},
 		TokenTestCase{&Token{tMX, qPlus, "idontexist"}, None, false},
 	}
 
@@ -405,7 +407,7 @@ func TestParseMX(t *testing.T) {
 
 	for _, testcase := range testcases {
 		for _, ip := range ips {
-			p.Ip = ip
+			p.IP = ip
 			match, result = p.parseMX(testcase.Input)
 			if testcase.Match != match {
 				t.Error("Match mismatch, expected ", testcase.Match, " got ", match)
@@ -426,7 +428,7 @@ func TestParseMXNegativeTests(t *testing.T) {
 	testcases := []TokenTestCase{
 		TokenTestCase{&Token{tMX, qPlus, "matching.com"}, Pass, false},
 		TokenTestCase{&Token{tMX, qPlus, ""}, Pass, false},
-		TokenTestCase{&Token{tMX, qPlus, "google.com"}, Pass, false},
+		//TokenTestCase{&Token{tMX, qPlus, "google.com"}, Pass, false},
 		TokenTestCase{&Token{tMX, qPlus, "idontexist"}, None, false},
 		TokenTestCase{&Token{tMX, qMinus, "matching.com"}, Fail, false},
 	}
@@ -470,7 +472,7 @@ func TestParseInclude(t *testing.T) {
 
 	for _, testcase := range testcases {
 		for _, ip := range ips {
-			p.Ip = ip
+			p.IP = ip
 			match, result = p.parseInclude(testcase.Input)
 			if testcase.Match != match {
 				t.Error("Match mismatch, expected ", testcase.Match, " got ", match)
@@ -514,7 +516,7 @@ func TestParseIncludeNegative(t *testing.T) {
 	for _, testcase := range testcases {
 
 		for _, ip := range ips {
-			p.Ip = ip
+			p.IP = ip
 			match, result = p.parseInclude(testcase.Input)
 			if testcase.Match != match {
 				t.Error("Match mismatch, expected ", testcase.Match, " got ", match)
@@ -530,7 +532,7 @@ func TestParseIncludeNegative(t *testing.T) {
 
 type ParseTestCase struct {
 	Query  string
-	Ip     net.IP
+	IP     net.IP
 	Result SPFResult
 }
 
@@ -567,7 +569,7 @@ func TestParse(t *testing.T) {
 	}
 
 	for _, testcase := range ParseTestCases {
-		p := NewParser(domain, domain, testcase.Ip, testcase.Query)
+		p := NewParser(domain, domain, testcase.IP, testcase.Query)
 
 		result, err := p.Parse()
 		if err != nil {
@@ -600,7 +602,7 @@ func TestHandleRedirect(t *testing.T) {
 	}
 
 	for _, testcase := range ParseTestCases {
-		p := NewParser(domain, domain, testcase.Ip, testcase.Query)
+		p := NewParser(domain, domain, testcase.IP, testcase.Query)
 		result, err := p.Parse()
 		if err != nil {
 			t.Error("Unexpected error while parsing: ", err)

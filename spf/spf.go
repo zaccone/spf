@@ -7,8 +7,12 @@ import (
 	"github.com/zaccone/goSPF/dns"
 )
 
+// SPFResult represents SPF defined result - None, Neutral, Pass, Pass, Fail,
+// Softfail, Temperror or Permerror
 type SPFResult int
 
+// SPFResult available values. Illegal and SPFEnd are used as a guards values
+// and should be used for validation checking.
 const (
 	Illegal SPFResult = iota
 
@@ -20,7 +24,6 @@ const (
 	Temperror
 	Permerror
 
-	// end of SPF
 	SPFEnd
 )
 
@@ -107,7 +110,7 @@ func checkHost(ip net.IP, domain, sender string) (SPFResult, error) {
 	spfQuery := strings.Join(query, " ")
 	parser := NewParser(sender, domain, ip, spfQuery)
 
-	var result SPFResult = Neutral
+	var result = Neutral
 	var err error
 
 	if result, err = parser.Parse(); err != nil {

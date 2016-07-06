@@ -47,8 +47,8 @@ func TestLexerScanIdent(t *testing.T) {
 		TestPair{"a", &Token{tA, qPlus, ""}},
 		TestPair{"a:127.0.0.1 ", &Token{tA, qPlus, "127.0.0.1"}},
 		TestPair{"?a:127.0.0.1   ", &Token{tA, qQuestionMark, "127.0.0.1"}},
-		TestPair{"?ip6:2001::43   ", &Token{tIp6, qQuestionMark, "2001::43"}},
-		TestPair{"+ip6:::1", &Token{tIp6, qPlus, "::1"}},
+		TestPair{"?ip6:2001::43   ", &Token{tIP6, qQuestionMark, "2001::43"}},
+		TestPair{"+ip6:::1", &Token{tIP6, qPlus, "::1"}},
 		TestPair{"^ip6:2001::4", &Token{tErr, qErr, ""}},
 		TestPair{"-all", &Token{tAll, qMinus, ""}},
 		TestPair{"-all ", &Token{tAll, qMinus, ""}},
@@ -80,50 +80,50 @@ func TestLexFunc(t *testing.T) {
 		Record string
 		Tokens []*Token
 	}
-	version_token := &Token{tVersion, qPlus, "spf1"}
+	versionToken := &Token{tVersion, qPlus, "spf1"}
 
 	testpairs := []TestPair{
 		TestPair{"v=spf1 a:127.0.0.1",
 			[]*Token{
-				version_token,
+				versionToken,
 				&Token{tA, qPlus, "127.0.0.1"}}},
 		TestPair{"v=spf1 ip4:127.0.0.1 -all",
 			[]*Token{
-				version_token,
-				&Token{tIp4, qPlus, "127.0.0.1"},
+				versionToken,
+				&Token{tIP4, qPlus, "127.0.0.1"},
 				&Token{tAll, qMinus, ""}}},
 		TestPair{"v=spf1  -ptr:arpa.1.0.0.127   -all  ",
 			[]*Token{
-				version_token,
+				versionToken,
 				&Token{tPTR, qMinus, "arpa.1.0.0.127"},
 				&Token{tAll, qMinus, ""}}},
 		TestPair{"v=spf1  ~ip6:2001:db8::cd30 ?all  ",
 			[]*Token{
-				version_token,
-				&Token{tIp6, qTilde, "2001:db8::cd30"},
+				versionToken,
+				&Token{tIP6, qTilde, "2001:db8::cd30"},
 				&Token{tAll, qQuestionMark, ""}}},
 		TestPair{"v=spf1  include:example.org -all  ",
 			[]*Token{
-				version_token,
+				versionToken,
 				&Token{tInclude, qPlus, "example.org"},
 				&Token{tAll, qMinus, ""}}},
 		TestPair{"v=spf1  include=example.org -all  ",
 			[]*Token{
-				version_token,
+				versionToken,
 				&Token{tErr, qErr, ""},
 				&Token{tAll, qMinus, ""}}},
 		TestPair{"v=spf1  exists:%{ir}.%{l1r+-}._spf.%{d} +all",
 			[]*Token{
-				version_token,
+				versionToken,
 				&Token{tExists, qPlus, "%{ir}.%{l1r+-}._spf.%{d}"},
 				&Token{tAll, qPlus, ""}}},
 		TestPair{"v=spf1  redirect=_spf.example.org",
 			[]*Token{
-				version_token,
+				versionToken,
 				&Token{tRedirect, qPlus, "_spf.example.org"}}},
 		TestPair{"v=spf1 mx -all exp=explain._spf.%{d}",
 			[]*Token{
-				version_token,
+				versionToken,
 				&Token{tMX, qPlus, ""},
 				&Token{tAll, qMinus, ""},
 				&Token{tExp, qPlus, "explain._spf.%{d}"}}},

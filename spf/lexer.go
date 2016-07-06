@@ -5,6 +5,7 @@ import (
 	"unicode/utf8"
 )
 
+// Lexer represents lexing structure
 type Lexer struct {
 	start  int
 	pos    int
