@@ -244,14 +244,22 @@ func (p *Parser) parseMX(t *Token) (bool, SPFResult) {
 	result, _ := matchingResult(t.Qualifier)
 
 	domain := p.setDomain(t)
-	if !dns.IsDomainName(domain) {
+
+	var host string
+	var v4Network *net.IPMask
+	var v6Network *net.IPMask
+	var ok bool
+	ok, host, v4Network, v6Network = splitToHostNetwork(domain)
+
+	// return Permerror if there was syntax error
+	if !ok {
 		return true, Permerror
 	}
 
 	var err error
 	var mxs []*net.MX
 
-	if mxs, err = net.LookupMX(domain); err != nil {
+	if mxs, err = net.LookupMX(host); err != nil {
 
 		if dnsErr, ok := err.(*net.DNSError); ok {
 			if dnsErr.Err != dns.RCODE3 || dnsErr.Timeout() {
@@ -271,19 +279,35 @@ func (p *Parser) parseMX(t *Token) (bool, SPFResult) {
 	wg.Add(len(mxs))
 
 	for _, mmx := range mxs {
-		go func(mx *net.MX) {
+		go func(mx *net.MX, v4Network, v6Network *net.IPMask) {
 			defer wg.Done()
+
+			v4Ipnet := net.IPNet{}
+			v4Ipnet.Mask = *v4Network
+
+			v6Ipnet := net.IPNet{}
+			v6Ipnet.Mask = *v6Network
 
 			if ips, err := net.LookupIP(mx.Host); err != nil {
 				//TODO(marek): Log DNS lookup error
 				return
 			} else {
+				contains := false
 				for _, ip := range ips {
-					pipe <- p.IP.Equal(ip)
+					// handle IPv6 address
+					if ip.To4() == nil {
+						v6Ipnet.IP = ip
+						contains = v6Ipnet.Contains(p.IP)
+						// handle IPv4 address
+					} else {
+						v4Ipnet.IP = ip
+						contains = v4Ipnet.Contains(p.IP)
+					}
+					pipe <- contains
 
 				}
 			}
-		}(mmx)
+		}(mmx, v4Network, v6Network)
 	}
 
 	go func() {

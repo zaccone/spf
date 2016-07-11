@@ -426,6 +426,7 @@ func TestParseMX(t *testing.T) {
 		net.IP{172, 18, 0, 2},
 		net.IP{172, 20, 20, 20},
 		net.IP{172, 100, 0, 1},
+		net.ParseIP("2001:4860:1:2001::80"),
 	}
 
 	domain := "matching.com"
@@ -433,10 +434,15 @@ func TestParseMX(t *testing.T) {
 
 	testcases := []TokenTestCase{
 		TokenTestCase{&Token{tMX, qPlus, "matching.com"}, Pass, true},
+		TokenTestCase{&Token{tMX, qPlus, "matching.com/24"}, Pass, true},
+		TokenTestCase{&Token{tMX, qPlus, "matching.com/24/64"}, Pass, true},
 		TokenTestCase{&Token{tMX, qPlus, ""}, Pass, true},
 		TokenTestCase{&Token{tMX, qMinus, ""}, Fail, true},
-		//TokenTestCase{&Token{tMX, qPlus, "onet.pl"}, Pass, false},
 		TokenTestCase{&Token{tMX, qPlus, "idontexist"}, None, false},
+
+		TokenTestCase{&Token{tMX, qPlus, "matching.net"}, Pass, false},
+		TokenTestCase{&Token{tMX, qPlus, "matching.net/24"}, Pass, false},
+		TokenTestCase{&Token{tMX, qPlus, "matching.net/24/64"}, Pass, false},
 	}
 
 	var match bool
