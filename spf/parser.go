@@ -194,16 +194,11 @@ func (p *Parser) parseA(t *Token) (bool, SPFResult) {
 	result, _ := matchingResult(t.Qualifier)
 	domain := p.setDomain(t)
 
-	var isIPv4 bool
-	if ok := p.IP.To4(); ok != nil {
-		isIPv4 = true
-	}
-
 	var host string
 	var v4Network *net.IPMask
 	var v6Network *net.IPMask
 	var ok bool
-	ok, host, v4Network, v6Network = splitToHostNetwork(domain, isIPv4)
+	ok, host, v4Network, v6Network = splitToHostNetwork(domain)
 
 	// return Permerror if there was syntax error
 	if !ok {
@@ -358,7 +353,7 @@ func (p *Parser) handleRedirect(oldResult SPFResult) SPFResult {
 	return result
 }
 
-func splitToHostNetwork(domain string, isIPv4 bool) (bool, string, *net.IPMask, *net.IPMask) {
+func splitToHostNetwork(domain string) (bool, string, *net.IPMask, *net.IPMask) {
 	var host string
 
 	const v4Len = 32
