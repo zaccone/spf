@@ -191,46 +191,6 @@ func (p *Parser) parseIP6(t *Token) (bool, SPFResult) {
 
 func (p *Parser) parseA(t *Token) (bool, SPFResult) {
 
-	SplitToHostNetwork := func(domain string, isIPv4 bool) (bool, string, *net.IPMask) {
-		var host string
-
-		addrLen := 128
-		ns := "128"
-
-		if isIPv4 {
-			addrLen = 32
-			ns = "32"
-		}
-
-		r := strings.SplitN(domain, "/", 2)
-
-		if len(r) == 2 {
-			host, ns = r[0], r[1]
-		} else {
-			host = r[0]
-		}
-
-		if !dns.IsDomainName(host) {
-			return false, host, nil
-		}
-
-		// if the network mask is invalid it means data provided in the SPF
-		//term is invalid and there is syntax error.
-		if n, err := strconv.Atoi(ns); err != nil {
-			return false, host, &net.IPMask{}
-		} else {
-
-			// network mask must be within [0, 32/128]
-			if n < 0 || n > addrLen {
-				return false, host, &net.IPMask{}
-			}
-
-			// looks like we are all OK
-			network := net.CIDRMask(n, addrLen)
-			return true, host, &network
-		}
-	}
-
 	result, _ := matchingResult(t.Qualifier)
 	domain := p.setDomain(t)
 
@@ -240,9 +200,10 @@ func (p *Parser) parseA(t *Token) (bool, SPFResult) {
 	}
 
 	var host string
-	var network *net.IPMask
+	var v4Network *net.IPMask
+	var v6Network *net.IPMask
 	var ok bool
-	ok, host, network = SplitToHostNetwork(domain, isIPv4)
+	ok, host, v4Network, v6Network = splitToHostNetwork(domain, isIPv4)
 
 	// return Permerror if there was syntax error
 	if !ok {
@@ -260,16 +221,24 @@ func (p *Parser) parseA(t *Token) (bool, SPFResult) {
 		//TODO(marek): Apparently non DNS error, what shall we do then?
 		return false, None
 	} else {
-		ipnet := net.IPNet{}
-		ipnet.Mask = *network
+		v4Ipnet := net.IPNet{}
+		v4Ipnet.Mask = *v4Network
+
+		v6Ipnet := net.IPNet{}
+		v6Ipnet.Mask = *v6Network
+
 		for _, address := range ips {
-			// skip if Parser.IP is IPv4 and tested isn't
-			if isIPv4 && address.To4() == nil {
-				continue
-			}
-			ipnet.IP = address
-			if ipnet.Contains(p.IP) {
-				return true, result
+			// check if address is IPv6
+			if address.To4() == nil {
+				v6Ipnet.IP = address
+				if v6Ipnet.Contains(p.IP) {
+					return true, result
+				}
+			} else { // otherwise handle IPv4 case
+				v4Ipnet.IP = address
+				if v4Ipnet.Contains(p.IP) {
+					return true, result
+				}
 			}
 		}
 	}
@@ -387,4 +356,63 @@ func (p *Parser) handleRedirect(oldResult SPFResult) SPFResult {
 	}
 
 	return result
+}
+
+func splitToHostNetwork(domain string, isIPv4 bool) (bool, string, *net.IPMask, *net.IPMask) {
+	var host string
+
+	const v4Len = 32
+	n4s := "32"
+
+	const v6Len = 128
+	n6s := "128"
+
+	line := strings.SplitN(domain, "/", 3)
+	if len(line) == 3 {
+		host, n4s, n6s = line[0], line[1], line[2]
+	} else if len(line) == 2 {
+		host, n4s = line[0], line[1]
+	} else {
+		host = line[0]
+	}
+
+	if !dns.IsDomainName(host) {
+		return false, host, nil, nil
+	}
+
+	if isEmpty(&n4s) {
+		// empty values default to maximum netmask
+		n4s = "32"
+	}
+
+	if isEmpty(&n6s) {
+		// empty values default to maximum netmask
+		n6s = "128"
+	}
+
+	var err error
+	var n4 int
+	var n6 int
+
+	var v4Network net.IPMask
+	var v6Network net.IPMask
+
+	if n4, err = strconv.Atoi(n4s); err != nil {
+		return false, host, nil, nil
+	} else if n4 < 0 || n4 > v4Len {
+		return false, host, nil, nil
+	} else {
+		v4Network = net.CIDRMask(n4, v4Len)
+	}
+
+	if n6, err = strconv.Atoi(n6s); err != nil {
+		return false, host, nil, nil
+	} else if n6 < 0 || n6 > v6Len {
+		return false, host, nil, nil
+	} else {
+		v6Network = net.CIDRMask(n6, v6Len)
+	}
+
+	return true, host, &v4Network, &v6Network
+
 }

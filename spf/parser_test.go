@@ -272,7 +272,6 @@ func TestParseA(t *testing.T) {
 		TokenTestCase{&Token{tA, qTilde, ""}, Softfail, true},
 
 		// expect (Permerror, true) results as a result of syntax errors
-		TokenTestCase{&Token{tA, qPlus, "range.matching.com/16/34"}, Permerror, true},
 		TokenTestCase{&Token{tA, qPlus, "range.matching.com/wrongmask"}, Permerror, true},
 		TokenTestCase{&Token{tA, qPlus, "range.matching.com/129"}, Permerror, true},
 		TokenTestCase{&Token{tA, qPlus, "range.matching.com/-1"}, Permerror, true},
@@ -282,6 +281,44 @@ func TestParseA(t *testing.T) {
 		TokenTestCase{&Token{tA, qPlus, "negative.matching.com/128"}, Permerror, true},
 		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/128"}, Permerror, true},
 		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/128"}, Permerror, true},
+
+		// test dual-cidr syntax
+		TokenTestCase{&Token{tA, qPlus, "positive.matching.com//128"}, Pass, true},
+		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/32/"}, Pass, true},
+		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/0/0"}, Pass, true},
+		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/33/100"}, Permerror, true},
+		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/24/129"}, Permerror, true},
+		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/128/32"}, Permerror, true},
+	}
+
+	var match bool
+	var result SPFResult
+
+	for _, testcase := range testcases {
+		match, result = p.parseA(testcase.Input)
+		if testcase.Match != match {
+			t.Error("Match mismatch")
+		}
+		if testcase.Result != result {
+			t.Error("Result mismatch")
+		}
+	}
+}
+
+func TestParseAIpv6(t *testing.T) {
+
+	domain := "matching.com"
+	p := NewParser(domain, domain, ipv6, stub)
+	testcases := []TokenTestCase{
+		TokenTestCase{&Token{tA, qPlus, "positive.matching.com"}, Pass, true},
+		TokenTestCase{&Token{tA, qPlus, "positive.matching.com//128"}, Pass, true},
+		TokenTestCase{&Token{tA, qPlus, "positive.matching.com//64"}, Pass, true},
+
+		TokenTestCase{&Token{tA, qPlus, "negative.matching.com"}, Pass, false},
+		TokenTestCase{&Token{tA, qPlus, "negative.matching.com//64"}, Pass, false},
+		TokenTestCase{&Token{tA, qPlus, "positive.matching.com// "}, Permerror, true},
+		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/ "}, Permerror, true},
+		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/ / "}, Permerror, true},
 	}
 
 	var match bool
