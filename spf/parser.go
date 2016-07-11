@@ -292,8 +292,8 @@ func (p *Parser) parseMX(t *Token) (bool, SPFResult) {
 				//TODO(marek): Log DNS lookup error
 				return
 			} else {
-				contains := false
 				for _, ip := range ips {
+					contains := false
 					// handle IPv6 address
 					if ip.To4() == nil {
 						v6Ipnet.IP = ip
