@@ -439,7 +439,8 @@ func TestParseMX(t *testing.T) {
 		TokenTestCase{&Token{tMX, qPlus, ""}, Pass, true},
 		TokenTestCase{&Token{tMX, qMinus, ""}, Fail, true},
 		TokenTestCase{&Token{tMX, qPlus, "idontexist"}, None, false},
-
+		// Mind that the domain is matching.NET and we expect Parser
+		// to not match results.
 		TokenTestCase{&Token{tMX, qPlus, "matching.net"}, Pass, false},
 		TokenTestCase{&Token{tMX, qPlus, "matching.net/24"}, Pass, false},
 		TokenTestCase{&Token{tMX, qPlus, "matching.net/24/64"}, Pass, false},
