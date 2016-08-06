@@ -133,3 +133,6 @@ func isDelimiter(ch rune) bool { return ch == ':' || ch == '=' }
 
 // isQualifier returns true if rune is a SPF delimiter (+,-,!,?)
 func isQualifier(ch rune) bool { return ch == '+' || ch == '-' || ch == '~' || ch == '?' }
+
+// isDigit returns true if rune is a numer (between '0' and '9'), false otherwise
+func isDigit(ch rune) bool { return ch >= '0' && ch <= '9' }
