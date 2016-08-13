@@ -80,6 +80,8 @@ func (p *Parser) Parse() (SPFResult, error) {
 			matches, result = p.parseMX(token)
 		case tInclude:
 			matches, result = p.parseInclude(token)
+		case tExists:
+			matches, result = p.parseExists(token)
 		}
 
 		if matches {
@@ -352,6 +354,31 @@ func (p *Parser) parseInclude(t *Token) (bool, SPFResult) {
 
 	return false, None
 
+}
+
+func (p *Parser) parseExists(t *Token) (bool, SPFResult) {
+	result, _ := matchingResult(t.Qualifier)
+	resolvedDomain, err := ParseMacro(p, t)
+	if err != nil || isEmpty(&resolvedDomain) {
+		return true, Permerror
+	}
+
+	ips, err := net.LookupIP(resolvedDomain)
+	if err != nil {
+		if dnsErr, ok := err.(*net.DNSError); ok {
+			if dnsErr.Err == dns.RCODE3 {
+				return false, result
+			}
+			return true, Temperror
+		}
+		//TODO(marek): Apparently non DNS error, what shall we do then?
+		return false, None
+	}
+
+	if len(ips) > 0 {
+		return true, result
+	}
+	return false, result
 }
 
 func (p *Parser) handleRedirect(oldResult SPFResult) SPFResult {

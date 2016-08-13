@@ -573,6 +573,33 @@ func TestParseIncludeNegative(t *testing.T) {
 
 }
 
+// TestParseExists executes tests for exists term.
+func TestParseExists(t *testing.T) {
+
+	domain := "matching.com"
+	p := NewParser(domain, domain, ip, stub)
+	testcases := []TokenTestCase{
+		TokenTestCase{&Token{tExists, qPlus, "positive.matching.net"}, Pass, true},
+		TokenTestCase{&Token{tExists, qMinus, "positive.matching.net"}, Fail, true},
+		TokenTestCase{&Token{tExists, qMinus, "idontexist.matching.net"}, Fail, false},
+		TokenTestCase{&Token{tExists, qMinus, "idontexist.%{d}"}, Fail, false},
+		TokenTestCase{&Token{tExists, qTilde, "positive.%{d}"}, Softfail, true},
+		TokenTestCase{&Token{tExists, qTilde, "positive.%{d}"}, Softfail, true},
+		TokenTestCase{&Token{tExists, qTilde, ""}, Permerror, true},
+		TokenTestCase{&Token{tExists, qTilde, "invalidsyntax%{}"}, Permerror, true},
+	}
+
+	for _, testcase := range testcases {
+		match, result := p.parseExists(testcase.Input)
+		if testcase.Match != match {
+			t.Error("Match mismatch, expected ", testcase.Match, " got ", match)
+		}
+		if testcase.Result != result {
+			t.Error("Result mismatch, expected ", testcase.Result, " got ", result)
+		}
+	}
+}
+
 type ParseTestCase struct {
 	Query  string
 	IP     net.IP
@@ -609,6 +636,13 @@ func TestParse(t *testing.T) {
 		// however parent Parse() exection path marked the result as not
 		// matching and proceeded to next term
 		ParseTestCase{"v=spf1 +include:yyz -all", net.IP{172, 100, 100, 1}, Fail},
+		ParseTestCase{"v=spf1 ?exists:lb.%{d} -all", ip, Neutral},
+		// domain is set to matching.com, macro >>d1r<< will reverse domain to
+		// >>com.matching<< and trim to first part counting from right,
+		// effectively returning >>matching<<, which we later concatenate with
+		// the >>.com<< suffix. This test should give same matching result as
+		// the test above, as effectively the host to be queried is identical.
+		ParseTestCase{"v=spf1 ?exists:lb.%{d1r}.com -all", ip, Neutral},
 	}
 
 	for _, testcase := range ParseTestCases {
