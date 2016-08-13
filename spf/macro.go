@@ -112,8 +112,7 @@ func scanPercent(m *macro, p *Parser) (stateFn, error) {
 	case '-':
 		m.output = append(m.output, "%20")
 	default:
-		errMsg := fmt.Sprintf("Forbidden character (%v) after '%'", r)
-		return nil, errors.New(errMsg)
+		return nil, fmt.Errorf("Forbidden character (%v) after '%'", r)
 	}
 
 	m.moveon()
@@ -131,7 +130,7 @@ func scanMacro(m *macro, p *Parser) (stateFn, error) {
 
 	r, eof := m.next()
 	if eof {
-		return nil, errors.New("macro ended too early.")
+		return nil, errors.New("Macro ended too early")
 	}
 	var curItem item
 
@@ -283,9 +282,9 @@ func parseDelimiter(m *macro, curItem *item) (string, error) {
 	if r != '}' {
 		// syntax error
 		return "", fmt.Errorf("unexpcted character '%v'\n", r)
-	} else {
-		m.back()
 	}
+
+	m.back()
 
 	// handle curItem
 	var parts []string
