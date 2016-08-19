@@ -648,7 +648,7 @@ func TestParse(t *testing.T) {
 	for _, testcase := range ParseTestCases {
 		p := NewParser(domain, domain, testcase.IP, testcase.Query)
 
-		result, err := p.Parse()
+		result, _, err := p.Parse()
 		if err != nil {
 			t.Error("Unexpected error while parsing: ", err)
 		} else if result != testcase.Result {
@@ -680,7 +680,7 @@ func TestHandleRedirect(t *testing.T) {
 
 	for _, testcase := range ParseTestCases {
 		p := NewParser(domain, domain, testcase.IP, testcase.Query)
-		result, err := p.Parse()
+		result, _, err := p.Parse()
 		if err != nil {
 			t.Error("Unexpected error while parsing: ", err)
 		} else if result != testcase.Result {
