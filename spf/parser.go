@@ -55,12 +55,12 @@ func NewParser(sender, domain string, ip net.IP, query string) *Parser {
 // there is any syntax error) and starts evaluating
 // each token (from left to right). Once a token matches Parse stops and
 // returns matched result.
-func (p *Parser) Parse() (SPFResult, error) {
+func (p *Parser) Parse() (SPFResult, string, error) {
 	var result = None
 	tokens := Lex(p.Query)
 
 	if err := p.sortTokens(tokens); err != nil {
-		return Permerror, err
+		return Permerror, "", err
 	}
 	var matches bool
 	for _, token := range p.Mechanisms {
@@ -85,14 +85,17 @@ func (p *Parser) Parse() (SPFResult, error) {
 		}
 
 		if matches {
-			return result, nil
+			if result == Fail && p.Explanation != nil {
+				return result, p.handleExplanation(), nil
+			}
+			return result, "", nil
 		}
 
 	}
 
 	result = p.handleRedirect(result)
 
-	return result, nil
+	return result, "", nil
 }
 
 func (p *Parser) sortTokens(tokens []*Token) error {
@@ -331,7 +334,7 @@ func (p *Parser) parseInclude(t *Token) (bool, SPFResult) {
 		return true, Permerror
 	}
 	matchesInclude := false
-	if includeResult, err := checkHost(p.IP, domain, p.Sender); err != nil {
+	if includeResult, _, err := checkHost(p.IP, domain, p.Sender); err != nil {
 		return false, None
 	} else { // it's all fine
 		switch includeResult {
@@ -390,7 +393,7 @@ func (p *Parser) handleRedirect(oldResult SPFResult) SPFResult {
 
 	redirectDomain := p.Redirect.Value
 
-	if result, err = checkHost(p.IP, redirectDomain, p.Sender); err != nil {
+	if result, _, err = checkHost(p.IP, redirectDomain, p.Sender); err != nil {
 		//TODO(zaccone): confirm result value
 		result = Permerror
 	} else if result == None || result == Permerror {
@@ -402,6 +405,23 @@ func (p *Parser) handleRedirect(oldResult SPFResult) SPFResult {
 	}
 
 	return result
+}
+
+func (p *Parser) handleExplanation() string {
+	resolvedDomain, err := ParseMacro(p, p.Explanation)
+	if err != nil || isEmpty(&resolvedDomain) {
+		// TODO(zaccone): Should we return some internal error
+		return ""
+	}
+
+	response, err := net.LookupTXT(resolvedDomain)
+	if err != nil {
+		return ""
+	}
+
+	// RFC 7208, section 6.2 specifies that result string should be
+	// concatenated with no spaces.
+	return strings.Join(response, "")
 }
 
 func splitToHostNetwork(domain string) (bool, string, *net.IPMask, *net.IPMask) {

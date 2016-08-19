@@ -56,7 +56,7 @@ func (spf SPFResult) String() string {
 // All the parameters should be parsed and dereferenced from real email fields.
 // This means domain should already be extracted from MAIL FROM field so this
 // function can focus on the core part.
-func checkHost(ip net.IP, domain, sender string) (SPFResult, error) {
+func checkHost(ip net.IP, domain, sender string) (SPFResult, string, error) {
 
 	/*
 			* As per RFC 7208 Section 4.3:
@@ -66,7 +66,7 @@ func checkHost(ip net.IP, domain, sender string) (SPFResult, error) {
 		    * domain name, [...], check_host() immediately returns None
 	*/
 	if !dns.IsDomainName(domain) {
-		return None, nil
+		return None, "", nil
 	}
 
 	query, dnsErr := dns.LookupSPF(domain)
@@ -97,12 +97,12 @@ func checkHost(ip net.IP, domain, sender string) (SPFResult, error) {
 			 */
 			if dnsErr.(*net.DNSError).Err != dns.RCODE3 ||
 				dnsErr.(*net.DNSError).Timeout() {
-				return Temperror, nil
+				return Temperror, "", nil
 			}
-			return None, nil
+			return None, "", nil
 
 		default:
-			return Permerror, nil
+			return Permerror, "", nil
 
 		}
 	}
@@ -112,13 +112,14 @@ func checkHost(ip net.IP, domain, sender string) (SPFResult, error) {
 
 	var result = Neutral
 	var err error
+	var explanation string
 
-	if result, err = parser.Parse(); err != nil {
+	if result, explanation, err = parser.Parse(); err != nil {
 		// handle error, something went wrong.
 		// Let's set PermError for now.
-		return Permerror, nil
+		return Permerror, "", nil
 	}
 
 	// return SPF evaluation result
-	return result, nil
+	return result, explanation, nil
 }
