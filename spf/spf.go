@@ -109,7 +109,8 @@ func checkHost(ip net.IP, domain, sender string) (SPFResult, string, error) {
 	parser := NewParser(sender, domain, ip, spfQuery)
 
 	var result = Neutral
-	var explanation string = ""
+	var err error
+	var explanation string
 
 	if result, explanation, err = parser.Parse(); err != nil {
 		// handle error, something went wrong.
