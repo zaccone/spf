@@ -14,7 +14,6 @@ var (
 const stub string = "stub"
 
 func TestNewParserFunction(t *testing.T) {
-	//stub := "stub"
 	p := NewParser(stub, stub, ip, stub)
 
 	if p.Sender != stub {
@@ -297,10 +296,10 @@ func TestParseA(t *testing.T) {
 	for _, testcase := range testcases {
 		match, result = p.parseA(testcase.Input)
 		if testcase.Match != match {
-			t.Error("Match mismatch")
+			t.Errorf("Match mismatch, expected %s, got %s\n", testcase.Match, match)
 		}
 		if testcase.Result != result {
-			t.Error("Result mismatch")
+			t.Errorf("Result mismatch, expected %s, got %s\n", testcase.Result, result)
 		}
 	}
 }

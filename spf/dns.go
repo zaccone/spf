@@ -1,18 +1,13 @@
-package dns
+package spf
 
-import (
-	"errors"
-	"net"
-	"strings"
-)
+import "strings"
 
 const (
-	// RCODE3 respresents string value set to net.DNSError.Err variable
-	// after underlying resolver returned RCODE 3.
-	RCODE3 = "no such host"
 	// SpfPrexif is a constant value for term indicating start of the SPF query
 	spfPrefix     = "v=spf1 "
 	spfPrefixTrim = "v=spf1"
+
+	Nameserver = "172.17.0.3:53"
 )
 
 func checkSPFVersion(spf []string) bool {
@@ -31,33 +26,6 @@ func checkSPFVersion(spf []string) bool {
 	}
 
 	return false
-}
-
-// LookupSPF retireves SPF query from domain in question.
-// If also carries out initial validation on whether the TXT record is an SPF
-// record (by comparing the string to a 'v=spf1' value)
-// In the future function should properly handle all known DNS related errors
-// as well as recurively query for SPF records
-// TODO(zaccone): Handle typical DNS errors and recusive calls
-func LookupSPF(domain string) ([]string, error) {
-	var spfRecords []string
-	var err error
-	if spfRecords, err = net.LookupTXT(domain); err != nil {
-		/*
-			Note(zaccone): We need to handle DNS related errors in the upper
-			layer, as depending on error type a SPF related result/exception
-			will be raised.
-		*/
-		return nil, err
-	}
-
-	if checkSPFVersion(spfRecords) == false {
-		return nil, errors.New(strings.Join(
-			[]string{"Invalid SPF record: ", strings.Join(spfRecords, " ")},
-			" "))
-	}
-
-	return spfRecords, nil
 }
 
 // IsDomainName is a 1:1 copy of implementation from
@@ -110,4 +78,15 @@ func IsDomainName(s string) bool {
 	}
 
 	return ok
+}
+
+// NormalizeHost appends a root domain (a dot) to the FQDN.
+func NormalizeHost(host string) string {
+	if isEmpty(&host) {
+		return "."
+	}
+	if host[len(host)-1] != '.' {
+		return host + "."
+	}
+	return host
 }

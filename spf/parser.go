@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/zaccone/goSPF/dns"
+	"github.com/miekg/dns"
 )
 
 func matchingResult(qualifier tokenType) (SPFResult, error) {
@@ -200,45 +200,64 @@ func (p *Parser) parseA(t *Token) (bool, SPFResult) {
 	var v4Network *net.IPMask
 	var v6Network *net.IPMask
 	var ok bool
+	ips4 := make([]net.IP, 0, 1)
+	ips6 := make([]net.IP, 0, 1)
 	ok, host, v4Network, v6Network = splitToHostNetwork(domain)
-
+	host = NormalizeHost(host)
 	// return Permerror if there was syntax error
 	if !ok {
 		return true, Permerror
 	}
 
-	if ips, err := net.LookupIP(host); err != nil {
-		if dnsErr, ok := err.(*net.DNSError); ok {
-			if dnsErr.Err != dns.RCODE3 || dnsErr.Timeout() {
+	var queries [2]dns.Msg
+
+	queries[0].SetQuestion(host, dns.TypeA)
+	queries[1].SetQuestion(host, dns.TypeAAAA)
+
+	for _, query := range queries {
+		c := new(dns.Client)
+		r, _, err := c.Exchange(&query, Nameserver)
+		if err != nil {
+			return true, Temperror
+		}
+
+		if r != nil && r.Rcode != dns.RcodeSuccess {
+			if r.Rcode != dns.RcodeNameError {
 				return true, Temperror
-			} else if dnsErr.Err == dns.RCODE3 {
+			} else {
 				return false, None
 			}
-		}
-		//TODO(marek): Apparently non DNS error, what shall we do then?
-		return false, None
-	} else {
-		v4Ipnet := net.IPNet{}
-		v4Ipnet.Mask = *v4Network
-
-		v6Ipnet := net.IPNet{}
-		v6Ipnet.Mask = *v6Network
-
-		for _, address := range ips {
-			// check if address is IPv6
-			if address.To4() == nil {
-				v6Ipnet.IP = address
-				if v6Ipnet.Contains(p.IP) {
-					return true, result
-				}
-			} else { // otherwise handle IPv4 case
-				v4Ipnet.IP = address
-				if v4Ipnet.Contains(p.IP) {
-					return true, result
+		} else {
+			for _, answer := range r.Answer {
+				if ans, ok := answer.(*dns.A); ok {
+					ips4 = append(ips4, ans.A)
+				} else if ans, ok := answer.(*dns.AAAA); ok {
+					ips6 = append(ips6, ans.AAAA)
 				}
 			}
 		}
 	}
+
+	v4Ipnet := net.IPNet{}
+	v4Ipnet.Mask = *v4Network
+
+	v6Ipnet := net.IPNet{}
+	v6Ipnet.Mask = *v6Network
+
+	for _, address := range ips4 {
+		v4Ipnet.IP = address
+		if v4Ipnet.Contains(p.IP) {
+			return true, result
+		}
+	}
+
+	for _, address := range ips6 {
+		v6Ipnet.IP = address
+		if v6Ipnet.Contains(p.IP) {
+			return true, result
+		}
+	}
+
 	return false, result
 }
 
@@ -252,6 +271,7 @@ func (p *Parser) parseMX(t *Token) (bool, SPFResult) {
 	var v6Network *net.IPMask
 	var ok bool
 	ok, host, v4Network, v6Network = splitToHostNetwork(domain)
+	host = NormalizeHost(host)
 
 	// return Permerror if there was syntax error
 	if !ok {
@@ -259,19 +279,28 @@ func (p *Parser) parseMX(t *Token) (bool, SPFResult) {
 	}
 
 	var err error
-	var mxs []*net.MX
-
-	if mxs, err = net.LookupMX(host); err != nil {
-
-		if dnsErr, ok := err.(*net.DNSError); ok {
-			if dnsErr.Err != dns.RCODE3 || dnsErr.Timeout() {
-				return true, Temperror
-			} else if dnsErr.Err == dns.RCODE3 {
-				return false, None
-			}
-		}
-
+	// TODO(zaccone): Ensure returned errors are correct.
+	query := new(dns.Msg)
+	query.SetQuestion(host, dns.TypeMX)
+	c := new(dns.Client)
+	response, _, err := c.Exchange(query, Nameserver)
+	if err != nil {
 		return false, None
+	}
+
+	if response != nil && response.Rcode != dns.RcodeSuccess {
+		if response.Rcode != dns.RcodeNameError {
+			return true, Temperror
+		} else {
+			return false, None
+		}
+	}
+
+	mxs := make([]string, 0, len(response.Answer))
+	for _, answer := range response.Answer {
+		if mx, ok := answer.(*dns.MX); ok {
+			mxs = append(mxs, mx.Mx)
+		}
 	}
 
 	var wg sync.WaitGroup
@@ -280,42 +309,71 @@ func (p *Parser) parseMX(t *Token) (bool, SPFResult) {
 
 	wg.Add(len(mxs))
 
-	for _, mmx := range mxs {
-		go func(mx *net.MX, v4Network, v6Network *net.IPMask) {
-			defer wg.Done()
+	go func() {
+		wg.Wait()
+		close(pipe)
+	}()
 
+	for _, mmx := range mxs {
+		go func(mx string, v4Network, v6Network *net.IPMask) {
+			defer wg.Done()
+			mx = NormalizeHost(mx)
 			v4Ipnet := net.IPNet{}
 			v4Ipnet.Mask = *v4Network
 
 			v6Ipnet := net.IPNet{}
 			v6Ipnet.Mask = *v6Network
 
-			if ips, err := net.LookupIP(mx.Host); err != nil {
-				//TODO(marek): Log DNS lookup error
-				return
-			} else {
-				for _, ip := range ips {
-					contains := false
-					// handle IPv6 address
-					if ip.To4() == nil {
-						v6Ipnet.IP = ip
-						contains = v6Ipnet.Contains(p.IP)
-						// handle IPv4 address
-					} else {
-						v4Ipnet.IP = ip
-						contains = v4Ipnet.Contains(p.IP)
-					}
-					pipe <- contains
+			ips4 := make([]net.IP, 0, 1)
+			ips6 := make([]net.IP, 0, 1)
 
+			var queries [2]dns.Msg
+
+			queries[0].SetQuestion(mx, dns.TypeA)
+			queries[1].SetQuestion(mx, dns.TypeAAAA)
+
+			for _, query := range queries {
+				c := new(dns.Client)
+				response, _, err := c.Exchange(&query, Nameserver)
+
+				if err != nil {
+					pipe <- false
+					return
 				}
+
+				if response != nil && response.Rcode != dns.RcodeSuccess {
+					pipe <- false
+					return
+				}
+
+				for _, answer := range response.Answer {
+					if ans, ok := answer.(*dns.A); ok {
+						ips4 = append(ips4, ans.A)
+					} else if ans, ok := answer.(*dns.AAAA); ok {
+						ips6 = append(ips6, ans.AAAA)
+					} else {
+						// TODO(zaccone): Log error
+					}
+				}
+
 			}
+
+			var contains bool
+
+			for _, address := range ips4 {
+				v4Ipnet.IP = address
+				contains = v4Ipnet.Contains(p.IP)
+				pipe <- contains
+			}
+
+			for _, address := range ips6 {
+				v6Ipnet.IP = address
+				contains = v6Ipnet.Contains(p.IP)
+				pipe <- contains
+			}
+
 		}(mmx, v4Network, v6Network)
 	}
-
-	go func() {
-		wg.Wait()
-		close(pipe)
-	}()
 
 	verdict := false
 	for subverdict := range pipe {
@@ -362,22 +420,36 @@ func (p *Parser) parseExists(t *Token) (bool, SPFResult) {
 	if err != nil || isEmpty(&resolvedDomain) {
 		return true, Permerror
 	}
+	resolvedDomain = NormalizeHost(resolvedDomain)
+	var queries [2]dns.Msg
 
-	ips, err := net.LookupIP(resolvedDomain)
-	if err != nil {
-		if dnsErr, ok := err.(*net.DNSError); ok {
-			if dnsErr.Err == dns.RCODE3 {
-				return false, result
-			}
+	queries[0].SetQuestion(resolvedDomain, dns.TypeA)
+	queries[1].SetQuestion(resolvedDomain, dns.TypeAAAA)
+	ips := 0
+	for _, query := range queries {
+		c := new(dns.Client)
+		response, _, err := c.Exchange(&query, Nameserver)
+		if err != nil {
 			return true, Temperror
 		}
-		//TODO(marek): Apparently non DNS error, what shall we do then?
-		return false, None
+
+		if response != nil && response.Rcode != dns.RcodeSuccess {
+			if response.Rcode == dns.RcodeNameError {
+				return false, result
+			} else {
+				return true, Temperror
+			}
+		} else {
+			ips += len(response.Answer)
+		}
+		/* We can check prematurely and avoid futher DNS calls if matching
+		* hosts were already found.
+		 */
+		if ips > 0 {
+			return true, result
+		}
 	}
 
-	if len(ips) > 0 {
-		return true, result
-	}
 	return false, result
 }
 
@@ -422,7 +494,7 @@ func splitToHostNetwork(domain string) (bool, string, *net.IPMask, *net.IPMask) 
 		host = line[0]
 	}
 
-	if !dns.IsDomainName(host) {
+	if !IsDomainName(host) {
 		return false, host, nil, nil
 	}
 

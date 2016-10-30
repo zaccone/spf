@@ -1,10 +1,11 @@
 package spf
 
 import (
+	"fmt"
 	"net"
 	"strings"
 
-	"github.com/zaccone/goSPF/dns"
+	"github.com/miekg/dns"
 )
 
 // SPFResult represents SPF defined result - None, Neutral, Pass, Pass, Fail,
@@ -65,53 +66,49 @@ func checkHost(ip net.IP, domain, sender string) (SPFResult, error) {
 			* a multi-label
 		    * domain name, [...], check_host() immediately returns None
 	*/
-	if !dns.IsDomainName(domain) {
+	if !IsDomainName(domain) {
+		fmt.Println("Invalid domain")
 		return None, nil
 	}
-
-	query, dnsErr := dns.LookupSPF(domain)
-
-	if dnsErr != nil {
-		switch dnsErr.(type) {
-		// as per RFC7208 section 4.4, DNS query errors result in Temperror
-		//result immediately
-		case *net.DNSError:
-			/*
-			* As per RFC 7208 Section 4.3:
-			* [...] or if the DNS lookup returns "Name Error" (RCODE 3, also
-			* known as "NXDOMAIN" [RFC2308]), check_host() immediately returns
-			* the result "none".
-			*
-			* Sadly, net.DNSError does not provide RCODE statuses, however
-			* reading its implementation we can deduct that
-			* DNSError.Err string is set to "no such host" upon RCODE 3.
-			* See
-			* https://github.com/golang/go/blob/master/src/net/dnsclient.go#L43
-			* for the logic implementation and
-			* https://github.com/golang/go/blob/master/src/net/net.go#L547 for
-			* `errNoSuchHost` error definition.
-			*
-			* On the other had, any other RCODE not equal to 0 (success, so no
-			* error) or 3 or timeout occurs, check_host() should return
-			* Temperror which we handle too.
-			 */
-			if dnsErr.(*net.DNSError).Err != dns.RCODE3 ||
-				dnsErr.(*net.DNSError).Timeout() {
-				return Temperror, nil
-			}
-			return None, nil
-
-		default:
-			return Permerror, nil
-
-		}
+	domain = NormalizeHost(domain)
+	query := new(dns.Msg)
+	query.SetQuestion(domain, dns.TypeTXT)
+	subQueries := make([]string, 0, 1)
+	c := new(dns.Client)
+	r, _, err := c.Exchange(query, Nameserver)
+	if err != nil {
+		return Temperror, err
 	}
 
-	spfQuery := strings.Join(query, " ")
+	/*
+	* As per RFC 7208 Section 4.3:
+	* [...] or if the DNS lookup returns "Name Error" (RCODE 3, also
+	* known as "NXDOMAIN" [RFC2308]), check_host() immediately returns
+	* the result "none".
+	*
+	* On the other had, any other RCODE not equal to 0 (success, so no
+	* error) or 3 or timeout occurs, check_host() should return
+	* Temperror which we handle too.
+	 */
+	if r != nil && r.Rcode != dns.RcodeSuccess {
+		if r.Rcode != dns.RcodeNameError {
+			return Temperror, nil
+		} else {
+			return None, nil
+		}
+	} else {
+		for _, answer := range r.Answer {
+			if ans, ok := answer.(*dns.TXT); ok {
+				for _, txt := range ans.Txt {
+					subQueries = append(subQueries, txt)
+				}
+			}
+		}
+	}
+	spfQuery := strings.Join(subQueries, " ")
 	parser := NewParser(sender, domain, ip, spfQuery)
 
 	var result = Neutral
-	var err error
 
 	if result, err = parser.Parse(); err != nil {
 		// handle error, something went wrong.
