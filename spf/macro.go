@@ -35,8 +35,8 @@ type stateFn func(*macro, *Parser) (stateFn, error)
 
 // ParseMacro evaluates whole input string and replaces keywords with appropriate
 // values from
-func ParseMacro(p *Parser, t *Token) (string, error) {
-	m := newMacro(t.Value)
+func ParseMacro(p *Parser, input string) (string, error) {
+	m := newMacro(input)
 	var err error
 	for m.state = scanText; m.state != nil; {
 		m.state, err = m.state(m, p)
@@ -47,6 +47,12 @@ func ParseMacro(p *Parser, t *Token) (string, error) {
 
 	}
 	return strings.Join(m.output, ""), nil
+}
+
+// ParseMacroToken evaluates whole input string and replaces keywords with appropriate
+// values from
+func ParseMacroToken(p *Parser, t *Token) (string, error) {
+	return ParseMacro(p, t.Value)
 }
 
 // macro.eof() return true when scanned record has ended, false otherwise

@@ -54,7 +54,7 @@ func TestMacroIteration(t *testing.T) {
 
 	for _, test := range testCases {
 		token.Value = test.Input
-		result, err := ParseMacro(parser, token)
+		result, err := ParseMacroToken(parser, token)
 		if err != nil {
 			t.Errorf("Macro %s evaluation failed due to returned error: %v\n",
 				test.Input, err)
@@ -102,7 +102,7 @@ func TestMacroExpansionRFCExamples(t *testing.T) {
 	for _, test := range testCases {
 
 		token.Value = test.Input
-		result, err := ParseMacro(parser, token)
+		result, err := ParseMacroToken(parser, token)
 		if err != nil {
 			t.Errorf("Macro %s evaluation failed due to returned error: %v\n",
 				test.Input, err)
@@ -142,7 +142,7 @@ func TestParsingErrors(t *testing.T) {
 	for _, test := range testcases {
 
 		token.Value = test.Input
-		result, err := ParseMacro(parser, token)
+		result, err := ParseMacroToken(parser, token)
 
 		if result != "" {
 			t.Errorf("For input '%s' expected empty result, got '%s' instead\n",

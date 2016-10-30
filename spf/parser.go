@@ -417,7 +417,7 @@ func (p *Parser) parseInclude(t *Token) (bool, SPFResult) {
 
 func (p *Parser) parseExists(t *Token) (bool, SPFResult) {
 	result, _ := matchingResult(t.Qualifier)
-	resolvedDomain, err := ParseMacro(p, t)
+	resolvedDomain, err := ParseMacroToken(p, t)
 	if err != nil || isEmpty(&resolvedDomain) {
 		return true, Permerror
 	}
@@ -478,7 +478,7 @@ func (p *Parser) handleRedirect(oldResult SPFResult) SPFResult {
 }
 
 func (p *Parser) handleExplanation() string {
-	resolvedDomain, err := ParseMacro(p, p.Explanation)
+	resolvedDomain, err := ParseMacroToken(p, p.Explanation)
 	if err != nil || isEmpty(&resolvedDomain) {
 		// TODO(zaccone): Should we return some internal error
 		return ""
@@ -503,7 +503,11 @@ func (p *Parser) handleExplanation() string {
 
 	// RFC 7208, section 6.2 specifies that result string should be
 	// concatenated with no spaces.
-	return strings.Join(explanation, "")
+	parsedExplanation, err := ParseMacro(p, strings.Join(explanation, ""))
+	if err != nil {
+		return ""
+	}
+	return parsedExplanation
 }
 
 func splitToHostNetwork(domain string) (bool, string, *net.IPMask, *net.IPMask) {
