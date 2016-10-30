@@ -351,8 +351,6 @@ func (p *Parser) parseMX(t *Token) (bool, SPFResult) {
 						ips4 = append(ips4, ans.A)
 					} else if ans, ok := answer.(*dns.AAAA); ok {
 						ips6 = append(ips6, ans.AAAA)
-					} else {
-						// TODO(zaccone): Log error
 					}
 				}
 
