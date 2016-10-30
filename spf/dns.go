@@ -7,6 +7,8 @@ const (
 	spfPrefix     = "v=spf1 "
 	spfPrefixTrim = "v=spf1"
 
+	// Nameserver is a constant defining entrypoint of the DNS server.
+	// In the future this value should be configurable
 	Nameserver = "172.17.0.3:53"
 )
 
