@@ -68,7 +68,7 @@ func checkHost(ip net.IP, domain, sender string) (SPFResult, string, error) {
 	*/
 	if !IsDomainName(domain) {
 		fmt.Println("Invalid domain")
-		return None, nil
+		return None, "", nil
 	}
 	domain = NormalizeHost(domain)
 	query := new(dns.Msg)
@@ -77,7 +77,7 @@ func checkHost(ip net.IP, domain, sender string) (SPFResult, string, error) {
 	c := new(dns.Client)
 	r, _, err := c.Exchange(query, Nameserver)
 	if err != nil {
-		return Temperror, err
+		return Temperror, "", err
 	}
 
 	/*
@@ -92,9 +92,9 @@ func checkHost(ip net.IP, domain, sender string) (SPFResult, string, error) {
 	 */
 	if r != nil && r.Rcode != dns.RcodeSuccess {
 		if r.Rcode != dns.RcodeNameError {
-			return Temperror, nil
+			return Temperror, "", nil
 		} else {
-			return None, nil
+			return None, "", nil
 		}
 	} else {
 		for _, answer := range r.Answer {
@@ -109,6 +109,7 @@ func checkHost(ip net.IP, domain, sender string) (SPFResult, string, error) {
 	parser := NewParser(sender, domain, ip, spfQuery)
 
 	var result = Neutral
+	var explanation string = ""
 
 	if result, explanation, err = parser.Parse(); err != nil {
 		// handle error, something went wrong.

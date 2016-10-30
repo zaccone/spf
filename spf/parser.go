@@ -483,15 +483,27 @@ func (p *Parser) handleExplanation() string {
 		// TODO(zaccone): Should we return some internal error
 		return ""
 	}
-
-	response, err := net.LookupTXT(resolvedDomain)
-	if err != nil {
+	resolvedDomain = NormalizeHost(resolvedDomain)
+	query := new(dns.Msg)
+	query.SetQuestion(Nameserver, dns.TypeTXT)
+	c := new(dns.Client)
+	response, _, err := c.Exchange(query, Nameserver)
+	if err != nil || (response != nil && response.Rcode != dns.RcodeSuccess) {
 		return ""
+	}
+
+	explanation := make([]string, 0, len(response.Answer))
+	for _, answer := range response.Answer {
+		if q, ok := answer.(*dns.TXT); ok {
+			for _, txt := range q.Txt {
+				explanation = append(explanation, txt)
+			}
+		}
 	}
 
 	// RFC 7208, section 6.2 specifies that result string should be
 	// concatenated with no spaces.
-	return strings.Join(response, "")
+	return strings.Join(explanation, "")
 }
 
 func splitToHostNetwork(domain string) (bool, string, *net.IPMask, *net.IPMask) {
