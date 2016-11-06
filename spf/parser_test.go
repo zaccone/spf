@@ -3,7 +3,11 @@ package spf
 import (
 	"net"
 	"reflect"
+	"sync"
 	"testing"
+	"time"
+
+	"github.com/miekg/dns"
 )
 
 var (
@@ -12,6 +16,55 @@ var (
 )
 
 const stub string = "stub"
+
+/* helper functions */
+
+func runLocalUDPServer(laddr string) (*dns.Server, string, error) {
+	server, l, _, err := runLocalUDPServerWithFinChan(laddr)
+
+	return server, l, err
+}
+
+func runLocalUDPServerWithFinChan(laddr string) (*dns.Server, string, chan struct{}, error) {
+	pc, err := net.ListenPacket("udp", laddr)
+	if err != nil {
+		return nil, "", nil, err
+	}
+	server := &dns.Server{PacketConn: pc, ReadTimeout: time.Hour, WriteTimeout: time.Hour}
+
+	waitLock := sync.Mutex{}
+	waitLock.Lock()
+	server.NotifyStartedFunc = waitLock.Unlock
+
+	fin := make(chan struct{}, 0)
+
+	go func() {
+		server.ActivateAndServe()
+		close(fin)
+		pc.Close()
+	}()
+
+	waitLock.Lock()
+	return server, pc.LocalAddr().String(), fin, nil
+}
+
+func helloServer(w dns.ResponseWriter, req *dns.Msg) {
+	m := new(dns.Msg)
+	m.SetReply(req)
+
+	m.Extra = make([]dns.RR, 1)
+	m.Extra[0] = &dns.TXT{
+		Hdr: dns.RR_Header{
+			Name:   m.Question[0].Name,
+			Rrtype: dns.TypeTXT,
+			Class:  dns.ClassINET,
+			Ttl:    0,
+		},
+		Txt: []string{"Hello world"}}
+	w.WriteMsg(m)
+}
+
+/********************/
 
 func TestNewParserFunction(t *testing.T) {
 	p := NewParser(stub, stub, ip, stub)
