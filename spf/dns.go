@@ -9,8 +9,10 @@ const (
 
 	// Nameserver is a constant defining entrypoint of the DNS server.
 	// In the future this value should be configurable
-	Nameserver = "172.17.0.3:53"
+	//Nameserver = "172.17.0.3:53"
 )
+
+var Nameserver = "127.0.0.1:53530"
 
 func checkSPFVersion(spf []string) bool {
 	if len(spf) == 0 {
@@ -85,7 +87,7 @@ func IsDomainName(s string) bool {
 // NormalizeHost appends a root domain (a dot) to the FQDN.
 func NormalizeHost(host string) string {
 	if isEmpty(&host) {
-		return "."
+		return ""
 	}
 	if host[len(host)-1] != '.' {
 		return host + "."
