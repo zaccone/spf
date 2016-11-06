@@ -485,7 +485,7 @@ func (p *Parser) handleExplanation() string {
 	}
 	resolvedDomain = NormalizeHost(resolvedDomain)
 	query := new(dns.Msg)
-	query.SetQuestion(Nameserver, dns.TypeTXT)
+	query.SetQuestion(resolvedDomain, dns.TypeTXT)
 	c := new(dns.Client)
 	response, _, err := c.Exchange(query, Nameserver)
 	if err != nil || (response != nil && response.Rcode != dns.RcodeSuccess) {

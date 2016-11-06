@@ -688,3 +688,35 @@ func TestHandleRedirect(t *testing.T) {
 		}
 	}
 }
+
+type ExpTestCase struct {
+	Query       string
+	Explanation string
+}
+
+func TestHandleExplanation(t *testing.T) {
+	const domain = "matching.com"
+	// static.exp.matching.com.        IN      TXT "Invalid SPF record"
+	// ip.exp.matching.com.            IN      TXT "%{i} is not one of %{d}'s designated mail servers."
+	// redirect.exp.matching.com.      IN      TXT "See http://%{d}/why.html?s=%{s}&i=%{i}"
+	ExpTestCases := []ExpTestCase{
+		ExpTestCase{"v=spf1 -all exp=static.exp.matching.com",
+			"Invalid SPF record"},
+		ExpTestCase{"v=spf1 -all exp=ip.exp.matching.com",
+			"127.0.0.1 is not one of matching.com's designated mail servers."},
+		ExpTestCase{"v=spf1 -all exp=redirect.exp.matching.com",
+			"See http://matching.com/why.html?s=&i="},
+	}
+
+	for _, testcase := range ExpTestCases {
+
+		p := NewParser(domain, domain, ip, testcase.Query)
+		_, exp, err := p.Parse()
+		if err != nil {
+			t.Error("Unexpected error while parsing: ", err)
+		} else if exp != testcase.Explanation {
+			t.Errorf("Explanation mismatch, expected %s, got %s\n",
+				testcase.Explanation, exp)
+		}
+	}
+}
