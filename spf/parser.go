@@ -2,6 +2,7 @@ package spf
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"strconv"
 	"strings"
@@ -216,16 +217,17 @@ func (p *Parser) parseA(t *Token) (bool, SPFResult) {
 
 	queries[0].SetQuestion(host, dns.TypeA)
 	queries[1].SetQuestion(host, dns.TypeAAAA)
-
 	for _, query := range queries {
 		c := new(dns.Client)
 		r, _, err := c.Exchange(&query, Nameserver)
 		if err != nil {
+			fmt.Println(err)
 			return true, Temperror
 		}
 
 		if r != nil && r.Rcode != dns.RcodeSuccess {
 			if r.Rcode != dns.RcodeNameError {
+				fmt.Println(r)
 				return true, Temperror
 			} else {
 				return false, None
@@ -260,7 +262,6 @@ func (p *Parser) parseA(t *Token) (bool, SPFResult) {
 			return true, result
 		}
 	}
-
 	return false, result
 }
 
@@ -288,6 +289,7 @@ func (p *Parser) parseMX(t *Token) (bool, SPFResult) {
 	c := new(dns.Client)
 	response, _, err := c.Exchange(query, Nameserver)
 	if err != nil {
+		fmt.Println(err)
 		return false, None
 	}
 
@@ -295,6 +297,7 @@ func (p *Parser) parseMX(t *Token) (bool, SPFResult) {
 		if response.Rcode != dns.RcodeNameError {
 			return true, Temperror
 		} else {
+			fmt.Println(err)
 			return false, None
 		}
 	}
@@ -391,6 +394,7 @@ func (p *Parser) parseInclude(t *Token) (bool, SPFResult) {
 	}
 	matchesInclude := false
 	if includeResult, _, err := checkHost(p.IP, domain, p.Sender); err != nil {
+		fmt.Println(err)
 		return false, None
 	} else { // it's all fine
 		switch includeResult {
@@ -410,9 +414,7 @@ func (p *Parser) parseInclude(t *Token) (bool, SPFResult) {
 	if matchesInclude {
 		return true, result
 	}
-
 	return false, None
-
 }
 
 func (p *Parser) parseExists(t *Token) (bool, SPFResult) {
