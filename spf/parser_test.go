@@ -1,6 +1,7 @@
 package spf
 
 import (
+	"fmt"
 	"net"
 	"reflect"
 	"sync"
@@ -48,6 +49,36 @@ func runLocalUDPServerWithFinChan(laddr string) (*dns.Server, string, chan struc
 
 	waitLock.Lock()
 	return server, pc.LocalAddr().String(), fin, nil
+}
+
+func rootZone(w dns.ResponseWriter, req *dns.Msg) {
+	m := new(dns.Msg)
+	m.SetReply(req)
+	rr, _ := dns.NewRR(". 0 IN SOA a.root-servers.net. nstld.verisign-grs.com. 2016110600 1800 900 604800 86400")
+	m.Ns = []dns.RR{rr}
+	w.WriteMsg(m)
+}
+
+func generateZone(zones map[uint16][]string) func(dns.ResponseWriter, *dns.Msg) {
+	return func(w dns.ResponseWriter, req *dns.Msg) {
+		m := new(dns.Msg)
+		m.SetReply(req)
+
+		answers, ok := zones[req.Question[0].Qtype]
+		if !ok {
+			w.WriteMsg(m)
+			return
+		}
+		m.Answer = make([]dns.RR, len(answers))
+		var err error
+		for i, host := range answers {
+			m.Answer[i], err = dns.NewRR(host)
+			if err != nil {
+				fmt.Printf("unable to prepare dns response: %s\n", err)
+			}
+		}
+		w.WriteMsg(m)
+	}
 }
 
 /********************/
@@ -298,142 +329,53 @@ func TestParseA(t *testing.T) {
 	ip := net.IP{172, 18, 0, 2}
 	domain := "matching.com"
 
-	positiveMatchingCom := func(w dns.ResponseWriter, req *dns.Msg) {
-		m := new(dns.Msg)
-		m.SetReply(req)
+	hosts := make(map[uint16][]string)
 
-		hosts := make(map[uint16][]string)
-
-		hosts[dns.TypeA] = []string{
-			"positive.matching.com. 0 IN A 172.20.21.1",
-			"positive.matching.com. 0 IN A 172.18.0.2",
-			"positive.matching.com. 0 IN A 172.20.20.1",
-		}
-		hosts[dns.TypeAAAA] = []string{
-			"positive.matching.com. 0 IN AAAA 2001:4860:0:2001::68",
-		}
-
-		answers, ok := hosts[req.Question[0].Qtype]
-		if !ok {
-			w.WriteMsg(m)
-			return
-		}
-		m.Answer = make([]dns.RR, len(answers))
-		var err error
-		for i, host := range answers {
-			m.Answer[i], err = dns.NewRR(host)
-			if err != nil {
-				t.Errorf("Error while adding host %s to the DNS server: %s\n",
-					host, err)
-			}
-		}
-		w.WriteMsg(m)
+	hosts[dns.TypeA] = []string{
+		"positive.matching.com. 0 IN A 172.20.21.1",
+		"positive.matching.com. 0 IN A 172.18.0.2",
+		"positive.matching.com. 0 IN A 172.20.20.1",
 	}
+	hosts[dns.TypeAAAA] = []string{
+		"positive.matching.com. 0 IN AAAA 2001:4860:0:2001::68",
+	}
+
+	positiveMatchingCom := generateZone(hosts)
 
 	dns.HandleFunc("positive.matching.com.", positiveMatchingCom)
 	defer dns.HandleRemove("positive.matching.com.")
 	dns.HandleFunc("matching.com.", positiveMatchingCom)
 	defer dns.HandleRemove("matching.com.")
 
-	negativeMatchingCom := func(w dns.ResponseWriter, req *dns.Msg) {
-		m := new(dns.Msg)
-		m.SetReply(req)
-
-		hosts := make(map[uint16][]string)
-
-		hosts[dns.TypeA] = []string{
-			"negative.matching.com. 0 IN A 172.20.21.1",
-		}
-
-		answers, ok := hosts[req.Question[0].Qtype]
-		if !ok {
-			w.WriteMsg(m)
-			return
-		}
-		m.Answer = make([]dns.RR, len(answers))
-		var err error
-		for i, host := range answers {
-			m.Answer[i], err = dns.NewRR(host)
-			if err != nil {
-				t.Errorf("Error while adding host %s to the DNS server: %s\n",
-					host, err)
-			}
-		}
-		w.WriteMsg(m)
+	hosts = make(map[uint16][]string)
+	hosts[dns.TypeA] = []string{
+		"negative.matching.com. 0 IN A 172.20.21.1",
 	}
+	negativeMatchingCom := generateZone(hosts)
 
 	dns.HandleFunc("negative.matching.com.", negativeMatchingCom)
 	defer dns.HandleRemove("negative.matching.com.")
 
-	rangeMatchingCom := func(w dns.ResponseWriter, req *dns.Msg) {
-		m := new(dns.Msg)
-		m.SetReply(req)
+	hosts = make(map[uint16][]string)
 
-		hosts := make(map[uint16][]string)
-
-		hosts[dns.TypeA] = []string{
-			"range.matching.com. 0 IN A 172.18.0.2",
-		}
-
-		answers, ok := hosts[req.Question[0].Qtype]
-		if !ok {
-			w.WriteMsg(m)
-			return
-		}
-		m.Answer = make([]dns.RR, len(answers))
-		var err error
-		for i, host := range answers {
-			m.Answer[i], err = dns.NewRR(host)
-			if err != nil {
-				t.Errorf("Error while adding host %s to the DNS server: %s\n",
-					host, err)
-			}
-		}
-		w.WriteMsg(m)
+	hosts[dns.TypeA] = []string{
+		"range.matching.com. 0 IN A 172.18.0.2",
 	}
+
+	rangeMatchingCom := generateZone(hosts)
 	dns.HandleFunc("range.matching.com.", rangeMatchingCom)
 	defer dns.HandleRemove("range.matching.com.")
 
-	lbMatchingCom := func(w dns.ResponseWriter, req *dns.Msg) {
-		m := new(dns.Msg)
-		m.SetReply(req)
+	hosts = make(map[uint16][]string)
 
-		hosts := make(map[uint16][]string)
-
-		hosts[dns.TypeA] = []string{
-			"lb.matching.com. 0 IN A 172.18.0.2",
-		}
-
-		answers, ok := hosts[req.Question[0].Qtype]
-		if !ok {
-			rr, _ := dns.NewRR(". 0 IN SOA a.root-servers.net. nstld.verisign-grs.com. 2016110600 1800 900 604800 86400")
-			m.Ns = []dns.RR{rr}
-			w.WriteMsg(m)
-			return
-		}
-		m.Answer = make([]dns.RR, len(answers))
-		var err error
-		for i, host := range answers {
-			m.Answer[i], err = dns.NewRR(host)
-			if err != nil {
-				t.Errorf("Error while adding host %s to the DNS server: %s\n",
-					host, err)
-			}
-		}
-		w.WriteMsg(m)
+	hosts[dns.TypeA] = []string{
+		"lb.matching.com. 0 IN A 172.18.0.2",
 	}
+	lbMatchingCom := generateZone(hosts)
 	dns.HandleFunc("lb.matching.com.", lbMatchingCom)
 	defer dns.HandleRemove("lb.matching.com.")
 
-	rootServer := func(w dns.ResponseWriter, req *dns.Msg) {
-		m := new(dns.Msg)
-		m.SetReply(req)
-		rr, _ := dns.NewRR(". 0 IN SOA a.root-servers.net. nstld.verisign-grs.com. 2016110600 1800 900 604800 86400")
-		m.Ns = []dns.RR{rr}
-		w.WriteMsg(m)
-	}
-
-	dns.HandleFunc(".", rootServer)
+	dns.HandleFunc(".", rootZone)
 	defer dns.HandleRemove(".")
 
 	s, addr, err := runLocalUDPServer(dnsServer)
@@ -490,72 +432,33 @@ func TestParseA(t *testing.T) {
 }
 
 func TestParseAIpv6(t *testing.T) {
-	positiveMatchingCom := func(w dns.ResponseWriter, req *dns.Msg) {
-		m := new(dns.Msg)
-		m.SetReply(req)
 
-		hosts := make(map[uint16][]string)
+	hosts := make(map[uint16][]string)
 
-		hosts[dns.TypeA] = []string{
-			"positive.matching.com. 0 IN A 172.20.21.1",
-			"positive.matching.com. 0 IN A 172.18.0.2",
-			"positive.matching.com. 0 IN A 172.20.20.1",
-		}
-		hosts[dns.TypeAAAA] = []string{
-			"positive.matching.com. 0 IN AAAA 2001:4860:0:2001::68",
-		}
-
-		answers, ok := hosts[req.Question[0].Qtype]
-		if !ok {
-			w.WriteMsg(m)
-			return
-		}
-		m.Answer = make([]dns.RR, len(answers))
-		var err error
-		for i, host := range answers {
-			m.Answer[i], err = dns.NewRR(host)
-			if err != nil {
-				t.Errorf("Error while adding host %s to the DNS server: %s\n",
-					host, err)
-			}
-		}
-		w.WriteMsg(m)
+	hosts[dns.TypeA] = []string{
+		"positive.matching.com. 0 IN A 172.20.21.1",
+		"positive.matching.com. 0 IN A 172.18.0.2",
+		"positive.matching.com. 0 IN A 172.20.20.1",
+	}
+	hosts[dns.TypeAAAA] = []string{
+		"positive.matching.com. 0 IN AAAA 2001:4860:0:2001::68",
 	}
 
+	positiveMatchingCom := generateZone(hosts)
 	dns.HandleFunc("positive.matching.com.", positiveMatchingCom)
 	defer dns.HandleRemove("positive.matching.com.")
 	dns.HandleFunc("matching.com.", positiveMatchingCom)
 	defer dns.HandleRemove("matching.com.")
 
-	negativeMatchingCom := func(w dns.ResponseWriter, req *dns.Msg) {
-		m := new(dns.Msg)
-		m.SetReply(req)
+	hosts = make(map[uint16][]string)
 
-		hosts := make(map[uint16][]string)
-
-		hosts[dns.TypeA] = []string{
-			"negative.matching.com. 0 IN A 172.20.21.1",
-		}
-
-		answers, ok := hosts[req.Question[0].Qtype]
-		if !ok {
-			w.WriteMsg(m)
-			return
-		}
-		m.Answer = make([]dns.RR, len(answers))
-		var err error
-		for i, host := range answers {
-			m.Answer[i], err = dns.NewRR(host)
-			if err != nil {
-				t.Errorf("Error while adding host %s to the DNS server: %s\n",
-					host, err)
-			}
-		}
-		w.WriteMsg(m)
+	hosts[dns.TypeA] = []string{
+		"negative.matching.com. 0 IN A 172.20.21.1",
 	}
-
+	negativeMatchingCom := generateZone(hosts)
 	dns.HandleFunc("negative.matching.com.", negativeMatchingCom)
 	defer dns.HandleRemove("negative.matching.com.")
+
 	s, addr, err := runLocalUDPServer(dnsServer)
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
@@ -686,55 +589,27 @@ func TestParseMX(t *testing.T) {
 
 	/* helper functions */
 
-	rootServer := func(w dns.ResponseWriter, req *dns.Msg) {
-		m := new(dns.Msg)
-		m.SetReply(req)
-		rr, _ := dns.NewRR(". 0 IN SOA a.root-servers.net. nstld.verisign-grs.com. 2016110600 1800 900 604800 86400")
-		m.Ns = []dns.RR{rr}
-		w.WriteMsg(m)
-	}
-
-	dns.HandleFunc(".", rootServer)
+	dns.HandleFunc(".", rootZone)
 	defer dns.HandleRemove(".")
 
-	mxMatchingCom := func(w dns.ResponseWriter, req *dns.Msg) {
-		m := new(dns.Msg)
-		m.SetReply(req)
+	hosts := make(map[uint16][]string)
 
-		hosts := make(map[uint16][]string)
-
-		hosts[dns.TypeMX] = []string{
-			"mail.matching.com. 0 IN MX 5 mail.matching.com.",
-			"mail.matching.com. 0 IN MX 10 mail2.matching.com.",
-			"mail.matching.com. 0 IN MX 15 mail3.matching.com.",
-		}
-		hosts[dns.TypeAAAA] = []string{
-			"mail.matching.com. 0 IN AAAA 2001:4860:1:2001::80",
-		}
-
-		hosts[dns.TypeA] = []string{
-			"mail.matching.com. 0 IN A 172.18.0.2",
-			"mail2.matching.com. 0 IN A 172.20.20.20",
-			"mail3.matching.com. 0 IN A 172.100.0.1",
-		}
-
-		answers, ok := hosts[req.Question[0].Qtype]
-		if !ok {
-			w.WriteMsg(m)
-			return
-		}
-		m.Answer = make([]dns.RR, len(answers))
-		var err error
-		for i, host := range answers {
-			m.Answer[i], err = dns.NewRR(host)
-			if err != nil {
-				t.Errorf("Error while adding host %s to the DNS server: %s\n",
-					host, err)
-			}
-		}
-		w.WriteMsg(m)
+	hosts[dns.TypeMX] = []string{
+		"mail.matching.com. 0 IN MX 5 mail.matching.com.",
+		"mail.matching.com. 0 IN MX 10 mail2.matching.com.",
+		"mail.matching.com. 0 IN MX 15 mail3.matching.com.",
+	}
+	hosts[dns.TypeAAAA] = []string{
+		"mail.matching.com. 0 IN AAAA 2001:4860:1:2001::80",
 	}
 
+	hosts[dns.TypeA] = []string{
+		"mail.matching.com. 0 IN A 172.18.0.2",
+		"mail2.matching.com. 0 IN A 172.20.20.20",
+		"mail3.matching.com. 0 IN A 172.100.0.1",
+	}
+
+	mxMatchingCom := generateZone(hosts)
 	dns.HandleFunc("matching.com.", mxMatchingCom)
 	defer dns.HandleRemove("matching.com.")
 
@@ -784,55 +659,26 @@ func TestParseMXNegativeTests(t *testing.T) {
 
 	/* helper functions */
 
-	rootServer := func(w dns.ResponseWriter, req *dns.Msg) {
-		m := new(dns.Msg)
-		m.SetReply(req)
-		rr, _ := dns.NewRR(". 0 IN SOA a.root-servers.net. nstld.verisign-grs.com. 2016110600 1800 900 604800 86400")
-		m.Ns = []dns.RR{rr}
-		w.WriteMsg(m)
-	}
-
-	dns.HandleFunc(".", rootServer)
+	dns.HandleFunc(".", rootZone)
 	defer dns.HandleRemove(".")
 
-	mxMatchingCom := func(w dns.ResponseWriter, req *dns.Msg) {
-		m := new(dns.Msg)
-		m.SetReply(req)
+	hosts := make(map[uint16][]string)
 
-		hosts := make(map[uint16][]string)
-
-		hosts[dns.TypeMX] = []string{
-			"mail.matching.com. 0 IN MX 5 mail.matching.com.",
-			"mail.matching.com. 0 IN MX 10 mail2.matching.com.",
-			"mail.matching.com. 0 IN MX 15 mail3.matching.com.",
-		}
-		hosts[dns.TypeAAAA] = []string{
-			"mail.matching.com. 0 IN AAAA 2001:4860:1:2001::80",
-		}
-
-		hosts[dns.TypeA] = []string{
-			"mail.matching.com. 0 IN A 172.18.0.2",
-			"mail2.matching.com. 0 IN A 172.20.20.20",
-			"mail3.matching.com. 0 IN A 172.100.0.1",
-		}
-
-		answers, ok := hosts[req.Question[0].Qtype]
-		if !ok {
-			w.WriteMsg(m)
-			return
-		}
-		m.Answer = make([]dns.RR, len(answers))
-		var err error
-		for i, host := range answers {
-			m.Answer[i], err = dns.NewRR(host)
-			if err != nil {
-				t.Errorf("Error while adding host %s to the DNS server: %s\n",
-					host, err)
-			}
-		}
-		w.WriteMsg(m)
+	hosts[dns.TypeMX] = []string{
+		"mail.matching.com. 0 IN MX 5 mail.matching.com.",
+		"mail.matching.com. 0 IN MX 10 mail2.matching.com.",
+		"mail.matching.com. 0 IN MX 15 mail3.matching.com.",
+	}
+	hosts[dns.TypeAAAA] = []string{
+		"mail.matching.com. 0 IN AAAA 2001:4860:1:2001::80",
 	}
 
+	hosts[dns.TypeA] = []string{
+		"mail.matching.com. 0 IN A 172.18.0.2",
+		"mail2.matching.com. 0 IN A 172.20.20.20",
+		"mail3.matching.com. 0 IN A 172.100.0.1",
+	}
+	mxMatchingCom := generateZone(hosts)
 	dns.HandleFunc("matching.com.", mxMatchingCom)
 	defer dns.HandleRemove("matching.com.")
 
@@ -875,58 +721,30 @@ func TestParseInclude(t *testing.T) {
 
 	/* helper functions */
 
-	rootServer := func(w dns.ResponseWriter, req *dns.Msg) {
-		m := new(dns.Msg)
-		m.SetReply(req)
-		rr, _ := dns.NewRR(". 0 IN SOA a.root-servers.net. nstld.verisign-grs.com. 2016110600 1800 900 604800 86400")
-		m.Ns = []dns.RR{rr}
-		w.WriteMsg(m)
-	}
-
-	dns.HandleFunc(".", rootServer)
+	dns.HandleFunc(".", rootZone)
 	defer dns.HandleRemove(".")
 
-	includeMatchingCom := func(w dns.ResponseWriter, req *dns.Msg) {
-		m := new(dns.Msg)
-		m.SetReply(req)
-
-		hosts := make(map[uint16][]string)
-		hosts[dns.TypeTXT] = []string{
-			"_spf.matching.net. 0 IN TXT \"v=spf1 a:positive.matching.net -a:negative.matching.net ~mx -all\"",
-		}
-		hosts[dns.TypeMX] = []string{
-			"mail.matching.net. 0 IN MX 5 mail.matching.net.",
-			"mail.matching.net. 0 IN MX 10 mail2.matching.net.",
-		}
-		hosts[dns.TypeA] = []string{
-			"postivie.matching.net. 0 IN A 172.100.100.1",
-			"positive.matching.net. 0 IN A 173.18.0.2",
-			"positive.matching.net. 0 IN A 173.20.20.1",
-			"positive.matching.net. 0 IN A 173.20.21.1",
-			"negative.matching.net. 0 IN A 172.18.100.100",
-			"negative.matching.net. 0 IN A 172.18.100.101",
-			"negative.matching.net. 0 IN A 172.18.100.102",
-			"negative.matching.net. 0 IN A 172.18.100.103",
-			"mail.matching.net.	0 IN A 173.18.0.2",
-			"mail2.matching.net. 0 IN A 173.20.20.20",
-		}
-		answers, ok := hosts[req.Question[0].Qtype]
-		if !ok {
-			w.WriteMsg(m)
-			return
-		}
-		m.Answer = make([]dns.RR, len(answers))
-		var err error
-		for i, host := range answers {
-			m.Answer[i], err = dns.NewRR(host)
-			if err != nil {
-				t.Errorf("Error while adding host %s to the DNS server: %s\n",
-					host, err)
-			}
-		}
-		w.WriteMsg(m)
+	hosts := make(map[uint16][]string)
+	hosts[dns.TypeTXT] = []string{
+		"_spf.matching.net. 0 IN TXT \"v=spf1 a:positive.matching.net -a:negative.matching.net ~mx -all\"",
 	}
-
+	hosts[dns.TypeMX] = []string{
+		"mail.matching.net. 0 IN MX 5 mail.matching.net.",
+		"mail.matching.net. 0 IN MX 10 mail2.matching.net.",
+	}
+	hosts[dns.TypeA] = []string{
+		"postivie.matching.net. 0 IN A 172.100.100.1",
+		"positive.matching.net. 0 IN A 173.18.0.2",
+		"positive.matching.net. 0 IN A 173.20.20.1",
+		"positive.matching.net. 0 IN A 173.20.21.1",
+		"negative.matching.net. 0 IN A 172.18.100.100",
+		"negative.matching.net. 0 IN A 172.18.100.101",
+		"negative.matching.net. 0 IN A 172.18.100.102",
+		"negative.matching.net. 0 IN A 172.18.100.103",
+		"mail.matching.net.	0 IN A 173.18.0.2",
+		"mail2.matching.net. 0 IN A 173.20.20.20",
+	}
+	includeMatchingCom := generateZone(hosts)
 	dns.HandleFunc("matching.net.", includeMatchingCom)
 	defer dns.HandleRemove("matching.net.")
 
@@ -974,58 +792,30 @@ func TestParseIncludeNegative(t *testing.T) {
 
 	/* helper functions */
 
-	rootServer := func(w dns.ResponseWriter, req *dns.Msg) {
-		m := new(dns.Msg)
-		m.SetReply(req)
-		rr, _ := dns.NewRR(". 0 IN SOA a.root-servers.net. nstld.verisign-grs.com. 2016110600 1800 900 604800 86400")
-		m.Ns = []dns.RR{rr}
-		w.WriteMsg(m)
-	}
-
-	dns.HandleFunc(".", rootServer)
+	dns.HandleFunc(".", rootZone)
 	defer dns.HandleRemove(".")
 
-	includeMatchingCom := func(w dns.ResponseWriter, req *dns.Msg) {
-		m := new(dns.Msg)
-		m.SetReply(req)
-
-		hosts := make(map[uint16][]string)
-		hosts[dns.TypeTXT] = []string{
-			"_spf.matching.net. 0 IN TXT \"v=spf1 a:positive.matching.net -a:negative.matching.net ~mx -all\"",
-		}
-		hosts[dns.TypeMX] = []string{
-			"mail.matching.net. 0 IN MX 5 mail.matching.net.",
-			"mail.matching.net. 0 IN MX 10 mail2.matching.net.",
-		}
-		hosts[dns.TypeA] = []string{
-			"postivie.matching.net. 0 IN A 172.100.100.1",
-			"positive.matching.net. 0 IN A 173.18.0.2",
-			"positive.matching.net. 0 IN A 173.20.20.1",
-			"positive.matching.net. 0 IN A 173.20.21.1",
-			"negative.matching.net. 0 IN A 172.18.100.100",
-			"negative.matching.net. 0 IN A 172.18.100.101",
-			"negative.matching.net. 0 IN A 172.18.100.102",
-			"negative.matching.net. 0 IN A 172.18.100.103",
-			"mail.matching.net.	0 IN A 173.18.0.2",
-			"mail2.matching.net. 0 IN A 173.20.20.20",
-		}
-		answers, ok := hosts[req.Question[0].Qtype]
-		if !ok {
-			w.WriteMsg(m)
-			return
-		}
-		m.Answer = make([]dns.RR, len(answers))
-		var err error
-		for i, host := range answers {
-			m.Answer[i], err = dns.NewRR(host)
-			if err != nil {
-				t.Errorf("Error while adding host %s to the DNS server: %s\n",
-					host, err)
-			}
-		}
-		w.WriteMsg(m)
+	hosts := make(map[uint16][]string)
+	hosts[dns.TypeTXT] = []string{
+		"_spf.matching.net. 0 IN TXT \"v=spf1 a:positive.matching.net -a:negative.matching.net ~mx -all\"",
 	}
-
+	hosts[dns.TypeMX] = []string{
+		"mail.matching.net. 0 IN MX 5 mail.matching.net.",
+		"mail.matching.net. 0 IN MX 10 mail2.matching.net.",
+	}
+	hosts[dns.TypeA] = []string{
+		"postivie.matching.net. 0 IN A 172.100.100.1",
+		"positive.matching.net. 0 IN A 173.18.0.2",
+		"positive.matching.net. 0 IN A 173.20.20.1",
+		"positive.matching.net. 0 IN A 173.20.21.1",
+		"negative.matching.net. 0 IN A 172.18.100.100",
+		"negative.matching.net. 0 IN A 172.18.100.101",
+		"negative.matching.net. 0 IN A 172.18.100.102",
+		"negative.matching.net. 0 IN A 172.18.100.103",
+		"mail.matching.net.	0 IN A 173.18.0.2",
+		"mail2.matching.net. 0 IN A 173.20.20.20",
+	}
+	includeMatchingCom := generateZone(hosts)
 	dns.HandleFunc("matching.net.", includeMatchingCom)
 	defer dns.HandleRemove("matching.net.")
 
@@ -1080,7 +870,7 @@ func TestParseIncludeNegative(t *testing.T) {
 }
 
 // TestParseExists executes tests for exists term.
-func TestParseExists(t *testing.T) {
+func testParseExists(t *testing.T) {
 
 	domain := "matching.com"
 	p := NewParser(domain, domain, ip, stub)
@@ -1115,8 +905,71 @@ type ParseTestCase struct {
 // TestParse tests whole Parser.Parse() method
 func TestParse(t *testing.T) {
 
-	domain := "matching.com"
+	dns.HandleFunc(".", rootZone)
+	defer dns.HandleRemove(".")
 
+	hosts := make(map[uint16][]string)
+	hosts[dns.TypeMX] = []string{
+		"matching.com. 0 in MX 5 matching.com.",
+	}
+	hosts[dns.TypeA] = []string{
+		"matching.com. 0 IN A 172.20.20.20",
+		"matching.com. 0 IN A 172.18.0.1",
+		"matching.com. 0 IN A 172.18.0.2",
+	}
+	dns.HandleFunc("matching.com.", generateZone(hosts))
+	defer dns.HandleRemove("matching.com.")
+
+	hosts = make(map[uint16][]string)
+
+	hosts[dns.TypeMX] = []string{
+		"matching.net. 0 IN MX 5 matching.net.",
+	}
+
+	hosts[dns.TypeA] = []string{
+		"matching.net. 0 IN A 173.18.0.2",
+		"matching.net. 0 IN A 173.20.20.20",
+	}
+
+	dns.HandleFunc("matching.net.", generateZone(hosts))
+	defer dns.HandleRemove("matching.net.")
+
+	hosts = make(map[uint16][]string)
+
+	hosts[dns.TypeTXT] = []string{
+		"_spf.matching.net. 0 IN TXT \"v=spf1 a:positive.matching.net -a:negative.matching.net ~mx -all\"",
+	}
+	dns.HandleFunc("_spf.matching.net.", generateZone(hosts))
+	defer dns.HandleRemove("_spf.matching.net.")
+
+	hosts = make(map[uint16][]string)
+	hosts[dns.TypeA] = []string{
+		"postivie.matching.net. 0 IN A 172.100.100.1",
+		"positive.matching.net. 0 IN A 173.18.0.2",
+		"positive.matching.net. 0 IN A 173.20.20.1",
+		"positive.matching.net. 0 IN A 173.20.21.1",
+	}
+
+	dns.HandleFunc("positive.matching.net.", generateZone(hosts))
+	defer dns.HandleRemove("positive.matching.net.")
+
+	hosts = make(map[uint16][]string)
+	hosts[dns.TypeA] = []string{
+		"negative.matching.net. 0 IN A 172.100.100.1",
+		"negative.matching.net. 0 IN A 173.18.0.2",
+		"negative.matching.net. 0 IN A 173.20.20.1",
+		"negative.matching.net. 0 IN A 173.20.21.1",
+	}
+	dns.HandleFunc("negative.matching.net.", generateZone(hosts))
+	defer dns.HandleRemove("negative.matching.net.")
+
+	s, addr, err := runLocalUDPServer(dnsServer)
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+	Nameserver = addr
+	domain := "matching.com"
 	ParseTestCases := []ParseTestCase{
 		ParseTestCase{"v=spf1 -all", net.IP{127, 0, 0, 1}, Fail},
 		ParseTestCase{"v=spf1 mx -all", net.IP{172, 20, 20, 20}, Pass},
@@ -1129,8 +982,8 @@ func TestParse(t *testing.T) {
 		ParseTestCase{"v=spf1 a:matching.net -all", net.IP{173, 18, 0, 2}, Pass},
 		ParseTestCase{"v=spf1 +ip4:128.14.15.16 -all", net.IP{128, 14, 15, 16}, Pass},
 		ParseTestCase{"v=spf1 ~ip6:2001:56::2 -all", net.ParseIP("2001:56::2"), Softfail},
-		// Test will return SPFResult Fail as 172.20.20.1 does not result
-		// positively for domain _spf.matching.net
+		//Test will return SPFResult Fail as 172.20.20.1 does not result
+		//positively for domain _spf.matching.net
 		ParseTestCase{"v=spf1 ip4:127.0.0.1 +include:_spf.matching.net -all", net.IP{172, 20, 20, 1}, Fail},
 		// Test will return SPFResult Pass as 172.100.100.1 is withing
 		// positive.matching.net A records, that are marked as +a:
@@ -1165,7 +1018,7 @@ func TestParse(t *testing.T) {
 
 // TestParseRedirect tests whole parsing behavior with a special testing of
 // redirect modifier
-func TestHandleRedirect(t *testing.T) {
+func testHandleRedirect(t *testing.T) {
 
 	const domain = "matching.com"
 	ParseTestCases := []ParseTestCase{
@@ -1200,7 +1053,7 @@ type ExpTestCase struct {
 	Explanation string
 }
 
-func TestHandleExplanation(t *testing.T) {
+func testHandleExplanation(t *testing.T) {
 	const domain = "matching.com"
 	// static.exp.matching.com.        IN      TXT "Invalid SPF record"
 	// ip.exp.matching.com.            IN      TXT "%{i} is not one of %{d}'s designated mail servers."
