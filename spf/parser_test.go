@@ -1075,7 +1075,36 @@ func TestHandleRedirect(t *testing.T) {
 	defer dns.HandleRemove("negative.matching.net.")
 
 	hosts = make(map[uint16][]string)
-	hosts[dns.TypeTXT] = []string{}
+	hosts[dns.TypeTXT] = []string{
+		"redirect.matching.net. 0 IN TXT \"v=spf1 redirect=matching.com\"",
+	}
+
+	dns.HandleFunc("redirect.matching.net.", generateZone(hosts))
+	defer dns.HandleRemove("redirect.matching.net.")
+
+	hosts = make(map[uint16][]string)
+	hosts[dns.TypeTXT] = []string{
+		"redirect.matching.com. 0 IN TXT \"v=spf1 redirect=redirect.matching.net\"",
+	}
+
+	dns.HandleFunc("redirect.matching.com.", generateZone(hosts))
+	defer dns.HandleRemove("redirect.matching.com.")
+
+	hosts = make(map[uint16][]string)
+	hosts[dns.TypeTXT] = []string{
+		"matching.com. 0 IN TXT \"v=spf1 mx:matching.com -all\"",
+	}
+
+	hosts[dns.TypeMX] = []string{
+		"matching.com	0 IN MX 5 mail.matching.com",
+	}
+
+	hosts[dns.TypeA] = []string{
+		"mail.matching.com.	0 IN A 172.18.0.2",
+	}
+
+	dns.HandleFunc("matching.com.", generateZone(hosts))
+	defer dns.HandleRemove("matching.com.")
 
 	s, addr, err := runLocalUDPServer(dnsServer)
 	if err != nil {
@@ -1097,8 +1126,8 @@ func TestHandleRedirect(t *testing.T) {
 		ParseTestCase{"v=spf1 +include:_spf.matching.net redirect=_spf.matching.net", net.IP{127, 0, 0, 1}, Fail},
 		ParseTestCase{"v=spf1 ~include:_spf.matching.net redirect=_spf.matching.net", net.IP{172, 100, 100, 1}, Softfail},
 		// Ensure recursive redirects work
-		// ParseTestCase{"v=spf1 redirect=redirect.matching.com", net.IP{172, 18, 0, 2}, Pass},
-		// ParseTestCase{"v=spf1 redirect=redirect.matching.com", net.IP{127, 0, 0, 1}, Fail},
+		ParseTestCase{"v=spf1 redirect=redirect.matching.com", net.IP{172, 18, 0, 2}, Pass},
+		ParseTestCase{"v=spf1 redirect=redirect.matching.com", net.IP{127, 0, 0, 1}, Fail},
 	}
 
 	for _, testcase := range ParseTestCases {
