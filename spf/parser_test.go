@@ -1146,18 +1146,44 @@ type ExpTestCase struct {
 	Explanation string
 }
 
-func testHandleExplanation(t *testing.T) {
+func TestHandleExplanation(t *testing.T) {
 	const domain = "matching.com"
 	// static.exp.matching.com.        IN      TXT "Invalid SPF record"
 	// ip.exp.matching.com.            IN      TXT "%{i} is not one of %{d}'s designated mail servers."
 	// redirect.exp.matching.com.      IN      TXT "See http://%{d}/why.html?s=%{s}&i=%{i}"
+
+	dns.HandleFunc(".", rootZone)
+	defer dns.HandleRemove(".")
+
+	hosts := make(map[uint16][]string)
+	hosts[dns.TypeTXT] = []string{
+		"static.exp.matching.com. 0 IN TXT \"Invalid SPF record\"",
+	}
+	dns.HandleFunc("static.exp.matching.com.", generateZone(hosts))
+	defer dns.HandleRemove("static.exp.matching.com.")
+
+	hosts = make(map[uint16][]string)
+	hosts[dns.TypeTXT] = []string{
+		"ip.exp.matching.com. 0 in TXT \"%{i} is not one of %{d}'s designated mail servers.\"",
+	}
+	dns.HandleFunc("ip.exp.matching.com.", generateZone(hosts))
+	defer dns.HandleRemove("ip.exp.matching.com.")
+
+	s, addr, err := runLocalUDPServer(dnsServer)
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+	Nameserver = addr
+
 	ExpTestCases := []ExpTestCase{
 		ExpTestCase{"v=spf1 -all exp=static.exp.matching.com",
 			"Invalid SPF record"},
 		ExpTestCase{"v=spf1 -all exp=ip.exp.matching.com",
 			"127.0.0.1 is not one of matching.com's designated mail servers."},
-		ExpTestCase{"v=spf1 -all exp=redirect.exp.matching.com",
-			"See http://matching.com/why.html?s=&i="},
+		// TODO(zaccone): Cover this testcase
+		//ExpTestCase{"v=spf1 -all exp=redirect.exp.matching.com",
+		//ExpT"See http://matching.com/why.html?s=&i="},
 	}
 
 	for _, testcase := range ExpTestCases {
