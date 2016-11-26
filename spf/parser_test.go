@@ -870,7 +870,34 @@ func TestParseIncludeNegative(t *testing.T) {
 }
 
 // TestParseExists executes tests for exists term.
-func testParseExists(t *testing.T) {
+func TestParseExists(t *testing.T) {
+
+	dns.HandleFunc(".", rootZone)
+	defer dns.HandleRemove(".")
+
+	hosts := make(map[uint16][]string)
+	hosts[dns.TypeA] = []string{
+		"postitive.matching.net. 0 IN A 172.20.20.20",
+		"postitive.matching.net. 0 IN A 172.18.0.1",
+		"postitive.matching.net. 0 IN A 172.18.0.2",
+	}
+	dns.HandleFunc("positive.matching.net.", generateZone(hosts))
+	defer dns.HandleRemove("positive.matching.net.")
+
+	hosts = make(map[uint16][]string)
+	hosts[dns.TypeA] = []string{
+		"postitive.matching.com. 0 IN A 172.20.20.20",
+		"postitive.matching.com. 0 IN A 172.18.0.1",
+		"postitive.matching.com. 0 IN A 172.18.0.2",
+	}
+	dns.HandleFunc("positive.matching.com.", generateZone(hosts))
+	defer dns.HandleRemove("positive.matching.com.")
+	s, addr, err := runLocalUDPServer(dnsServer)
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+	Nameserver = addr
 
 	domain := "matching.com"
 	p := NewParser(domain, domain, ip, stub)
@@ -1055,7 +1082,7 @@ func TestHandleRedirect(t *testing.T) {
 
 	hosts = make(map[uint16][]string)
 	hosts[dns.TypeA] = []string{
-		"postivie.matching.net. 0 IN A 172.100.100.1",
+		"positive.matching.net. 0 IN A 172.100.100.1",
 		"positive.matching.net. 0 IN A 173.18.0.2",
 		"positive.matching.net. 0 IN A 173.20.20.1",
 		"positive.matching.net. 0 IN A 173.20.21.1",
