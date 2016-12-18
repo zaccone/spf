@@ -39,7 +39,7 @@ type ParseError struct {
 }
 
 func (pe ParseError) Error() string {
-	return fmt.Sprintf("parse error for token %v: %v", pe.err.Error(), pe.token)
+	return fmt.Sprintf("parse error for token %v: %v", pe.token, pe.err.Error())
 }
 
 // Parser represents parsing structure. It keeps all arguments provided by top
