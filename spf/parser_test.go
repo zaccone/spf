@@ -314,7 +314,7 @@ func TestParseAll(t *testing.T) {
 	var result SPFResult
 
 	for _, testcase := range testcases {
-		match, result = p.parseAll(testcase.Input)
+		match, result, _ = p.parseAll(testcase.Input)
 		if testcase.Match != match {
 			t.Error("Match mismatch")
 		}
@@ -421,7 +421,7 @@ func TestParseA(t *testing.T) {
 	var result SPFResult
 
 	for _, testcase := range testcases {
-		match, result = p.parseA(testcase.Input)
+		match, result, _ = p.parseA(testcase.Input)
 		if testcase.Match != match {
 			t.Errorf("Match mismatch, expected %s, got %s\n", testcase.Match, match)
 		}
@@ -483,7 +483,7 @@ func TestParseAIpv6(t *testing.T) {
 	var result SPFResult
 
 	for _, testcase := range testcases {
-		match, result = p.parseA(testcase.Input)
+		match, result, _ = p.parseA(testcase.Input)
 		if testcase.Match != match {
 			t.Error("Match mismatch")
 		}
@@ -515,7 +515,7 @@ func TestParseIp4(t *testing.T) {
 	var result SPFResult
 
 	for _, testcase := range testcases {
-		match, result = p.parseIP4(testcase.Input)
+		match, result, _ = p.parseIP4(testcase.Input)
 		if testcase.Match != match {
 			t.Error("Match mismatch")
 		}
@@ -546,7 +546,7 @@ func TestParseIp6(t *testing.T) {
 	var result SPFResult
 
 	for _, testcase := range testcases {
-		match, result = p.parseIP6(testcase.Input)
+		match, result, _ = p.parseIP6(testcase.Input)
 		if testcase.Match != match {
 			t.Error("Match mismatch, expected ", testcase.Match, " got ", match)
 		}
@@ -568,7 +568,7 @@ func TestParseIp6WithIp4(t *testing.T) {
 	var result SPFResult
 
 	for _, testcase := range testcases {
-		match, result = p.parseIP6(testcase.Input)
+		match, result, _ = p.parseIP6(testcase.Input)
 		if testcase.Match != match {
 			t.Error("Match mismatch, expected ", testcase.Match, " got ", match)
 		}
@@ -644,7 +644,7 @@ func TestParseMX(t *testing.T) {
 	for _, testcase := range testcases {
 		for _, ip := range ips {
 			p.IP = ip
-			match, result = p.parseMX(testcase.Input)
+			match, result, _ = p.parseMX(testcase.Input)
 			if testcase.Match != match {
 				t.Error("Match mismatch, expected ", testcase.Match, " got ", match)
 			}
@@ -705,7 +705,7 @@ func TestParseMXNegativeTests(t *testing.T) {
 	var result SPFResult
 
 	for _, testcase := range testcases {
-		match, result = p.parseMX(testcase.Input)
+		match, result, _ = p.parseMX(testcase.Input)
 		if testcase.Match != match {
 			t.Error("Match mismatch, expected ", testcase.Match, " got ", match)
 		}
@@ -776,7 +776,7 @@ func TestParseInclude(t *testing.T) {
 	for _, testcase := range testcases {
 		for _, ip := range ips {
 			p.IP = ip
-			match, result = p.parseInclude(testcase.Input)
+			match, result, _ = p.parseInclude(testcase.Input)
 			if testcase.Match != match {
 				t.Error("Match mismatch, expected ", testcase.Match, " got ", match)
 			}
@@ -856,7 +856,7 @@ func TestParseIncludeNegative(t *testing.T) {
 
 		for _, ip := range ips {
 			p.IP = ip
-			match, result = p.parseInclude(testcase.Input)
+			match, result, _ = p.parseInclude(testcase.Input)
 			if testcase.Match != match {
 				t.Error("Match mismatch, expected ", testcase.Match, " got ", match)
 			}
@@ -913,7 +913,7 @@ func TestParseExists(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		match, result := p.parseExists(testcase.Input)
+		match, result, _ := p.parseExists(testcase.Input)
 		if testcase.Match != match {
 			t.Error("Match mismatch, expected ", testcase.Match, " got ", match)
 		}

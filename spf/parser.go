@@ -13,7 +13,7 @@ import (
 
 func matchingResult(qualifier tokenType) (SPFResult, error) {
 	if !qualifier.isQualifier() {
-		return SPFEnd, errors.New("Not a Qualifier")
+		return SPFEnd, fmt.Errorf("invalid qualifier (%d)", qualifier)
 	}
 
 	var result SPFResult
@@ -29,6 +29,17 @@ func matchingResult(qualifier tokenType) (SPFResult, error) {
 		result = Softfail
 	}
 	return result, nil
+}
+
+// ParseError represents parsing error, it holds reference to faulty token
+// as well as error describing fault
+type ParseError struct {
+	token *Token
+	err   error
+}
+
+func (pe ParseError) Error() string {
+	return fmt.Sprintf("parse error for token %v: %v", pe.err.Error(), pe.token)
 }
 
 // Parser represents parsing structure. It keeps all arguments provided by top
@@ -57,53 +68,57 @@ func NewParser(sender, domain string, ip net.IP, query string) *Parser {
 // each token (from left to right). Once a token matches Parse stops and
 // returns matched result.
 func (p *Parser) Parse() (SPFResult, string, error) {
-	var result = None
 	tokens := Lex(p.Query)
 
 	if err := p.sortTokens(tokens); err != nil {
 		return Permerror, "", err
 	}
+
+	var result = None
 	var matches bool
+	var err error
+
 	for _, token := range p.Mechanisms {
 		switch token.Mechanism {
 
 		case tVersion:
-			matches, result = p.parseVersion(token)
+			matches, result, err = p.parseVersion(token)
 		case tAll:
-			matches, result = p.parseAll(token)
+			matches, result, err = p.parseAll(token)
 		case tA:
-			matches, result = p.parseA(token)
+			matches, result, err = p.parseA(token)
 		case tIP4:
-			matches, result = p.parseIP4(token)
+			matches, result, err = p.parseIP4(token)
 		case tIP6:
-			matches, result = p.parseIP6(token)
+			matches, result, err = p.parseIP6(token)
 		case tMX:
-			matches, result = p.parseMX(token)
+			matches, result, err = p.parseMX(token)
 		case tInclude:
-			matches, result = p.parseInclude(token)
+			matches, result, err = p.parseInclude(token)
 		case tExists:
-			matches, result = p.parseExists(token)
+			matches, result, err = p.parseExists(token)
 		}
 
 		if matches {
 			if result == Fail && p.Explanation != nil {
-				return result, p.handleExplanation(), nil
+				explanation, expError := p.handleExplanation()
+				return result, explanation, expError
 			}
 			return result, "", nil
 		}
 
 	}
 
-	result = p.handleRedirect(result)
+	result, err = p.handleRedirect(result)
 
-	return result, "", nil
+	return result, "", err
 }
 
 func (p *Parser) sortTokens(tokens []*Token) error {
 	all := false
 	for _, token := range tokens {
 		if token.Mechanism.isErr() {
-			return errors.New("Token syntax error")
+			return fmt.Errorf("syntax error: %v", token.Value)
 		} else if token.Mechanism.isMechanism() && all == false {
 			p.Mechanisms = append(p.Mechanisms, token)
 
@@ -116,13 +131,13 @@ func (p *Parser) sortTokens(tokens []*Token) error {
 				if p.Redirect == nil {
 					p.Redirect = token
 				} else {
-					return errors.New("Modifier redirect musn't appear more than once")
+					return errors.New("modifier redirect musn't appear more than once")
 				}
 			} else if token.Mechanism == tExp {
 				if p.Explanation == nil {
 					p.Explanation = token
 				} else {
-					return errors.New("Modifier exp musn't appear more than once")
+					return errors.New("modifier exp musn't appear more than once")
 				}
 			}
 		}
@@ -143,59 +158,60 @@ func (p *Parser) setDomain(t *Token) string {
 	}
 }
 
-func (p *Parser) parseVersion(t *Token) (bool, SPFResult) {
+func (p *Parser) parseVersion(t *Token) (bool, SPFResult, error) {
 	if t.Value == "spf1" {
-		return false, None
+		return false, None, nil
 	}
-	return true, Permerror
+	return true, Permerror, ParseError{t,
+		fmt.Errorf("invalid spf qualifier: %v", t.Value)}
 }
 
-func (p *Parser) parseAll(t *Token) (bool, SPFResult) {
+func (p *Parser) parseAll(t *Token) (bool, SPFResult, error) {
 	if result, err := matchingResult(t.Qualifier); err != nil {
-		return true, Permerror
+		return true, Permerror, ParseError{t, err}
 	} else {
-		return true, result
+		return true, result, nil
 	}
 }
 
-func (p *Parser) parseIP4(t *Token) (bool, SPFResult) {
+func (p *Parser) parseIP4(t *Token) (bool, SPFResult, error) {
 	result, _ := matchingResult(t.Qualifier)
 
 	if ip, ipnet, err := net.ParseCIDR(t.Value); err == nil {
 		if ip.To4() == nil {
-			return true, Permerror
+			return true, Permerror, ParseError{t, errors.New("address isn't ipv4")}
 		} else {
-			return ipnet.Contains(p.IP), result
+			return ipnet.Contains(p.IP), result, nil
 		}
 	} else {
 		if ip := net.ParseIP(t.Value).To4(); ip == nil {
-			return true, Permerror
+			return true, Permerror, ParseError{t, errors.New("address isn't ipv4")}
 		} else {
-			return ip.Equal(p.IP), result
+			return ip.Equal(p.IP), result, nil
 		}
 	}
 }
 
-func (p *Parser) parseIP6(t *Token) (bool, SPFResult) {
+func (p *Parser) parseIP6(t *Token) (bool, SPFResult, error) {
 	result, _ := matchingResult(t.Qualifier)
 
 	if ip, ipnet, err := net.ParseCIDR(t.Value); err == nil {
 		if ip.To16() == nil {
-			return true, Permerror
+			return true, Permerror, ParseError{t, errors.New("address isn't ipv6")}
 		} else {
-			return ipnet.Contains(p.IP), result
+			return ipnet.Contains(p.IP), result, nil
 		}
 	} else {
 		ip := net.ParseIP(t.Value)
 		if ip.To4() != nil || ip.To16() == nil {
-			return true, Permerror
+			return true, Permerror, ParseError{t, errors.New("address isn't ipv6")}
 		} else {
-			return ip.Equal(p.IP), result
+			return ip.Equal(p.IP), result, nil
 		}
 	}
 }
 
-func (p *Parser) parseA(t *Token) (bool, SPFResult) {
+func (p *Parser) parseA(t *Token) (bool, SPFResult, error) {
 
 	result, _ := matchingResult(t.Qualifier)
 	domain := p.setDomain(t)
@@ -204,13 +220,14 @@ func (p *Parser) parseA(t *Token) (bool, SPFResult) {
 	var v4Network *net.IPMask
 	var v6Network *net.IPMask
 	var ok bool
+	var err error
 	ips4 := make([]net.IP, 0, 1)
 	ips6 := make([]net.IP, 0, 1)
-	ok, host, v4Network, v6Network = splitToHostNetwork(domain)
+	ok, host, v4Network, v6Network, err = splitToHostNetwork(domain)
 	host = NormalizeHost(host)
 	// return Permerror if there was syntax error
 	if !ok {
-		return true, Permerror
+		return true, Permerror, ParseError{t, err}
 	}
 
 	var queries [2]dns.Msg
@@ -221,16 +238,15 @@ func (p *Parser) parseA(t *Token) (bool, SPFResult) {
 		c := new(dns.Client)
 		r, _, err := c.Exchange(&query, Nameserver)
 		if err != nil {
-			fmt.Println(err)
-			return true, Temperror
+			return true, Temperror, ParseError{t, err}
 		}
 
 		if r != nil && r.Rcode != dns.RcodeSuccess {
 			if r.Rcode != dns.RcodeNameError {
-				fmt.Println(r)
-				return true, Temperror
+				return true, Temperror, ParseError{t,
+					fmt.Errorf("unsuccessful DNS response, code %d", r.Rcode)}
 			} else {
-				return false, None
+				return false, None, nil
 			}
 		} else {
 			for _, answer := range r.Answer {
@@ -252,20 +268,20 @@ func (p *Parser) parseA(t *Token) (bool, SPFResult) {
 	for _, address := range ips4 {
 		v4Ipnet.IP = address
 		if v4Ipnet.Contains(p.IP) {
-			return true, result
+			return true, result, nil
 		}
 	}
 
 	for _, address := range ips6 {
 		v6Ipnet.IP = address
 		if v6Ipnet.Contains(p.IP) {
-			return true, result
+			return true, result, nil
 		}
 	}
-	return false, result
+	return false, result, nil
 }
 
-func (p *Parser) parseMX(t *Token) (bool, SPFResult) {
+func (p *Parser) parseMX(t *Token) (bool, SPFResult, error) {
 	result, _ := matchingResult(t.Qualifier)
 
 	domain := p.setDomain(t)
@@ -274,31 +290,30 @@ func (p *Parser) parseMX(t *Token) (bool, SPFResult) {
 	var v4Network *net.IPMask
 	var v6Network *net.IPMask
 	var ok bool
-	ok, host, v4Network, v6Network = splitToHostNetwork(domain)
+	var err error
+	ok, host, v4Network, v6Network, err = splitToHostNetwork(domain)
 	host = NormalizeHost(host)
 
 	// return Permerror if there was syntax error
 	if !ok {
-		return true, Permerror
+		return true, Permerror, ParseError{t, err}
 	}
 
-	var err error
 	// TODO(zaccone): Ensure returned errors are correct.
 	query := new(dns.Msg)
 	query.SetQuestion(host, dns.TypeMX)
 	c := new(dns.Client)
 	response, _, err := c.Exchange(query, Nameserver)
 	if err != nil {
-		fmt.Println(err)
-		return false, None
+		return false, None, ParseError{t, err}
 	}
 
 	if response != nil && response.Rcode != dns.RcodeSuccess {
 		if response.Rcode != dns.RcodeNameError {
-			return true, Temperror
+			return true, Temperror, ParseError{t,
+				fmt.Errorf("unsuccessful DNS response, code %d", response.Rcode)}
 		} else {
-			fmt.Println(err)
-			return false, None
+			return false, None, ParseError{t, err}
 		}
 	}
 
@@ -383,19 +398,18 @@ func (p *Parser) parseMX(t *Token) (bool, SPFResult) {
 	for subverdict := range pipe {
 		verdict = verdict || subverdict
 	}
-	return verdict, result
+	return verdict, result, nil
 }
 
-func (p *Parser) parseInclude(t *Token) (bool, SPFResult) {
+func (p *Parser) parseInclude(t *Token) (bool, SPFResult, error) {
 	result, _ := matchingResult(t.Qualifier)
 	domain := t.Value
 	if isEmpty(&domain) {
-		return true, Permerror
+		return true, Permerror, ParseError{t, errors.New("empty domain")}
 	}
 	matchesInclude := false
 	if includeResult, _, err := checkHost(p.IP, domain, p.Sender); err != nil {
-		fmt.Println(err)
-		return false, None
+		return false, None, ParseError{t, err}
 	} else { // it's all fine
 		switch includeResult {
 		case Pass:
@@ -412,16 +426,18 @@ func (p *Parser) parseInclude(t *Token) (bool, SPFResult) {
 	}
 
 	if matchesInclude {
-		return true, result
+		return true, result, nil
 	}
-	return false, None
+	return false, None, nil
 }
 
-func (p *Parser) parseExists(t *Token) (bool, SPFResult) {
+func (p *Parser) parseExists(t *Token) (bool, SPFResult, error) {
 	result, _ := matchingResult(t.Qualifier)
 	resolvedDomain, err := ParseMacroToken(p, t)
-	if err != nil || isEmpty(&resolvedDomain) {
-		return true, Permerror
+	if err != nil {
+		return true, Permerror, ParseError{t, err}
+	} else if isEmpty(&resolvedDomain) {
+		return true, Permerror, ParseError{t, errors.New("empty domain")}
 	}
 	resolvedDomain = NormalizeHost(resolvedDomain)
 	var queries [2]dns.Msg
@@ -433,14 +449,15 @@ func (p *Parser) parseExists(t *Token) (bool, SPFResult) {
 		c := new(dns.Client)
 		response, _, err := c.Exchange(&query, Nameserver)
 		if err != nil {
-			return true, Temperror
+			return true, Temperror, ParseError{t, err}
 		}
 
 		if response != nil && response.Rcode != dns.RcodeSuccess {
 			if response.Rcode == dns.RcodeNameError {
-				return false, result
+				return false, result, nil
 			} else {
-				return true, Temperror
+				return true, Temperror, ParseError{t,
+					fmt.Errorf("unsuccessful DNS response, code %d", response.Rcode)}
 			}
 		} else {
 			ips += len(response.Answer)
@@ -449,18 +466,18 @@ func (p *Parser) parseExists(t *Token) (bool, SPFResult) {
 		* hosts were already found.
 		 */
 		if ips > 0 {
-			return true, result
+			return true, result, nil
 		}
 	}
 
-	return false, result
+	return false, result, nil
 }
 
-func (p *Parser) handleRedirect(oldResult SPFResult) SPFResult {
-	var err error
+func (p *Parser) handleRedirect(oldResult SPFResult) (SPFResult, error) {
+	var err error = nil
 	result := oldResult
 	if result != None || p.Redirect == nil {
-		return result
+		return result, nil
 	}
 
 	redirectDomain := p.Redirect.Value
@@ -476,22 +493,26 @@ func (p *Parser) handleRedirect(oldResult SPFResult) SPFResult {
 		result = Permerror
 	}
 
-	return result
+	return result, err
 }
 
-func (p *Parser) handleExplanation() string {
+func (p *Parser) handleExplanation() (string, error) {
 	resolvedDomain, err := ParseMacroToken(p, p.Explanation)
-	if err != nil || isEmpty(&resolvedDomain) {
-		// TODO(zaccone): Should we return some internal error
-		return ""
+	if err != nil {
+		return "", ParseError{p.Explanation, err}
+	} else if isEmpty(&resolvedDomain) {
+		return "", ParseError{p.Explanation, errors.New("empty domain")}
 	}
 	resolvedDomain = NormalizeHost(resolvedDomain)
 	query := new(dns.Msg)
 	query.SetQuestion(resolvedDomain, dns.TypeTXT)
 	c := new(dns.Client)
 	response, _, err := c.Exchange(query, Nameserver)
-	if err != nil || (response != nil && response.Rcode != dns.RcodeSuccess) {
-		return ""
+	if err != nil {
+		return "", ParseError{p.Explanation, err}
+	} else if response != nil && response.Rcode != dns.RcodeSuccess {
+		return "", ParseError{p.Explanation,
+			fmt.Errorf("unsuccessful DNS response, code %d", response.Rcode)}
 	}
 
 	explanation := make([]string, 0, len(response.Answer))
@@ -507,12 +528,12 @@ func (p *Parser) handleExplanation() string {
 	// concatenated with no spaces.
 	parsedExplanation, err := ParseMacro(p, strings.Join(explanation, ""))
 	if err != nil {
-		return ""
+		return "", ParseError{p.Explanation, err}
 	}
-	return parsedExplanation
+	return parsedExplanation, nil
 }
 
-func splitToHostNetwork(domain string) (bool, string, *net.IPMask, *net.IPMask) {
+func splitToHostNetwork(domain string) (bool, string, *net.IPMask, *net.IPMask, error) {
 	var host string
 
 	const v4Len = 32
@@ -531,7 +552,7 @@ func splitToHostNetwork(domain string) (bool, string, *net.IPMask, *net.IPMask) 
 	}
 
 	if !IsDomainName(host) {
-		return false, host, nil, nil
+		return false, host, nil, nil, fmt.Errorf("invalid hostname %v", host)
 	}
 
 	if isEmpty(&n4s) {
@@ -552,21 +573,26 @@ func splitToHostNetwork(domain string) (bool, string, *net.IPMask, *net.IPMask) 
 	var v6Network net.IPMask
 
 	if n4, err = strconv.Atoi(n4s); err != nil {
-		return false, host, nil, nil
+		return false, host, nil, nil,
+			fmt.Errorf("error converting %v to int: %v",
+				n4s, err.(*strconv.NumError).Err)
 	} else if n4 < 0 || n4 > v4Len {
-		return false, host, nil, nil
+		return false, host, nil, nil,
+			fmt.Errorf("netmask out of ipv4 range: %d", n4)
 	} else {
 		v4Network = net.CIDRMask(n4, v4Len)
 	}
 
 	if n6, err = strconv.Atoi(n6s); err != nil {
-		return false, host, nil, nil
+		return false, host, nil, nil,
+			fmt.Errorf("error converting %v to int: %v",
+				n6s, err.(*strconv.NumError).Err)
 	} else if n6 < 0 || n6 > v6Len {
-		return false, host, nil, nil
+		return false, host, nil, nil,
+			fmt.Errorf("netmask out of ipv6 range: %d", n6)
 	} else {
 		v6Network = net.CIDRMask(n6, v6Len)
 	}
 
-	return true, host, &v4Network, &v6Network
-
+	return true, host, &v4Network, &v6Network, nil
 }
