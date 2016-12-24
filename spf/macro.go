@@ -64,7 +64,7 @@ func (m *macro) eof() bool { return m.pos >= m.length }
 // Upon eof found, an non nil error is returned.
 func (m *macro) next() (rune, error) {
 	if m.eof() {
-		return 0, fmt.Errorf("macro eof: (%v)", m.input)
+		return 0, fmt.Errorf("unexpected eof for macro (%v)", m.input)
 	}
 	r, size := utf8.DecodeRuneInString(m.input[m.pos:])
 	m.prev = m.pos
@@ -218,7 +218,7 @@ func scanMacro(m *macro, p *Parser) (stateFn, error) {
 	}
 
 	if err != nil {
-		return nil, errors.New("Macro parsing error: " + err.Error())
+		return nil, errors.New("macro parsing error: " + err.Error())
 	}
 
 	r, err = m.next()
@@ -227,7 +227,7 @@ func scanMacro(m *macro, p *Parser) (stateFn, error) {
 		return nil, err
 	} else if r != '}' {
 		// macro not ended properly, handle error here
-		return nil, errors.New("unexpected char, expected '}'")
+		return nil, fmt.Errorf("unexpected char (%v), expected '}'", r)
 	}
 
 	m.moveon()
@@ -291,7 +291,7 @@ func parseDelimiter(m *macro, curItem *item) (string, error) {
 	}
 	if r != '}' {
 		// syntax error
-		return "", fmt.Errorf("unexpcted character '%v'\n", r)
+		return nil, fmt.Errorf("unexpected char (%v), expected '}'", r)
 	}
 
 	m.back()
