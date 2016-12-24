@@ -1035,7 +1035,7 @@ func TestParse(t *testing.T) {
 		p := NewParser(domain, domain, testcase.IP, testcase.Query)
 
 		result, _, err := p.Parse()
-		if err != nil {
+		if result != Permerror && result != Temperror && err != nil {
 			t.Error("Unexpected error while parsing: ", err)
 		} else if result != testcase.Result {
 			t.Error("Expected ", testcase.Result, " got ", result, " instead.")

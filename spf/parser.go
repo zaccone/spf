@@ -104,7 +104,7 @@ func (p *Parser) Parse() (SPFResult, string, error) {
 				explanation, expError := p.handleExplanation()
 				return result, explanation, expError
 			}
-			return result, "", nil
+			return result, "", err
 		}
 
 	}
