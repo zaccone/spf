@@ -118,7 +118,7 @@ func (p *Parser) sortTokens(tokens []*Token) error {
 	all := false
 	for _, token := range tokens {
 		if token.Mechanism.isErr() {
-			return fmt.Errorf("syntax error: %v", token.Value)
+			return fmt.Errorf("syntax error for token: %v", token.Value)
 		} else if token.Mechanism.isMechanism() && all == false {
 			p.Mechanisms = append(p.Mechanisms, token)
 
