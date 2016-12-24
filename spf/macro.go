@@ -291,7 +291,7 @@ func parseDelimiter(m *macro, curItem *item) (string, error) {
 	}
 	if r != '}' {
 		// syntax error
-		return nil, fmt.Errorf("unexpected char (%v), expected '}'", r)
+		return "", fmt.Errorf("unexpected char (%v), expected '}'", r)
 	}
 
 	m.back()
