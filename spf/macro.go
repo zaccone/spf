@@ -61,14 +61,15 @@ func (m *macro) eof() bool { return m.pos >= m.length }
 // next() returns next read rune and boolean indicator whether scanned
 // record has ended. Method also moves `pos` value to size (length of read rune),
 // and `prev` to previous `pos` location.
-func (m *macro) next() (rune, bool) {
+// Upon eof found, an non nil error is returned.
+func (m *macro) next() (rune, error) {
 	if m.eof() {
-		return 0, true
+		return 0, fmt.Errorf("macro eof: (%v)", m.input)
 	}
 	r, size := utf8.DecodeRuneInString(m.input[m.pos:])
 	m.prev = m.pos
 	m.pos += size
-	return r, false
+	return r, nil
 }
 
 // macro.moveon() sets macro.start to macro.pos. This is usually done once the
@@ -83,9 +84,9 @@ func (m *macro) back() { m.pos = m.prev }
 func scanText(m *macro, p *Parser) (stateFn, error) {
 	for {
 
-		r, eof := m.next()
+		r, err := m.next()
 
-		if eof {
+		if err != nil {
 			m.output = append(m.output, m.input[m.start:m.pos])
 			m.moveon()
 			break
@@ -103,9 +104,9 @@ func scanText(m *macro, p *Parser) (stateFn, error) {
 }
 
 func scanPercent(m *macro, p *Parser) (stateFn, error) {
-	r, eof := m.next()
-	if eof {
-		return nil, errors.New("Unexpected end of macro")
+	r, err := m.next()
+	if err != nil {
+		return nil, err
 	}
 	switch r {
 	case '{':
@@ -134,13 +135,13 @@ type item struct {
 
 func scanMacro(m *macro, p *Parser) (stateFn, error) {
 
-	r, eof := m.next()
-	if eof {
-		return nil, errors.New("macro ended too early")
+	r, err := m.next()
+	if err != nil {
+		return nil, err
 	}
 	var curItem item
 
-	var err error
+	//var err error
 	var result string
 	var email *mail.Email
 
@@ -220,13 +221,13 @@ func scanMacro(m *macro, p *Parser) (stateFn, error) {
 		return nil, errors.New("Macro parsing error: " + err.Error())
 	}
 
-	r, eof = m.next()
-	if eof {
+	r, err = m.next()
+	if err != nil {
 		// macro not ended properly, handle error here
-		return nil, errors.New("Macro ended too early.")
+		return nil, err
 	} else if r != '}' {
 		// macro not ended properly, handle error here
-		return nil, errors.New("Invalid syntax.")
+		return nil, errors.New("unexpected char, expected '}'")
 	}
 
 	m.moveon()
@@ -243,17 +244,17 @@ func parseDelimiter(m *macro, curItem *item) (string, error) {
 		return strings.ContainsRune(".-+,/_=", ch)
 	}
 
-	r, eof := m.next()
-	if eof {
-		return "", errors.New("unexpected eof")
+	r, err := m.next()
+	if err != nil {
+		return "", err
 	}
 
 	if isDigit(r) {
 		m.back()
 		for {
-			r, eof := m.next()
-			if eof {
-				return "", errors.New("unexpected eof")
+			r, err := m.next()
+			if err != nil {
+				return "", err
 			}
 
 			if !isDigit(r) {
@@ -268,24 +269,24 @@ func parseDelimiter(m *macro, curItem *item) (string, error) {
 			}
 		}
 
-		r, eof = m.next()
-		if eof {
-			return "", errors.New("unexpected eof")
+		r, err = m.next()
+		if err != nil {
+			return "", err
 		}
 	}
 
 	if r == 'r' {
 		curItem.reversed = true
-		r, eof = m.next()
-		if eof {
-			return "", errors.New("unexpected eof")
+		r, err = m.next()
+		if err != nil {
+			return "", err
 		}
 	}
 	if isMacroDelimiter(r) {
 		curItem.delimiter = r
-		r, eof = m.next()
-		if eof {
-			return "", errors.New("unexpected eof")
+		r, err = m.next()
+		if err != nil {
+			return "", err
 		}
 	}
 	if r != '}' {
