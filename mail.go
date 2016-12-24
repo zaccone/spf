@@ -1,4 +1,4 @@
-package mail
+package spf
 
 import (
 	"errors"

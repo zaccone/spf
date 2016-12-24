@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"unicode/utf8"
-
-	"github.com/zaccone/goSPF/mail"
 )
 
 // DELIMITER is a constant rune other than any allowed delimiter.
@@ -143,7 +141,7 @@ func scanMacro(m *macro, p *Parser) (stateFn, error) {
 
 	//var err error
 	var result string
-	var email *mail.Email
+	var email *Email
 
 	switch r {
 	case 's':
@@ -157,7 +155,7 @@ func scanMacro(m *macro, p *Parser) (stateFn, error) {
 		m.moveon()
 
 	case 'l':
-		email, err = mail.SplitEmails(p.Sender, p.Sender)
+		email, err = SplitEmails(p.Sender, p.Sender)
 		if err != nil {
 			break
 		}
@@ -171,7 +169,7 @@ func scanMacro(m *macro, p *Parser) (stateFn, error) {
 		m.moveon()
 
 	case 'o':
-		email, err = mail.SplitEmails(p.Sender, p.Sender)
+		email, err = SplitEmails(p.Sender, p.Sender)
 		if err != nil {
 			break
 		}

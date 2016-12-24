@@ -6,4 +6,4 @@ go:
 install:
     - go get github.com/miekg/dns
 script:
-    - go test -v ./spf
+    - go test -v
