@@ -57,7 +57,7 @@ func (spf SPFResult) String() string {
 // All the parameters should be parsed and dereferenced from real email fields.
 // This means domain should already be extracted from MAIL FROM field so this
 // function can focus on the core part.
-func checkHost(ip net.IP, domain, sender string, config *Config) (SPFResult, string, error) {
+func CheckHost(ip net.IP, domain, sender string, config *Config) (SPFResult, string, error) {
 
 	/*
 	* As per RFC 7208 Section 4.3:

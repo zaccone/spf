@@ -43,7 +43,7 @@ func (pe ParseError) Error() string {
 }
 
 // Parser represents parsing structure. It keeps all arguments provided by top
-// level checkHost method as well as tokenized terms from TXT RR. One should
+// level CheckHost method as well as tokenized terms from TXT RR. One should
 // call Parser.Parse() for a proper SPF evaluation.
 type Parser struct {
 	Sender      string
@@ -57,7 +57,7 @@ type Parser struct {
 }
 
 // NewParser creates new Parser objects and returns its reference.
-// It accepts checkHost() parameters as well as SPF query (fetched from TXT RR
+// It accepts CheckHost() parameters as well as SPF query (fetched from TXT RR
 // during initial DNS lookup.
 func NewParser(sender, domain string, ip net.IP, query string, config *Config) *Parser {
 	return &Parser{sender, domain, ip, query, make([]*Token, 0, 10), nil, nil, config}
@@ -409,7 +409,7 @@ func (p *Parser) parseInclude(t *Token) (bool, SPFResult, error) {
 		return true, Permerror, ParseError{t, errors.New("empty domain")}
 	}
 	matchesInclude := false
-	if includeResult, _, err := checkHost(p.IP, domain, p.Sender, p.Config); err != nil {
+	if includeResult, _, err := CheckHost(p.IP, domain, p.Sender, p.Config); err != nil {
 		return false, None, ParseError{t, err}
 	} else { // it's all fine
 		switch includeResult {
@@ -483,7 +483,7 @@ func (p *Parser) handleRedirect(oldResult SPFResult) (SPFResult, error) {
 
 	redirectDomain := p.Redirect.Value
 
-	if result, _, err = checkHost(p.IP, redirectDomain, p.Sender, p.Config); err != nil {
+	if result, _, err = CheckHost(p.IP, redirectDomain, p.Sender, p.Config); err != nil {
 		//TODO(zaccone): confirm result value
 		result = Permerror
 	} else if result == None || result == Permerror {
