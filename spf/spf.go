@@ -60,15 +60,14 @@ func (spf SPFResult) String() string {
 func checkHost(ip net.IP, domain, sender string) (SPFResult, string, error) {
 
 	/*
-			* As per RFC 7208 Section 4.3:
-			* If the <domain> is malformed (e.g., label longer than 63
-			* characters, zero-length label not at the end, etc.) or is not
-			* a multi-label
-		    * domain name, [...], check_host() immediately returns None
-	*/
+	* As per RFC 7208 Section 4.3:
+	* If the <domain> is malformed (e.g., label longer than 63
+	* characters, zero-length label not at the end, etc.) or is not
+	* a multi-label
+	* domain name, [...], check_host() immediately returns None
+	 */
 	if !IsDomainName(domain) {
-		fmt.Println("Invalid domain")
-		return None, "", nil
+		return None, "", fmt.Errorf("Invalid domain %v", domain)
 	}
 	domain = NormalizeHost(domain)
 	query := new(dns.Msg)
@@ -92,7 +91,8 @@ func checkHost(ip net.IP, domain, sender string) (SPFResult, string, error) {
 	 */
 	if r != nil && r.Rcode != dns.RcodeSuccess {
 		if r.Rcode != dns.RcodeNameError {
-			return Temperror, "", nil
+			return Temperror, "",
+				fmt.Errorf("unsuccessful DNS response, code %d", r.Rcode)
 		} else {
 			return None, "", nil
 		}
@@ -108,15 +108,5 @@ func checkHost(ip net.IP, domain, sender string) (SPFResult, string, error) {
 	spfQuery := strings.Join(subQueries, " ")
 	parser := NewParser(sender, domain, ip, spfQuery)
 
-	var result = Neutral
-	var explanation string
-
-	if result, explanation, err = parser.Parse(); err != nil {
-		// handle error, something went wrong.
-		// Let's set PermError for now.
-		return Permerror, "", nil
-	}
-
-	// return SPF evaluation result
-	return result, explanation, nil
+	return parser.Parse()
 }
