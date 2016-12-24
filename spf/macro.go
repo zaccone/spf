@@ -118,7 +118,7 @@ func scanPercent(m *macro, p *Parser) (stateFn, error) {
 	case '-':
 		m.output = append(m.output, "%20")
 	default:
-		return nil, fmt.Errorf("Forbidden character (%v) after '%'", r)
+		return nil, fmt.Errorf("forbidden character (%v) after '%'", r)
 	}
 
 	m.moveon()
@@ -136,48 +136,49 @@ func scanMacro(m *macro, p *Parser) (stateFn, error) {
 
 	r, eof := m.next()
 	if eof {
-		return nil, errors.New("Macro ended too early")
+		return nil, errors.New("macro ended too early")
 	}
 	var curItem item
+
+	var err error
+	var result string
+	var email *mail.Email
 
 	switch r {
 	case 's':
 		curItem = item{p.Sender, NEGATIVE, DELIMITER, false}
 		m.moveon()
-		result, err := parseDelimiter(m, &curItem)
+		result, err = parseDelimiter(m, &curItem)
 		if err != nil {
-			return nil, errors.New(
-				"Error while parsing macro " + err.Error())
+			break
 		}
 		m.output = append(m.output, result)
 		m.moveon()
 
 	case 'l':
-		email, err := mail.SplitEmails(p.Sender, p.Sender)
+		email, err = mail.SplitEmails(p.Sender, p.Sender)
 		if err != nil {
-			return nil, errors.New("Error while parsin macro:  " + err.Error())
+			break
 		}
 		curItem = item{email.User, NEGATIVE, DELIMITER, false}
 		m.moveon()
-		result, err := parseDelimiter(m, &curItem)
+		result, err = parseDelimiter(m, &curItem)
 		if err != nil {
-			return nil, errors.New(
-				"Error while parsing macro " + err.Error())
+			break
 		}
 		m.output = append(m.output, result)
 		m.moveon()
 
 	case 'o':
-		email, err := mail.SplitEmails(p.Sender, p.Sender)
+		email, err = mail.SplitEmails(p.Sender, p.Sender)
 		if err != nil {
-			return nil, errors.New("Error while parsing macro:  " + err.Error())
+			break
 		}
 		curItem = item{email.Domain, NEGATIVE, DELIMITER, false}
 		m.moveon()
-		result, err := parseDelimiter(m, &curItem)
+		result, err = parseDelimiter(m, &curItem)
 		if err != nil {
-			return nil, errors.New(
-				"Error while parsing macro " + err.Error())
+			break
 		}
 		m.output = append(m.output, result)
 		m.moveon()
@@ -185,10 +186,9 @@ func scanMacro(m *macro, p *Parser) (stateFn, error) {
 	case 'd', 'h':
 		curItem = item{p.Domain, NEGATIVE, DELIMITER, false}
 		m.moveon()
-		result, err := parseDelimiter(m, &curItem)
+		result, err = parseDelimiter(m, &curItem)
 		if err != nil {
-			return nil, errors.New(
-				"Error while parsing macro " + err.Error())
+			break
 		}
 		m.output = append(m.output, result)
 		m.moveon()
@@ -196,10 +196,9 @@ func scanMacro(m *macro, p *Parser) (stateFn, error) {
 	case 'i':
 		curItem = item{p.IP.String(), NEGATIVE, DELIMITER, false}
 		m.moveon()
-		result, err := parseDelimiter(m, &curItem)
+		result, err = parseDelimiter(m, &curItem)
 		if err != nil {
-			return nil, errors.New(
-				"Error while parsing macro " + err.Error())
+			break
 		}
 		m.output = append(m.output, result)
 		m.moveon()
@@ -215,6 +214,10 @@ func scanMacro(m *macro, p *Parser) (stateFn, error) {
 		}
 		m.moveon()
 		// TODO(zaccone): add remaining "c", "r", "t"
+	}
+
+	if err != nil {
+		return nil, errors.New("Macro parsing error: " + err.Error())
 	}
 
 	r, eof = m.next()
