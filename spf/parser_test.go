@@ -12,8 +12,9 @@ import (
 )
 
 var (
-	ip   = net.IP{127, 0, 0, 1}
-	ipv6 = net.ParseIP("2001:4860:0:2001::68")
+	ip     = net.IP{127, 0, 0, 1}
+	ipv6   = net.ParseIP("2001:4860:0:2001::68")
+	config = &Config{"127.0.0.1:53530"}
 )
 
 const (
@@ -84,7 +85,7 @@ func generateZone(zones map[uint16][]string) func(dns.ResponseWriter, *dns.Msg) 
 /********************/
 
 func TestNewParserFunction(t *testing.T) {
-	p := NewParser(stub, stub, ip, stub)
+	p := NewParser(stub, stub, ip, stub, config)
 
 	if p.Sender != stub {
 		t.Error("Sender mismatch, got: ", p.Sender, " expected ", stub)
@@ -226,7 +227,7 @@ func TestTokensSoriting(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		p := NewParser(stub, stub, ip, stub)
+		p := NewParser(stub, stub, ip, stub, config)
 		p.sortTokens(testcase.Tokens)
 
 		if !reflect.DeepEqual(p.Mechanisms, testcase.ExpTokens) {
@@ -283,7 +284,7 @@ func TestTokensSoritingHandleErrors(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		p := NewParser(stub, stub, ip, stub)
+		p := NewParser(stub, stub, ip, stub, config)
 		if err := p.sortTokens(testcase.Tokens); err == nil {
 			t.Error("We should have gotten an error, ")
 		}
@@ -301,7 +302,7 @@ type TokenTestCase struct {
 // TODO(marek): Add testfunction for tVersion token
 
 func TestParseAll(t *testing.T) {
-	p := NewParser(stub, stub, ip, stub)
+	p := NewParser(stub, stub, ip, stub, config)
 	testcases := []TokenTestCase{
 		TokenTestCase{&Token{tAll, qPlus, ""}, Pass, true},
 		TokenTestCase{&Token{tAll, qMinus, ""}, Fail, true},
@@ -383,8 +384,8 @@ func TestParseA(t *testing.T) {
 		t.Fatalf("unable to run test server: %v", err)
 	}
 	defer s.Shutdown()
-	Nameserver = addr
-	p := NewParser(domain, domain, ip, stub)
+	config.Nameserver = addr
+	p := NewParser(domain, domain, ip, stub, config)
 	testcases := []TokenTestCase{
 		TokenTestCase{&Token{tA, qPlus, "positive.matching.com"}, Pass, true},
 		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/32"}, Pass, true},
@@ -464,9 +465,9 @@ func TestParseAIpv6(t *testing.T) {
 		t.Fatalf("unable to run test server: %v", err)
 	}
 	defer s.Shutdown()
-	Nameserver = addr
+	config.Nameserver = addr
 	domain := "matching.com"
-	p := NewParser(domain, domain, ipv6, stub)
+	p := NewParser(domain, domain, ipv6, stub, config)
 	testcases := []TokenTestCase{
 		TokenTestCase{&Token{tA, qPlus, "positive.matching.com"}, Pass, true},
 		TokenTestCase{&Token{tA, qPlus, "positive.matching.com//128"}, Pass, true},
@@ -494,7 +495,7 @@ func TestParseAIpv6(t *testing.T) {
 }
 
 func TestParseIp4(t *testing.T) {
-	p := NewParser(stub, stub, ip, stub)
+	p := NewParser(stub, stub, ip, stub, config)
 	testcases := []TokenTestCase{
 		TokenTestCase{&Token{tIP4, qPlus, "127.0.0.1"}, Pass, true},
 		TokenTestCase{&Token{tIP4, qMinus, "127.0.0.1"}, Fail, true},
@@ -526,7 +527,7 @@ func TestParseIp4(t *testing.T) {
 }
 
 func TestParseIp6(t *testing.T) {
-	p := NewParser(stub, stub, ipv6, stub)
+	p := NewParser(stub, stub, ipv6, stub, config)
 
 	testcases := []TokenTestCase{
 		TokenTestCase{&Token{tIP6, qPlus, "2001:4860:0:2001::68"}, Pass, true},
@@ -557,7 +558,7 @@ func TestParseIp6(t *testing.T) {
 }
 
 func TestParseIp6WithIp4(t *testing.T) {
-	p := NewParser(stub, stub, ip, stub)
+	p := NewParser(stub, stub, ip, stub, config)
 
 	testcases := []TokenTestCase{
 		TokenTestCase{&Token{tIP6, qPlus, "127.0.0.1"}, Permerror, true},
@@ -618,11 +619,11 @@ func TestParseMX(t *testing.T) {
 		t.Fatalf("unable to run test server: %v", err)
 	}
 	defer s.Shutdown()
-	Nameserver = addr
+	config.Nameserver = addr
 	/* ***************** */
 
 	domain := "matching.com"
-	p := NewParser(domain, domain, net.IP{0, 0, 0, 0}, stub)
+	p := NewParser(domain, domain, net.IP{0, 0, 0, 0}, stub, config)
 
 	testcases := []TokenTestCase{
 		TokenTestCase{&Token{tMX, qPlus, "matching.com"}, Pass, true},
@@ -687,11 +688,11 @@ func TestParseMXNegativeTests(t *testing.T) {
 		t.Fatalf("unable to run test server: %v", err)
 	}
 	defer s.Shutdown()
-	Nameserver = addr
+	config.Nameserver = addr
 	/* ***************** */
 	ip := net.IP{127, 0, 0, 1}
 	domain := "matching.com"
-	p := NewParser(domain, domain, ip, stub)
+	p := NewParser(domain, domain, ip, stub, config)
 
 	testcases := []TokenTestCase{
 		TokenTestCase{&Token{tMX, qPlus, "matching.com"}, Pass, false},
@@ -753,7 +754,7 @@ func TestParseInclude(t *testing.T) {
 		t.Fatalf("unable to run test server: %v", err)
 	}
 	defer s.Shutdown()
-	Nameserver = addr
+	config.Nameserver = addr
 	/*******************************/
 	ips := []net.IP{
 		net.IP{172, 100, 100, 1},
@@ -762,7 +763,7 @@ func TestParseInclude(t *testing.T) {
 	}
 
 	domain := "matching.net"
-	p := NewParser(domain, domain, net.IP{0, 0, 0, 0}, stub)
+	p := NewParser(domain, domain, net.IP{0, 0, 0, 0}, stub, config)
 	testcases := []TokenTestCase{
 		TokenTestCase{&Token{tInclude, qPlus, "_spf.matching.net"}, Pass, true},
 		TokenTestCase{&Token{tInclude, qMinus, "_spf.matching.net"}, Fail, true},
@@ -824,7 +825,7 @@ func TestParseIncludeNegative(t *testing.T) {
 		t.Fatalf("unable to run test server: %v", err)
 	}
 	defer s.Shutdown()
-	Nameserver = addr
+	config.Nameserver = addr
 	/*******************************/
 	ips := []net.IP{
 		// completely random IP addres out of the net segment
@@ -836,7 +837,7 @@ func TestParseIncludeNegative(t *testing.T) {
 		net.IP{173, 18, 100, 103},
 	}
 	domain := "matching.net"
-	p := NewParser(domain, domain, ip, stub)
+	p := NewParser(domain, domain, ip, stub, config)
 
 	testcases := []TokenTestCase{
 		TokenTestCase{&Token{tInclude, qMinus, "_spf.matching.net"}, None, false},
@@ -897,10 +898,10 @@ func TestParseExists(t *testing.T) {
 		t.Fatalf("unable to run test server: %v", err)
 	}
 	defer s.Shutdown()
-	Nameserver = addr
+	config.Nameserver = addr
 
 	domain := "matching.com"
-	p := NewParser(domain, domain, ip, stub)
+	p := NewParser(domain, domain, ip, stub, config)
 	testcases := []TokenTestCase{
 		TokenTestCase{&Token{tExists, qPlus, "positive.matching.net"}, Pass, true},
 		TokenTestCase{&Token{tExists, qMinus, "positive.matching.net"}, Fail, true},
@@ -995,7 +996,7 @@ func TestParse(t *testing.T) {
 		t.Fatalf("unable to run test server: %v", err)
 	}
 	defer s.Shutdown()
-	Nameserver = addr
+	config.Nameserver = addr
 	domain := "matching.com"
 	ParseTestCases := []ParseTestCase{
 		ParseTestCase{"v=spf1 -all", net.IP{127, 0, 0, 1}, Fail},
@@ -1032,7 +1033,7 @@ func TestParse(t *testing.T) {
 	}
 
 	for _, testcase := range ParseTestCases {
-		p := NewParser(domain, domain, testcase.IP, testcase.Query)
+		p := NewParser(domain, domain, testcase.IP, testcase.Query, config)
 
 		result, _, err := p.Parse()
 		if result != Permerror && result != Temperror && err != nil {
@@ -1138,7 +1139,7 @@ func TestHandleRedirect(t *testing.T) {
 		t.Fatalf("unable to run test server: %v", err)
 	}
 	defer s.Shutdown()
-	Nameserver = addr
+	config.Nameserver = addr
 
 	const domain = "matching.com"
 	ParseTestCases := []ParseTestCase{
@@ -1158,7 +1159,7 @@ func TestHandleRedirect(t *testing.T) {
 	}
 
 	for _, testcase := range ParseTestCases {
-		p := NewParser(domain, domain, testcase.IP, testcase.Query)
+		p := NewParser(domain, domain, testcase.IP, testcase.Query, config)
 		result, _, _ := p.Parse()
 		if result != testcase.Result {
 			t.Error("Expected ", testcase.Result, " got ", result, " instead.")
@@ -1199,7 +1200,7 @@ func TestHandleExplanation(t *testing.T) {
 		t.Fatalf("unable to run test server: %v", err)
 	}
 	defer s.Shutdown()
-	Nameserver = addr
+	config.Nameserver = addr
 
 	ExpTestCases := []ExpTestCase{
 		ExpTestCase{"v=spf1 -all exp=static.exp.matching.com",
@@ -1213,7 +1214,7 @@ func TestHandleExplanation(t *testing.T) {
 
 	for _, testcase := range ExpTestCases {
 
-		p := NewParser(domain, domain, ip, testcase.Query)
+		p := NewParser(domain, domain, ip, testcase.Query, config)
 		_, exp, err := p.Parse()
 		if err != nil {
 			t.Error("Unexpected error while parsing: ", err)

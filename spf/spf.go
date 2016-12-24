@@ -57,7 +57,7 @@ func (spf SPFResult) String() string {
 // All the parameters should be parsed and dereferenced from real email fields.
 // This means domain should already be extracted from MAIL FROM field so this
 // function can focus on the core part.
-func checkHost(ip net.IP, domain, sender string) (SPFResult, string, error) {
+func checkHost(ip net.IP, domain, sender string, config *Config) (SPFResult, string, error) {
 
 	/*
 	* As per RFC 7208 Section 4.3:
@@ -74,7 +74,7 @@ func checkHost(ip net.IP, domain, sender string) (SPFResult, string, error) {
 	query.SetQuestion(domain, dns.TypeTXT)
 	subQueries := make([]string, 0, 1)
 	c := new(dns.Client)
-	r, _, err := c.Exchange(query, Nameserver)
+	r, _, err := c.Exchange(query, config.Nameserver)
 	if err != nil {
 		return Temperror, "", err
 	}
@@ -106,7 +106,7 @@ func checkHost(ip net.IP, domain, sender string) (SPFResult, string, error) {
 		}
 	}
 	spfQuery := strings.Join(subQueries, " ")
-	parser := NewParser(sender, domain, ip, spfQuery)
+	parser := NewParser(sender, domain, ip, spfQuery, config)
 
 	return parser.Parse()
 }

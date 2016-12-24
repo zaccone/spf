@@ -50,7 +50,7 @@ func TestMacroIteration(t *testing.T) {
 			"Address IP 13.12.11.10 end"},
 	}
 
-	parser := NewParser(sender, domain, ip4, stub)
+	parser := NewParser(sender, domain, ip4, stub, config)
 
 	for _, test := range testCases {
 		token.Value = test.Input
@@ -97,7 +97,7 @@ func TestMacroExpansionRFCExamples(t *testing.T) {
 	}
 
 	parser := NewParser("strong-bad@email.example.com",
-		"email.example.com", net.IP{192, 0, 2, 3}, stub)
+		"email.example.com", net.IP{192, 0, 2, 3}, stub, config)
 
 	for _, test := range testCases {
 
@@ -137,7 +137,7 @@ func TestParsingErrors(t *testing.T) {
 		&MacroTest{"%{i-2}", ""},
 	}
 
-	parser := NewParser(sender, domain, ip4, stub)
+	parser := NewParser(sender, domain, ip4, stub, config)
 
 	for _, test := range testcases {
 

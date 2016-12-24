@@ -53,13 +53,14 @@ type Parser struct {
 	Mechanisms  []*Token
 	Explanation *Token
 	Redirect    *Token
+	Config      *Config
 }
 
 // NewParser creates new Parser objects and returns its reference.
 // It accepts checkHost() parameters as well as SPF query (fetched from TXT RR
 // during initial DNS lookup.
-func NewParser(sender, domain string, ip net.IP, query string) *Parser {
-	return &Parser{sender, domain, ip, query, make([]*Token, 0, 10), nil, nil}
+func NewParser(sender, domain string, ip net.IP, query string, config *Config) *Parser {
+	return &Parser{sender, domain, ip, query, make([]*Token, 0, 10), nil, nil, config}
 }
 
 // Parse aggregates all steps required for SPF evaluation.
@@ -236,7 +237,7 @@ func (p *Parser) parseA(t *Token) (bool, SPFResult, error) {
 	queries[1].SetQuestion(host, dns.TypeAAAA)
 	for _, query := range queries {
 		c := new(dns.Client)
-		r, _, err := c.Exchange(&query, Nameserver)
+		r, _, err := c.Exchange(&query, p.Config.Nameserver)
 		if err != nil {
 			return true, Temperror, ParseError{t, err}
 		}
@@ -303,7 +304,7 @@ func (p *Parser) parseMX(t *Token) (bool, SPFResult, error) {
 	query := new(dns.Msg)
 	query.SetQuestion(host, dns.TypeMX)
 	c := new(dns.Client)
-	response, _, err := c.Exchange(query, Nameserver)
+	response, _, err := c.Exchange(query, p.Config.Nameserver)
 	if err != nil {
 		return false, None, ParseError{t, err}
 	}
@@ -355,7 +356,7 @@ func (p *Parser) parseMX(t *Token) (bool, SPFResult, error) {
 
 			for _, query := range queries {
 				c := new(dns.Client)
-				response, _, err := c.Exchange(&query, Nameserver)
+				response, _, err := c.Exchange(&query, p.Config.Nameserver)
 
 				if err != nil {
 					pipe <- false
@@ -408,7 +409,7 @@ func (p *Parser) parseInclude(t *Token) (bool, SPFResult, error) {
 		return true, Permerror, ParseError{t, errors.New("empty domain")}
 	}
 	matchesInclude := false
-	if includeResult, _, err := checkHost(p.IP, domain, p.Sender); err != nil {
+	if includeResult, _, err := checkHost(p.IP, domain, p.Sender, p.Config); err != nil {
 		return false, None, ParseError{t, err}
 	} else { // it's all fine
 		switch includeResult {
@@ -447,7 +448,7 @@ func (p *Parser) parseExists(t *Token) (bool, SPFResult, error) {
 	ips := 0
 	for _, query := range queries {
 		c := new(dns.Client)
-		response, _, err := c.Exchange(&query, Nameserver)
+		response, _, err := c.Exchange(&query, p.Config.Nameserver)
 		if err != nil {
 			return true, Temperror, ParseError{t, err}
 		}
@@ -482,7 +483,7 @@ func (p *Parser) handleRedirect(oldResult SPFResult) (SPFResult, error) {
 
 	redirectDomain := p.Redirect.Value
 
-	if result, _, err = checkHost(p.IP, redirectDomain, p.Sender); err != nil {
+	if result, _, err = checkHost(p.IP, redirectDomain, p.Sender, p.Config); err != nil {
 		//TODO(zaccone): confirm result value
 		result = Permerror
 	} else if result == None || result == Permerror {
@@ -507,7 +508,7 @@ func (p *Parser) handleExplanation() (string, error) {
 	query := new(dns.Msg)
 	query.SetQuestion(resolvedDomain, dns.TypeTXT)
 	c := new(dns.Client)
-	response, _, err := c.Exchange(query, Nameserver)
+	response, _, err := c.Exchange(query, p.Config.Nameserver)
 	if err != nil {
 		return "", ParseError{p.Explanation, err}
 	} else if response != nil && response.Rcode != dns.RcodeSuccess {
