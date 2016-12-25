@@ -424,7 +424,7 @@ func TestParseA(t *testing.T) {
 	for _, testcase := range testcases {
 		match, result, _ = p.parseA(testcase.Input)
 		if testcase.Match != match {
-			t.Errorf("Match mismatch, expected %s, got %s\n", testcase.Match, match)
+			t.Errorf("Match mismatch, expected %v, got %v\n", testcase.Match, match)
 		}
 		if testcase.Result != result {
 			t.Errorf("Result mismatch, expected %s, got %s\n", testcase.Result, result)
@@ -828,7 +828,7 @@ func TestParseIncludeNegative(t *testing.T) {
 	config.Nameserver = addr
 	/*******************************/
 	ips := []net.IP{
-		// completely random IP addres out of the net segment
+		// completely random IP address out of the net segment
 		net.IP{80, 81, 82, 83},
 		// ip addresses from failing negative.matching.net A records
 		net.IP{173, 18, 100, 100},
@@ -1013,14 +1013,14 @@ func TestParse(t *testing.T) {
 		//Test will return SPFResult Fail as 172.20.20.1 does not result
 		//positively for domain _spf.matching.net
 		ParseTestCase{"v=spf1 ip4:127.0.0.1 +include:_spf.matching.net -all", net.IP{172, 20, 20, 1}, Fail},
-		// Test will return SPFResult Pass as 172.100.100.1 is withing
+		// Test will return SPFResult Pass as 172.100.100.1 is within
 		// positive.matching.net A records, that are marked as +a:
 		ParseTestCase{"v=spf1 ip4:127.0.0.1 +include:_spf.matching.net -all", net.IP{172, 100, 100, 1}, Pass},
 		// Test for syntax errors (include must have nonempty domain parameter)
 		ParseTestCase{"v=spf1 ip4:127.0.0.1 +include -all", net.IP{172, 100, 100, 1}, Permerror},
 		ParseTestCase{"v=spf1 ip4:127.0.0.1 ?include -all", net.IP{172, 100, 100, 1}, Permerror},
 		// Include didn't match domain:yyz and underneath returned Temperror,
-		// however parent Parse() exection path marked the result as not
+		// however parent Parse() execution path marked the result as not
 		// matching and proceeded to next term
 		ParseTestCase{"v=spf1 +include:yyz -all", net.IP{172, 100, 100, 1}, Fail},
 		ParseTestCase{"v=spf1 ?exists:lb.%{d} -all", ip, Neutral},

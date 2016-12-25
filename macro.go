@@ -91,7 +91,7 @@ func scanText(m *macro, p *Parser) (stateFn, error) {
 		}
 
 		if r == '%' {
-			// TODO(zaccone): excercise more with peek(),next(), back()
+			// TODO(zaccone): exercise more with peek(),next(), back()
 			m.output = append(m.output, m.input[m.start:m.prev])
 			m.moveon()
 			return scanPercent, nil
@@ -117,7 +117,7 @@ func scanPercent(m *macro, p *Parser) (stateFn, error) {
 	case '-':
 		m.output = append(m.output, "%20")
 	default:
-		return nil, fmt.Errorf("forbidden character (%v) after '%'", r)
+		return nil, fmt.Errorf("forbidden character (%v) after %%", r)
 	}
 
 	m.moveon()

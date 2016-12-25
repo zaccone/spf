@@ -93,18 +93,19 @@ func CheckHost(ip net.IP, domain, sender string, config *Config) (SPFResult, str
 		if r.Rcode != dns.RcodeNameError {
 			return Temperror, "",
 				fmt.Errorf("unsuccessful DNS response, code %d", r.Rcode)
-		} else {
-			return None, "", nil
 		}
-	} else {
-		for _, answer := range r.Answer {
-			if ans, ok := answer.(*dns.TXT); ok {
-				for _, txt := range ans.Txt {
-					subQueries = append(subQueries, txt)
-				}
+		return None, "", nil
+
+	}
+
+	for _, answer := range r.Answer {
+		if ans, ok := answer.(*dns.TXT); ok {
+			for _, txt := range ans.Txt {
+				subQueries = append(subQueries, txt)
 			}
 		}
 	}
+
 	spfQuery := strings.Join(subQueries, " ")
 	parser := NewParser(sender, domain, ip, spfQuery, config)
 

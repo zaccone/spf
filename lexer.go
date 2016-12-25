@@ -18,7 +18,7 @@ type Lexer struct {
 // their modifiers and values. Parser should parse the Tokens and execute
 // relevant actions
 func Lex(input string) []*Token {
-	tokens := make([]*Token, 0)
+	var tokens []*Token
 	lexer := &Lexer{0, 0, 0, len(input), input}
 	for {
 		token := lexer.Scan()

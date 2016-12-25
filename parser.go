@@ -154,9 +154,8 @@ func (p *Parser) sortTokens(tokens []*Token) error {
 func (p *Parser) setDomain(t *Token) string {
 	if !isEmpty(&t.Value) {
 		return t.Value
-	} else {
-		return p.Domain
 	}
+	return p.Domain
 }
 
 func (p *Parser) parseVersion(t *Token) (bool, SPFResult, error) {
@@ -168,11 +167,12 @@ func (p *Parser) parseVersion(t *Token) (bool, SPFResult, error) {
 }
 
 func (p *Parser) parseAll(t *Token) (bool, SPFResult, error) {
-	if result, err := matchingResult(t.Qualifier); err != nil {
+	result, err := matchingResult(t.Qualifier)
+	if err != nil {
 		return true, Permerror, ParseError{t, err}
-	} else {
-		return true, result, nil
 	}
+	return true, result, nil
+
 }
 
 func (p *Parser) parseIP4(t *Token) (bool, SPFResult, error) {
@@ -181,16 +181,15 @@ func (p *Parser) parseIP4(t *Token) (bool, SPFResult, error) {
 	if ip, ipnet, err := net.ParseCIDR(t.Value); err == nil {
 		if ip.To4() == nil {
 			return true, Permerror, ParseError{t, errors.New("address isn't ipv4")}
-		} else {
-			return ipnet.Contains(p.IP), result, nil
 		}
-	} else {
-		if ip := net.ParseIP(t.Value).To4(); ip == nil {
-			return true, Permerror, ParseError{t, errors.New("address isn't ipv4")}
-		} else {
-			return ip.Equal(p.IP), result, nil
-		}
+		return ipnet.Contains(p.IP), result, nil
 	}
+
+	ip := net.ParseIP(t.Value).To4()
+	if ip == nil {
+		return true, Permerror, ParseError{t, errors.New("address isn't ipv4")}
+	}
+	return ip.Equal(p.IP), result, nil
 }
 
 func (p *Parser) parseIP6(t *Token) (bool, SPFResult, error) {
@@ -199,17 +198,17 @@ func (p *Parser) parseIP6(t *Token) (bool, SPFResult, error) {
 	if ip, ipnet, err := net.ParseCIDR(t.Value); err == nil {
 		if ip.To16() == nil {
 			return true, Permerror, ParseError{t, errors.New("address isn't ipv6")}
-		} else {
-			return ipnet.Contains(p.IP), result, nil
 		}
-	} else {
-		ip := net.ParseIP(t.Value)
-		if ip.To4() != nil || ip.To16() == nil {
-			return true, Permerror, ParseError{t, errors.New("address isn't ipv6")}
-		} else {
-			return ip.Equal(p.IP), result, nil
-		}
+		return ipnet.Contains(p.IP), result, nil
+
 	}
+
+	ip := net.ParseIP(t.Value)
+	if ip.To4() != nil || ip.To16() == nil {
+		return true, Permerror, ParseError{t, errors.New("address isn't ipv6")}
+	}
+	return ip.Equal(p.IP), result, nil
+
 }
 
 func (p *Parser) parseA(t *Token) (bool, SPFResult, error) {
@@ -246,18 +245,18 @@ func (p *Parser) parseA(t *Token) (bool, SPFResult, error) {
 			if r.Rcode != dns.RcodeNameError {
 				return true, Temperror, ParseError{t,
 					fmt.Errorf("unsuccessful DNS response, code %d", r.Rcode)}
-			} else {
-				return false, None, nil
 			}
-		} else {
-			for _, answer := range r.Answer {
-				if ans, ok := answer.(*dns.A); ok {
-					ips4 = append(ips4, ans.A)
-				} else if ans, ok := answer.(*dns.AAAA); ok {
-					ips6 = append(ips6, ans.AAAA)
-				}
+			return false, None, nil
+
+		}
+		for _, answer := range r.Answer {
+			if ans, ok := answer.(*dns.A); ok {
+				ips4 = append(ips4, ans.A)
+			} else if ans, ok := answer.(*dns.AAAA); ok {
+				ips6 = append(ips6, ans.AAAA)
 			}
 		}
+
 	}
 
 	v4Ipnet := net.IPNet{}
@@ -313,9 +312,9 @@ func (p *Parser) parseMX(t *Token) (bool, SPFResult, error) {
 		if response.Rcode != dns.RcodeNameError {
 			return true, Temperror, ParseError{t,
 				fmt.Errorf("unsuccessful DNS response, code %d", response.Rcode)}
-		} else {
-			return false, None, ParseError{t, err}
 		}
+		return false, None, ParseError{t, err}
+
 	}
 
 	mxs := make([]string, 0, len(response.Answer))
@@ -409,21 +408,23 @@ func (p *Parser) parseInclude(t *Token) (bool, SPFResult, error) {
 		return true, Permerror, ParseError{t, errors.New("empty domain")}
 	}
 	matchesInclude := false
-	if includeResult, _, err := CheckHost(p.IP, domain, p.Sender, p.Config); err != nil {
+	includeResult, _, err := CheckHost(p.IP, domain, p.Sender, p.Config)
+	if err != nil {
 		return false, None, ParseError{t, err}
-	} else { // it's all fine
-		switch includeResult {
-		case Pass:
-			matchesInclude = true
-		case Fail, Softfail, Neutral:
-			matchesInclude = false
-		case Temperror:
-			matchesInclude = false
-			result = Temperror
-		case Permerror, None:
-			matchesInclude = false
-			result = Permerror
-		}
+	}
+
+	// it's all fine
+	switch includeResult {
+	case Pass:
+		matchesInclude = true
+	case Fail, Softfail, Neutral:
+		matchesInclude = false
+	case Temperror:
+		matchesInclude = false
+		result = Temperror
+	case Permerror, None:
+		matchesInclude = false
+		result = Permerror
 	}
 
 	if matchesInclude {
@@ -456,14 +457,14 @@ func (p *Parser) parseExists(t *Token) (bool, SPFResult, error) {
 		if response != nil && response.Rcode != dns.RcodeSuccess {
 			if response.Rcode == dns.RcodeNameError {
 				return false, result, nil
-			} else {
-				return true, Temperror, ParseError{t,
-					fmt.Errorf("unsuccessful DNS response, code %d", response.Rcode)}
 			}
-		} else {
-			ips += len(response.Answer)
+			return true, Temperror, ParseError{t,
+				fmt.Errorf("unsuccessful DNS response, code %d", response.Rcode)}
 		}
-		/* We can check prematurely and avoid futher DNS calls if matching
+		// else
+		ips += len(response.Answer)
+
+		/* We can check prematurely and avoid further DNS calls if matching
 		* hosts were already found.
 		 */
 		if ips > 0 {
@@ -475,7 +476,7 @@ func (p *Parser) parseExists(t *Token) (bool, SPFResult, error) {
 }
 
 func (p *Parser) handleRedirect(oldResult SPFResult) (SPFResult, error) {
-	var err error = nil
+	var err error
 	result := oldResult
 	if result != None || p.Redirect == nil {
 		return result, nil

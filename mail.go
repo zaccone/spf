@@ -1,17 +1,17 @@
 package spf
 
-import (
-	"errors"
-	"strings"
-)
+import "strings"
 
 const postmaster string = "postmaster"
 
+// Email abstracts e-mail address. There're are two struct's fields - User and
+// Domain.
 type Email struct {
 	User   string
 	Domain string
 }
 
+// SplitEmails parses e-mail string address and retuens *Email structure.
 func SplitEmails(sender, helo string) (*Email, error) {
 	if sender == "" {
 		return &Email{postmaster, helo}, nil
@@ -24,9 +24,6 @@ func SplitEmails(sender, helo string) (*Email, error) {
 
 	if len(fields) == 2 {
 		return &Email{fields[0], fields[1]}, nil
-	} else {
-		return &Email{postmaster, sender}, nil
 	}
-
-	return nil, errors.New("error parsing sender and helo parameters")
+	return &Email{postmaster, sender}, nil
 }

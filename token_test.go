@@ -54,7 +54,9 @@ func TestTokenSyntaxValidation(t *testing.T) {
 		expected := test.expected
 
 		if checkTokenSyntax(token, delimiter) != expected {
-			t.Errorf("Error: For token %s, delimiter %s got result %b, expected %b\n", *token, delimiter, !expected, expected)
+			t.Errorf(
+				"Error: For token %v, delimiter %v got result %v, expected %v\n",
+				*token, delimiter, !expected, expected)
 		}
 	}
 
