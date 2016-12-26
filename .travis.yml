@@ -7,3 +7,4 @@ install:
     - go get github.com/miekg/dns
 script:
     - go test -v
+    - go vet -x
