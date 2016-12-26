@@ -1,0 +1,36 @@
+# This is the test suite used during development of the pyspf library.
+# It is a collection of ad hoc tests based on bug reports.  It is the
+# goal of the SPF test project to have an elegant and minimal test suite
+# that reflects RFC 4408.  However, this should help get things started
+# by serving as a example of what tests look like.  Also, any implementation
+# that flunks this, should flunk the minimal elegant suite as well.
+#
+# We extended the test attributes with 'receiver' and 'header' to test
+# our implementation of the Received-SPF header.  This cannot easily
+# be part of the RFC test suite because of wide latitude in formatting.
+#
+comment: |
+  check basic exists with macros
+tests:
+  exists-pass:
+    helo: mail.example.net
+    host: 1.2.3.5
+    mailfrom: lyme.eater@example.co.uk
+    result: pass
+    receiver: receiver.com
+    header: >-
+      Pass (receiver.com: domain of example.co.uk designates 1.2.3.5 as
+      permitted sender) client-ip=1.2.3.5;
+      envelope-from="lyme.eater@example.co.uk"; helo=mail.example.net;
+      receiver=receiver.com; mechanism="exists:%{l}.%{d}.%{i}.spf.example.net";
+      identity=mailfrom
+  exists-fail:
+    helo: mail.example.net
+    host: 1.2.3.4
+    mailfrom: lyme.eater@example.co.uk
+    result: fail
+zonedata:
+   lyme.eater.example.co.uk.1.2.3.5.spf.example.net:
+   - A: 127.0.0.1
+   example.co.uk:
+   - SPF: v=spf1 mx/26 exists:%{l}.%{d}.%{i}.spf.example.net -all
