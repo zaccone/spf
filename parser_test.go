@@ -112,10 +112,10 @@ func TestMatchingResult(t *testing.T) {
 	}
 
 	testcases := []TestCase{
-		TestCase{qPlus, Pass},
-		TestCase{qMinus, Fail},
-		TestCase{qQuestionMark, Neutral},
-		TestCase{qTilde, Softfail},
+		{qPlus, Pass},
+		{qMinus, Fail},
+		{qQuestionMark, Neutral},
+		{qTilde, Softfail},
 	}
 
 	var result SPFResult
@@ -154,72 +154,72 @@ func TestTokensSoriting(t *testing.T) {
 	}
 
 	testcases := []TestCase{
-		TestCase{
+		{
 			[]*Token{
 				versionToken,
-				&Token{tAll, qMinus, ""},
+				{tAll, qMinus, ""},
 			},
 			[]*Token{
 				versionToken,
-				&Token{tAll, qMinus, ""},
+				{tAll, qMinus, ""},
 			},
 			nil,
 			nil,
 		},
-		TestCase{
+		{
 			[]*Token{
 				versionToken,
-				&Token{tRedirect, qPlus, "_spf.example.com"},
-				&Token{tMX, qTilde, "example.org"},
+				{tRedirect, qPlus, "_spf.example.com"},
+				{tMX, qTilde, "example.org"},
 			},
 			[]*Token{
 				versionToken,
-				&Token{tMX, qTilde, "example.org"},
+				{tMX, qTilde, "example.org"},
 			},
 			&Token{tRedirect, qPlus, "_spf.example.com"},
 			nil,
 		},
-		TestCase{
+		{
 			[]*Token{
 				versionToken,
-				&Token{tRedirect, qPlus, "_spf.example.com"},
-				&Token{tIP4, qTilde, "192.168.1.2"},
-				&Token{tExp, qPlus, "Something went wrong"},
+				{tRedirect, qPlus, "_spf.example.com"},
+				{tIP4, qTilde, "192.168.1.2"},
+				{tExp, qPlus, "Something went wrong"},
 			},
 			[]*Token{
 				versionToken,
-				&Token{tIP4, qTilde, "192.168.1.2"},
+				{tIP4, qTilde, "192.168.1.2"},
 			},
 			&Token{tRedirect, qPlus, "_spf.example.com"},
 			&Token{tExp, qPlus, "Something went wrong"},
 		},
-		TestCase{
+		{
 			[]*Token{
 				versionToken,
-				&Token{tRedirect, qPlus, "_spf.example.com"},
-				&Token{tMX, qTilde, "example.org"},
-				&Token{tAll, qQuestionMark, ""},
+				{tRedirect, qPlus, "_spf.example.com"},
+				{tMX, qTilde, "example.org"},
+				{tAll, qQuestionMark, ""},
 			},
 			[]*Token{
 				versionToken,
-				&Token{tMX, qTilde, "example.org"},
-				&Token{tAll, qQuestionMark, ""},
+				{tMX, qTilde, "example.org"},
+				{tAll, qQuestionMark, ""},
 			},
 			nil,
 			nil,
 		},
-		TestCase{
+		{
 			[]*Token{
 				versionToken,
-				&Token{tRedirect, qPlus, "_spf.example.com"},
-				&Token{tMX, qTilde, "example.org"},
-				&Token{tAll, qQuestionMark, ""},
-				&Token{tExp, qPlus, "You are wrong"},
+				{tRedirect, qPlus, "_spf.example.com"},
+				{tMX, qTilde, "example.org"},
+				{tAll, qQuestionMark, ""},
+				{tExp, qPlus, "You are wrong"},
 			},
 			[]*Token{
 				versionToken,
-				&Token{tMX, qTilde, "example.org"},
-				&Token{tAll, qQuestionMark, ""},
+				{tMX, qTilde, "example.org"},
+				{tAll, qQuestionMark, ""},
 			},
 			nil,
 			&Token{tExp, qPlus, "You are wrong"},
@@ -255,30 +255,30 @@ func TestTokensSoritingHandleErrors(t *testing.T) {
 	}
 
 	testcases := []TestCase{
-		TestCase{
+		{
 			[]*Token{
 				versionToken,
-				&Token{tRedirect, qPlus, "_spf.example.com"},
-				&Token{tMX, qMinus, "example.org"},
-				&Token{tRedirect, qPlus, "_spf.example.com"},
+				{tRedirect, qPlus, "_spf.example.com"},
+				{tMX, qMinus, "example.org"},
+				{tRedirect, qPlus, "_spf.example.com"},
 			},
 		},
-		TestCase{
+		{
 			[]*Token{
 				versionToken,
-				&Token{tRedirect, qPlus, "_spf.example.com"},
-				&Token{tMX, qMinus, "example.org"},
-				&Token{tExp, qPlus, "Explanation"},
-				&Token{tExp, qPlus, "Explanation"},
+				{tRedirect, qPlus, "_spf.example.com"},
+				{tMX, qMinus, "example.org"},
+				{tExp, qPlus, "Explanation"},
+				{tExp, qPlus, "Explanation"},
 			},
 		},
-		TestCase{
+		{
 			[]*Token{
 				versionToken,
-				&Token{tRedirect, qPlus, "_spf.example.com"},
-				&Token{tAll, qMinus, ""},
-				&Token{tExp, qPlus, "_spf.example.com"},
-				&Token{tRedirect, qPlus, "mydomain.com"},
+				{tRedirect, qPlus, "_spf.example.com"},
+				{tAll, qMinus, ""},
+				{tExp, qPlus, "_spf.example.com"},
+				{tRedirect, qPlus, "mydomain.com"},
 			},
 		},
 	}
@@ -304,11 +304,11 @@ type TokenTestCase struct {
 func TestParseAll(t *testing.T) {
 	p := NewParser(stub, stub, ip, stub, config)
 	testcases := []TokenTestCase{
-		TokenTestCase{&Token{tAll, qPlus, ""}, Pass, true},
-		TokenTestCase{&Token{tAll, qMinus, ""}, Fail, true},
-		TokenTestCase{&Token{tAll, qQuestionMark, ""}, Neutral, true},
-		TokenTestCase{&Token{tAll, qTilde, ""}, Softfail, true},
-		TokenTestCase{&Token{tAll, tErr, ""}, Permerror, true},
+		{&Token{tAll, qPlus, ""}, Pass, true},
+		{&Token{tAll, qMinus, ""}, Fail, true},
+		{&Token{tAll, qQuestionMark, ""}, Neutral, true},
+		{&Token{tAll, qTilde, ""}, Softfail, true},
+		{&Token{tAll, tErr, ""}, Permerror, true},
 	}
 
 	var match bool
@@ -387,35 +387,35 @@ func TestParseA(t *testing.T) {
 	config.Nameserver = addr
 	p := NewParser(domain, domain, ip, stub, config)
 	testcases := []TokenTestCase{
-		TokenTestCase{&Token{tA, qPlus, "positive.matching.com"}, Pass, true},
-		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/32"}, Pass, true},
-		TokenTestCase{&Token{tA, qPlus, "negative.matching.com"}, Pass, false},
-		TokenTestCase{&Token{tA, qPlus, "range.matching.com/16"}, Pass, true},
-		TokenTestCase{&Token{tA, qPlus, "range.matching.com/128"}, Permerror, true},
-		TokenTestCase{&Token{tA, qPlus, "idontexist"}, Pass, false},
-		TokenTestCase{&Token{tA, qPlus, "#%$%^"}, Permerror, true},
-		TokenTestCase{&Token{tA, qPlus, "lb.matching.com"}, Pass, true},
-		TokenTestCase{&Token{tA, qMinus, ""}, Fail, true},
-		TokenTestCase{&Token{tA, qTilde, ""}, Softfail, true},
+		{&Token{tA, qPlus, "positive.matching.com"}, Pass, true},
+		{&Token{tA, qPlus, "positive.matching.com/32"}, Pass, true},
+		{&Token{tA, qPlus, "negative.matching.com"}, Pass, false},
+		{&Token{tA, qPlus, "range.matching.com/16"}, Pass, true},
+		{&Token{tA, qPlus, "range.matching.com/128"}, Permerror, true},
+		{&Token{tA, qPlus, "idontexist"}, Pass, false},
+		{&Token{tA, qPlus, "#%$%^"}, Permerror, true},
+		{&Token{tA, qPlus, "lb.matching.com"}, Pass, true},
+		{&Token{tA, qMinus, ""}, Fail, true},
+		{&Token{tA, qTilde, ""}, Softfail, true},
 
 		// expect (Permerror, true) results as a result of syntax errors
-		TokenTestCase{&Token{tA, qPlus, "range.matching.com/wrongmask"}, Permerror, true},
-		TokenTestCase{&Token{tA, qPlus, "range.matching.com/129"}, Permerror, true},
-		TokenTestCase{&Token{tA, qPlus, "range.matching.com/-1"}, Permerror, true},
+		{&Token{tA, qPlus, "range.matching.com/wrongmask"}, Permerror, true},
+		{&Token{tA, qPlus, "range.matching.com/129"}, Permerror, true},
+		{&Token{tA, qPlus, "range.matching.com/-1"}, Permerror, true},
 
 		// expect (Permerror, true) due to wrong netmasks.
 		// It's a syntax error to specify a netmask over 32 bits for IPv4 addresses
-		TokenTestCase{&Token{tA, qPlus, "negative.matching.com/128"}, Permerror, true},
-		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/128"}, Permerror, true},
-		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/128"}, Permerror, true},
+		{&Token{tA, qPlus, "negative.matching.com/128"}, Permerror, true},
+		{&Token{tA, qPlus, "positive.matching.com/128"}, Permerror, true},
+		{&Token{tA, qPlus, "positive.matching.com/128"}, Permerror, true},
 
 		// test dual-cidr syntax
-		TokenTestCase{&Token{tA, qPlus, "positive.matching.com//128"}, Pass, true},
-		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/32/"}, Pass, true},
-		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/0/0"}, Pass, true},
-		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/33/100"}, Permerror, true},
-		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/24/129"}, Permerror, true},
-		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/128/32"}, Permerror, true},
+		{&Token{tA, qPlus, "positive.matching.com//128"}, Pass, true},
+		{&Token{tA, qPlus, "positive.matching.com/32/"}, Pass, true},
+		{&Token{tA, qPlus, "positive.matching.com/0/0"}, Pass, true},
+		{&Token{tA, qPlus, "positive.matching.com/33/100"}, Permerror, true},
+		{&Token{tA, qPlus, "positive.matching.com/24/129"}, Permerror, true},
+		{&Token{tA, qPlus, "positive.matching.com/128/32"}, Permerror, true},
 	}
 
 	var match bool
@@ -469,15 +469,15 @@ func TestParseAIpv6(t *testing.T) {
 	domain := "matching.com"
 	p := NewParser(domain, domain, ipv6, stub, config)
 	testcases := []TokenTestCase{
-		TokenTestCase{&Token{tA, qPlus, "positive.matching.com"}, Pass, true},
-		TokenTestCase{&Token{tA, qPlus, "positive.matching.com//128"}, Pass, true},
-		TokenTestCase{&Token{tA, qPlus, "positive.matching.com//64"}, Pass, true},
+		{&Token{tA, qPlus, "positive.matching.com"}, Pass, true},
+		{&Token{tA, qPlus, "positive.matching.com//128"}, Pass, true},
+		{&Token{tA, qPlus, "positive.matching.com//64"}, Pass, true},
 
-		TokenTestCase{&Token{tA, qPlus, "negative.matching.com"}, Pass, false},
-		TokenTestCase{&Token{tA, qPlus, "negative.matching.com//64"}, Pass, false},
-		TokenTestCase{&Token{tA, qPlus, "positive.matching.com// "}, Permerror, true},
-		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/ "}, Permerror, true},
-		TokenTestCase{&Token{tA, qPlus, "positive.matching.com/ / "}, Permerror, true},
+		{&Token{tA, qPlus, "negative.matching.com"}, Pass, false},
+		{&Token{tA, qPlus, "negative.matching.com//64"}, Pass, false},
+		{&Token{tA, qPlus, "positive.matching.com// "}, Permerror, true},
+		{&Token{tA, qPlus, "positive.matching.com/ "}, Permerror, true},
+		{&Token{tA, qPlus, "positive.matching.com/ / "}, Permerror, true},
 	}
 
 	var match bool
@@ -497,19 +497,19 @@ func TestParseAIpv6(t *testing.T) {
 func TestParseIp4(t *testing.T) {
 	p := NewParser(stub, stub, ip, stub, config)
 	testcases := []TokenTestCase{
-		TokenTestCase{&Token{tIP4, qPlus, "127.0.0.1"}, Pass, true},
-		TokenTestCase{&Token{tIP4, qMinus, "127.0.0.1"}, Fail, true},
-		TokenTestCase{&Token{tIP4, qQuestionMark, "127.0.0.1"}, Neutral, true},
-		TokenTestCase{&Token{tIP4, qTilde, "127.0.0.1"}, Softfail, true},
+		{&Token{tIP4, qPlus, "127.0.0.1"}, Pass, true},
+		{&Token{tIP4, qMinus, "127.0.0.1"}, Fail, true},
+		{&Token{tIP4, qQuestionMark, "127.0.0.1"}, Neutral, true},
+		{&Token{tIP4, qTilde, "127.0.0.1"}, Softfail, true},
 
-		TokenTestCase{&Token{tIP4, qTilde, "127.0.0.0/16"}, Softfail, true},
+		{&Token{tIP4, qTilde, "127.0.0.0/16"}, Softfail, true},
 
-		TokenTestCase{&Token{tIP4, qTilde, "192.168.1.2"}, Softfail, false},
-		TokenTestCase{&Token{tIP4, qMinus, "192.168.1.5/16"}, Fail, false},
+		{&Token{tIP4, qTilde, "192.168.1.2"}, Softfail, false},
+		{&Token{tIP4, qMinus, "192.168.1.5/16"}, Fail, false},
 
-		TokenTestCase{&Token{tIP4, qMinus, "random string"}, Permerror, true},
-		TokenTestCase{&Token{tIP4, qMinus, "2001:4860:0:2001::68"}, Permerror, true},
-		TokenTestCase{&Token{tIP4, qMinus, "2001:4860:0:2001::68/48"}, Permerror, true},
+		{&Token{tIP4, qMinus, "random string"}, Permerror, true},
+		{&Token{tIP4, qMinus, "2001:4860:0:2001::68"}, Permerror, true},
+		{&Token{tIP4, qMinus, "2001:4860:0:2001::68/48"}, Permerror, true},
 	}
 
 	var match bool
@@ -530,17 +530,17 @@ func TestParseIp6(t *testing.T) {
 	p := NewParser(stub, stub, ipv6, stub, config)
 
 	testcases := []TokenTestCase{
-		TokenTestCase{&Token{tIP6, qPlus, "2001:4860:0:2001::68"}, Pass, true},
-		TokenTestCase{&Token{tIP6, qMinus, "2001:4860:0:2001::68"}, Fail, true},
-		TokenTestCase{&Token{tIP6, qQuestionMark, "2001:4860:0:2001::68"}, Neutral, true},
-		TokenTestCase{&Token{tIP6, qTilde, "2001:4860:0:2001::68"}, Softfail, true},
+		{&Token{tIP6, qPlus, "2001:4860:0:2001::68"}, Pass, true},
+		{&Token{tIP6, qMinus, "2001:4860:0:2001::68"}, Fail, true},
+		{&Token{tIP6, qQuestionMark, "2001:4860:0:2001::68"}, Neutral, true},
+		{&Token{tIP6, qTilde, "2001:4860:0:2001::68"}, Softfail, true},
 
-		TokenTestCase{&Token{tIP6, qTilde, "2001:4860:0:2001::68/64"}, Softfail, true},
+		{&Token{tIP6, qTilde, "2001:4860:0:2001::68/64"}, Softfail, true},
 
-		TokenTestCase{&Token{tIP6, qTilde, "::1"}, Softfail, false},
-		TokenTestCase{&Token{tIP6, qMinus, "2002::/16"}, Fail, false},
+		{&Token{tIP6, qTilde, "::1"}, Softfail, false},
+		{&Token{tIP6, qMinus, "2002::/16"}, Fail, false},
 
-		TokenTestCase{&Token{tIP6, qMinus, "random string"}, Permerror, true},
+		{&Token{tIP6, qMinus, "random string"}, Permerror, true},
 	}
 
 	var match bool
@@ -561,8 +561,8 @@ func TestParseIp6WithIp4(t *testing.T) {
 	p := NewParser(stub, stub, ip, stub, config)
 
 	testcases := []TokenTestCase{
-		TokenTestCase{&Token{tIP6, qPlus, "127.0.0.1"}, Permerror, true},
-		TokenTestCase{&Token{tIP6, qTilde, "127.0.0.1"}, Permerror, true},
+		{&Token{tIP6, qPlus, "127.0.0.1"}, Permerror, true},
+		{&Token{tIP6, qTilde, "127.0.0.1"}, Permerror, true},
 	}
 
 	var match bool
@@ -582,9 +582,9 @@ func TestParseIp6WithIp4(t *testing.T) {
 func TestParseMX(t *testing.T) {
 
 	ips := []net.IP{
-		net.IP{172, 18, 0, 2},
-		net.IP{172, 20, 20, 20},
-		net.IP{172, 100, 0, 1},
+		{172, 18, 0, 2},
+		{172, 20, 20, 20},
+		{172, 100, 0, 1},
 		net.ParseIP("2001:4860:1:2001::80"),
 	}
 
@@ -626,17 +626,17 @@ func TestParseMX(t *testing.T) {
 	p := NewParser(domain, domain, net.IP{0, 0, 0, 0}, stub, config)
 
 	testcases := []TokenTestCase{
-		TokenTestCase{&Token{tMX, qPlus, "matching.com"}, Pass, true},
-		TokenTestCase{&Token{tMX, qPlus, "matching.com/24"}, Pass, true},
-		TokenTestCase{&Token{tMX, qPlus, "matching.com/24/64"}, Pass, true},
-		TokenTestCase{&Token{tMX, qPlus, ""}, Pass, true},
-		TokenTestCase{&Token{tMX, qMinus, ""}, Fail, true},
-		TokenTestCase{&Token{tMX, qPlus, "idontexist"}, Pass, false},
+		{&Token{tMX, qPlus, "matching.com"}, Pass, true},
+		{&Token{tMX, qPlus, "matching.com/24"}, Pass, true},
+		{&Token{tMX, qPlus, "matching.com/24/64"}, Pass, true},
+		{&Token{tMX, qPlus, ""}, Pass, true},
+		{&Token{tMX, qMinus, ""}, Fail, true},
+		{&Token{tMX, qPlus, "idontexist"}, Pass, false},
 		// Mind that the domain is matching.NET and we expect Parser
 		// to not match results.
-		TokenTestCase{&Token{tMX, qPlus, "matching.net"}, Pass, false},
-		TokenTestCase{&Token{tMX, qPlus, "matching.net/24"}, Pass, false},
-		TokenTestCase{&Token{tMX, qPlus, "matching.net/24/64"}, Pass, false},
+		{&Token{tMX, qPlus, "matching.net"}, Pass, false},
+		{&Token{tMX, qPlus, "matching.net/24"}, Pass, false},
+		{&Token{tMX, qPlus, "matching.net/24/64"}, Pass, false},
 	}
 
 	var match bool
@@ -695,11 +695,11 @@ func TestParseMXNegativeTests(t *testing.T) {
 	p := NewParser(domain, domain, ip, stub, config)
 
 	testcases := []TokenTestCase{
-		TokenTestCase{&Token{tMX, qPlus, "matching.com"}, Pass, false},
-		TokenTestCase{&Token{tMX, qPlus, ""}, Pass, false},
+		{&Token{tMX, qPlus, "matching.com"}, Pass, false},
+		{&Token{tMX, qPlus, ""}, Pass, false},
 		//TokenTestCase{&Token{tMX, qPlus, "google.com"}, Pass, false},
-		TokenTestCase{&Token{tMX, qPlus, "idontexist"}, Pass, false},
-		TokenTestCase{&Token{tMX, qMinus, "matching.com"}, Fail, false},
+		{&Token{tMX, qPlus, "idontexist"}, Pass, false},
+		{&Token{tMX, qMinus, "matching.com"}, Fail, false},
 	}
 
 	var match bool
@@ -757,18 +757,18 @@ func TestParseInclude(t *testing.T) {
 	config.Nameserver = addr
 	/*******************************/
 	ips := []net.IP{
-		net.IP{172, 100, 100, 1},
-		net.IP{173, 20, 20, 1},
-		net.IP{173, 20, 21, 1},
+		{172, 100, 100, 1},
+		{173, 20, 20, 1},
+		{173, 20, 21, 1},
 	}
 
 	domain := "matching.net"
 	p := NewParser(domain, domain, net.IP{0, 0, 0, 0}, stub, config)
 	testcases := []TokenTestCase{
-		TokenTestCase{&Token{tInclude, qPlus, "_spf.matching.net"}, Pass, true},
-		TokenTestCase{&Token{tInclude, qMinus, "_spf.matching.net"}, Fail, true},
-		TokenTestCase{&Token{tInclude, qTilde, "_spf.matching.net"}, Softfail, true},
-		TokenTestCase{&Token{tInclude, qQuestionMark, "_spf.matching.net"}, Neutral, true},
+		{&Token{tInclude, qPlus, "_spf.matching.net"}, Pass, true},
+		{&Token{tInclude, qMinus, "_spf.matching.net"}, Fail, true},
+		{&Token{tInclude, qTilde, "_spf.matching.net"}, Softfail, true},
+		{&Token{tInclude, qQuestionMark, "_spf.matching.net"}, Neutral, true},
 	}
 
 	var match bool
@@ -829,25 +829,25 @@ func TestParseIncludeNegative(t *testing.T) {
 	/*******************************/
 	ips := []net.IP{
 		// completely random IP address out of the net segment
-		net.IP{80, 81, 82, 83},
+		{80, 81, 82, 83},
 		// ip addresses from failing negative.matching.net A records
-		net.IP{173, 18, 100, 100},
-		net.IP{173, 18, 100, 101},
-		net.IP{173, 18, 100, 102},
-		net.IP{173, 18, 100, 103},
+		{173, 18, 100, 100},
+		{173, 18, 100, 101},
+		{173, 18, 100, 102},
+		{173, 18, 100, 103},
 	}
 	domain := "matching.net"
 	p := NewParser(domain, domain, ip, stub, config)
 
 	testcases := []TokenTestCase{
-		TokenTestCase{&Token{tInclude, qMinus, "_spf.matching.net"}, None, false},
-		TokenTestCase{&Token{tInclude, qPlus, "_spf.matching.net"}, None, false},
-		TokenTestCase{&Token{tInclude, qPlus, "_errspf.matching.net"}, None, false},
-		TokenTestCase{&Token{tInclude, qPlus, "nospf.matching.net"}, None, false},
-		TokenTestCase{&Token{tInclude, qPlus, "idontexist.matching.net"}, None, false},
+		{&Token{tInclude, qMinus, "_spf.matching.net"}, None, false},
+		{&Token{tInclude, qPlus, "_spf.matching.net"}, None, false},
+		{&Token{tInclude, qPlus, "_errspf.matching.net"}, None, false},
+		{&Token{tInclude, qPlus, "nospf.matching.net"}, None, false},
+		{&Token{tInclude, qPlus, "idontexist.matching.net"}, None, false},
 
 		// empty input qualifier results in Permerror withour recursive calls
-		TokenTestCase{&Token{tInclude, qMinus, ""}, Permerror, true},
+		{&Token{tInclude, qMinus, ""}, Permerror, true},
 	}
 
 	var match bool
@@ -903,14 +903,14 @@ func TestParseExists(t *testing.T) {
 	domain := "matching.com"
 	p := NewParser(domain, domain, ip, stub, config)
 	testcases := []TokenTestCase{
-		TokenTestCase{&Token{tExists, qPlus, "positive.matching.net"}, Pass, true},
-		TokenTestCase{&Token{tExists, qMinus, "positive.matching.net"}, Fail, true},
-		TokenTestCase{&Token{tExists, qMinus, "idontexist.matching.net"}, Fail, false},
-		TokenTestCase{&Token{tExists, qMinus, "idontexist.%{d}"}, Fail, false},
-		TokenTestCase{&Token{tExists, qTilde, "positive.%{d}"}, Softfail, true},
-		TokenTestCase{&Token{tExists, qTilde, "positive.%{d}"}, Softfail, true},
-		TokenTestCase{&Token{tExists, qTilde, ""}, Permerror, true},
-		TokenTestCase{&Token{tExists, qTilde, "invalidsyntax%{}"}, Permerror, true},
+		{&Token{tExists, qPlus, "positive.matching.net"}, Pass, true},
+		{&Token{tExists, qMinus, "positive.matching.net"}, Fail, true},
+		{&Token{tExists, qMinus, "idontexist.matching.net"}, Fail, false},
+		{&Token{tExists, qMinus, "idontexist.%{d}"}, Fail, false},
+		{&Token{tExists, qTilde, "positive.%{d}"}, Softfail, true},
+		{&Token{tExists, qTilde, "positive.%{d}"}, Softfail, true},
+		{&Token{tExists, qTilde, ""}, Permerror, true},
+		{&Token{tExists, qTilde, "invalidsyntax%{}"}, Permerror, true},
 	}
 
 	for _, testcase := range testcases {
@@ -999,37 +999,37 @@ func TestParse(t *testing.T) {
 	config.Nameserver = addr
 	domain := "matching.com"
 	ParseTestCases := []ParseTestCase{
-		ParseTestCase{"v=spf1 -all", net.IP{127, 0, 0, 1}, Fail},
-		ParseTestCase{"v=spf1 mx -all", net.IP{172, 20, 20, 20}, Pass},
-		ParseTestCase{"v=spf1 ?mx -all", net.IP{172, 20, 20, 20}, Neutral},
-		ParseTestCase{"v=spf1 ~mx -all", net.IP{172, 20, 20, 20}, Softfail},
-		ParseTestCase{"v=spf1 a -mx -all", net.IP{172, 18, 0, 2}, Pass},
-		ParseTestCase{"v=spf1 -mx a -all", net.IP{172, 18, 0, 2}, Fail},
-		ParseTestCase{"v=spf1 +mx:matching.net -a -all", net.IP{173, 18, 0, 2}, Pass},
-		ParseTestCase{"v=spf1 +mx:matching.net -a -all", net.IP{172, 17, 0, 2}, Fail},
-		ParseTestCase{"v=spf1 a:matching.net -all", net.IP{173, 18, 0, 2}, Pass},
-		ParseTestCase{"v=spf1 +ip4:128.14.15.16 -all", net.IP{128, 14, 15, 16}, Pass},
-		ParseTestCase{"v=spf1 ~ip6:2001:56::2 -all", net.ParseIP("2001:56::2"), Softfail},
+		{"v=spf1 -all", net.IP{127, 0, 0, 1}, Fail},
+		{"v=spf1 mx -all", net.IP{172, 20, 20, 20}, Pass},
+		{"v=spf1 ?mx -all", net.IP{172, 20, 20, 20}, Neutral},
+		{"v=spf1 ~mx -all", net.IP{172, 20, 20, 20}, Softfail},
+		{"v=spf1 a -mx -all", net.IP{172, 18, 0, 2}, Pass},
+		{"v=spf1 -mx a -all", net.IP{172, 18, 0, 2}, Fail},
+		{"v=spf1 +mx:matching.net -a -all", net.IP{173, 18, 0, 2}, Pass},
+		{"v=spf1 +mx:matching.net -a -all", net.IP{172, 17, 0, 2}, Fail},
+		{"v=spf1 a:matching.net -all", net.IP{173, 18, 0, 2}, Pass},
+		{"v=spf1 +ip4:128.14.15.16 -all", net.IP{128, 14, 15, 16}, Pass},
+		{"v=spf1 ~ip6:2001:56::2 -all", net.ParseIP("2001:56::2"), Softfail},
 		//Test will return SPFResult Fail as 172.20.20.1 does not result
 		//positively for domain _spf.matching.net
-		ParseTestCase{"v=spf1 ip4:127.0.0.1 +include:_spf.matching.net -all", net.IP{172, 20, 20, 1}, Fail},
+		{"v=spf1 ip4:127.0.0.1 +include:_spf.matching.net -all", net.IP{172, 20, 20, 1}, Fail},
 		// Test will return SPFResult Pass as 172.100.100.1 is within
 		// positive.matching.net A records, that are marked as +a:
-		ParseTestCase{"v=spf1 ip4:127.0.0.1 +include:_spf.matching.net -all", net.IP{172, 100, 100, 1}, Pass},
+		{"v=spf1 ip4:127.0.0.1 +include:_spf.matching.net -all", net.IP{172, 100, 100, 1}, Pass},
 		// Test for syntax errors (include must have nonempty domain parameter)
-		ParseTestCase{"v=spf1 ip4:127.0.0.1 +include -all", net.IP{172, 100, 100, 1}, Permerror},
-		ParseTestCase{"v=spf1 ip4:127.0.0.1 ?include -all", net.IP{172, 100, 100, 1}, Permerror},
+		{"v=spf1 ip4:127.0.0.1 +include -all", net.IP{172, 100, 100, 1}, Permerror},
+		{"v=spf1 ip4:127.0.0.1 ?include -all", net.IP{172, 100, 100, 1}, Permerror},
 		// Include didn't match domain:yyz and underneath returned Temperror,
 		// however parent Parse() execution path marked the result as not
 		// matching and proceeded to next term
-		ParseTestCase{"v=spf1 +include:yyz -all", net.IP{172, 100, 100, 1}, Fail},
-		ParseTestCase{"v=spf1 ?exists:lb.%{d} -all", ip, Neutral},
+		{"v=spf1 +include:yyz -all", net.IP{172, 100, 100, 1}, Fail},
+		{"v=spf1 ?exists:lb.%{d} -all", ip, Neutral},
 		// domain is set to matching.com, macro >>d1r<< will reverse domain to
 		// >>com.matching<< and trim to first part counting from right,
 		// effectively returning >>matching<<, which we later concatenate with
 		// the >>.com<< suffix. This test should give same matching result as
 		// the test above, as effectively the host to be queried is identical.
-		ParseTestCase{"v=spf1 ?exists:lb.%{d1r}.com -all", ip, Neutral},
+		{"v=spf1 ?exists:lb.%{d1r}.com -all", ip, Neutral},
 	}
 
 	for _, testcase := range ParseTestCases {
@@ -1143,19 +1143,19 @@ func TestHandleRedirect(t *testing.T) {
 
 	const domain = "matching.com"
 	ParseTestCases := []ParseTestCase{
-		ParseTestCase{"v=spf1 -all redirect=_spf.matching.net", net.IP{172, 100, 100, 1}, Fail},
-		ParseTestCase{"v=spf1 redirect=_spf.matching.net -all", net.IP{172, 100, 100, 1}, Fail},
-		ParseTestCase{"v=spf1 redirect=_spf.matching.net", net.IP{172, 100, 100, 1}, Pass},
-		ParseTestCase{"v=spf1 redirect=malformed", net.IP{172, 100, 100, 1}, Permerror},
-		ParseTestCase{"v=spf1 redirect=_spf.matching.net", net.IP{127, 0, 0, 1}, Fail},
-		ParseTestCase{"v=spf1 redirect=nospf.matching.net", net.IP{127, 0, 0, 1}, Permerror},
-		ParseTestCase{"v=spf1 +ip4:127.0.0.1 redirect=nospf.matching.net", net.IP{127, 0, 0, 1}, Pass},
-		ParseTestCase{"v=spf1 -ip4:127.0.0.1 redirect=nospf.matching.net", net.IP{127, 0, 0, 1}, Fail},
-		ParseTestCase{"v=spf1 +include:_spf.matching.net redirect=_spf.matching.net", net.IP{127, 0, 0, 1}, Fail},
-		ParseTestCase{"v=spf1 ~include:_spf.matching.net redirect=_spf.matching.net", net.IP{172, 100, 100, 1}, Softfail},
+		{"v=spf1 -all redirect=_spf.matching.net", net.IP{172, 100, 100, 1}, Fail},
+		{"v=spf1 redirect=_spf.matching.net -all", net.IP{172, 100, 100, 1}, Fail},
+		{"v=spf1 redirect=_spf.matching.net", net.IP{172, 100, 100, 1}, Pass},
+		{"v=spf1 redirect=malformed", net.IP{172, 100, 100, 1}, Permerror},
+		{"v=spf1 redirect=_spf.matching.net", net.IP{127, 0, 0, 1}, Fail},
+		{"v=spf1 redirect=nospf.matching.net", net.IP{127, 0, 0, 1}, Permerror},
+		{"v=spf1 +ip4:127.0.0.1 redirect=nospf.matching.net", net.IP{127, 0, 0, 1}, Pass},
+		{"v=spf1 -ip4:127.0.0.1 redirect=nospf.matching.net", net.IP{127, 0, 0, 1}, Fail},
+		{"v=spf1 +include:_spf.matching.net redirect=_spf.matching.net", net.IP{127, 0, 0, 1}, Fail},
+		{"v=spf1 ~include:_spf.matching.net redirect=_spf.matching.net", net.IP{172, 100, 100, 1}, Softfail},
 		// Ensure recursive redirects work
-		ParseTestCase{"v=spf1 redirect=redirect.matching.com", net.IP{172, 18, 0, 2}, Pass},
-		ParseTestCase{"v=spf1 redirect=redirect.matching.com", net.IP{127, 0, 0, 1}, Fail},
+		{"v=spf1 redirect=redirect.matching.com", net.IP{172, 18, 0, 2}, Pass},
+		{"v=spf1 redirect=redirect.matching.com", net.IP{127, 0, 0, 1}, Fail},
 	}
 
 	for _, testcase := range ParseTestCases {
@@ -1203,9 +1203,9 @@ func TestHandleExplanation(t *testing.T) {
 	config.Nameserver = addr
 
 	ExpTestCases := []ExpTestCase{
-		ExpTestCase{"v=spf1 -all exp=static.exp.matching.com",
+		{"v=spf1 -all exp=static.exp.matching.com",
 			"Invalid SPF record"},
-		ExpTestCase{"v=spf1 -all exp=ip.exp.matching.com",
+		{"v=spf1 -all exp=ip.exp.matching.com",
 			"127.0.0.1 is not one of matching.com's designated mail servers."},
 		// TODO(zaccone): Cover this testcase
 		//ExpTestCase{"v=spf1 -all exp=redirect.exp.matching.com",

@@ -10,38 +10,38 @@ func TestTokenSyntaxValidation(t *testing.T) {
 	}
 
 	tests := []TokenTestCase{
-		TokenTestCase{nil, rune('='), false},
-		TokenTestCase{
+		{nil, rune('='), false},
+		{
 			&Token{
 				tInclude, qPlus, "matching.com",
 			}, rune(':'), true,
 		},
-		TokenTestCase{
+		{
 			&Token{
 				tInclude, qPlus, "",
 			}, rune(':'), false,
 		},
-		TokenTestCase{
+		{
 			&Token{
 				tErr, qErr, "",
 			}, rune('='), true,
 		},
-		TokenTestCase{
+		{
 			&Token{
 				tAll, qMinus, "matching.com",
 			}, rune(':'), true,
 		},
-		TokenTestCase{
+		{
 			&Token{
 				tAll, qMinus, "matching.com",
 			}, rune('='), false,
 		},
-		TokenTestCase{
+		{
 			&Token{
 				tRedirect, qEmpty, "matching.com",
 			}, rune('='), true,
 		},
-		TokenTestCase{
+		{
 			&Token{
 				tRedirect, qEmpty, "matching.com",
 			}, rune(':'), false,
