@@ -1,11 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
-
-	"gopkg.in/yaml.v2"
 )
+
+type Zonedata map[string][]map[string]string
 
 type Test struct {
 	Helo     string
@@ -18,31 +19,31 @@ type Test struct {
 
 type Tests map[string]Test
 
-type Zonedata map[string][]map[string]string
-
 type TestCase struct {
 	Comment  string
 	Tests    Tests
 	Zonedata Zonedata
 }
 
-type TestCases []TestCase
-
-const fname = "./test.yml"
+type JSONTest []TestCase
 
 func main() {
-
+	const fname = "/tmp/asd.json"
 	fh, err := ioutil.ReadFile(fname)
 	if err != nil {
 		panic(err)
 	}
 
-	var tc TestCases
-	err = yaml.Unmarshal(fh, &tc)
+	var tc JSONTest
+	err = json.Unmarshal(fh, &tc)
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Printf("%+v\n", tc)
+
+	for _, test := range tc {
+		fmt.Printf("val: %+v\n", test)
+	}
 
 }

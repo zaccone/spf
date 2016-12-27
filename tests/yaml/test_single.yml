@@ -9,6 +9,7 @@
 # our implementation of the Received-SPF header.  This cannot easily
 # be part of the RFC test suite because of wide latitude in formatting.
 #
+---
 comment: |
   check basic exists with macros
 tests:

@@ -1,0 +1,33 @@
+[
+  {
+    "comment": "check basic exists with macros\n",
+    "tests": {
+      "exists-pass": {
+        "result": "pass",
+        "helo": "mail.example.net",
+        "receiver": "receiver.com",
+        "mailfrom": "lyme.eater@example.co.uk",
+        "header": "Pass (receiver.com: domain of example.co.uk designates 1.2.3.5 as permitted sender) client-ip=1.2.3.5; envelope-from=\"lyme.eater@example.co.uk\"; helo=mail.example.net; receiver=receiver.com; mechanism=\"exists:%{l}.%{d}.%{i}.spf.example.net\"; identity=mailfrom",
+        "host": "1.2.3.5"
+      },
+      "exists-fail": {
+        "result": "fail",
+        "helo": "mail.example.net",
+        "host": "1.2.3.4",
+        "mailfrom": "lyme.eater@example.co.uk"
+      }
+    },
+    "zonedata": {
+      "example.co.uk": [
+        {
+          "SPF": "v=spf1 mx/26 exists:%{l}.%{d}.%{i}.spf.example.net -all"
+        }
+      ],
+      "lyme.eater.example.co.uk.1.2.3.5.spf.example.net": [
+        {
+          "A": "127.0.0.1"
+        }
+      ]
+    }
+  }
+]

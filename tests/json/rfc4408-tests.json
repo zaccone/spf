@@ -1,0 +1,3270 @@
+[
+  {
+    "zonedata": {
+      "a.example.net": [
+        {
+          "SPF": "v=spf1 -all exp=exp.example.net"
+        }
+      ],
+      "nothosed.example.com": [
+        {
+          "SPF": "v=spf1 a:example.net -all"
+        },
+        {
+          "SPF": "\u0096"
+        }
+      ],
+      "a12345678901234567890123456789012345678901234567890123456789012.example.com": [
+        {
+          "SPF": "v=spf1 -all"
+        }
+      ],
+      "example.net": [
+        {
+          "SPF": "v=spf1 -all exp=exp.example.net"
+        }
+      ],
+      "example.com": [
+        "TIMEOUT"
+      ],
+      "hosed2.example.com": [
+        {
+          "SPF": "v=spf1 \u0080a:example.net -all"
+        }
+      ],
+      "fine.example.com": [
+        {
+          "TXT": "v=spf1 a  -all"
+        }
+      ],
+      "exp.example.net": [
+        {
+          "TXT": "%{l}"
+        }
+      ],
+      "hosed.example.com": [
+        {
+          "SPF": "v=spf1 a:\u00ef\u00bb\u00bfgarbage.example.net -all"
+        }
+      ],
+      "hosed3.example.com": [
+        {
+          "SPF": "v=spf1 a:example.net \u0096all"
+        }
+      ]
+    },
+    "tests": {
+      "non-ascii-result": {
+        "result": "permerror",
+        "description": "SPF policies are restricted to 7-bit ascii.",
+        "comment": "Checking yet another code path for non-ascii chars.",
+        "host": "1.2.3.4",
+        "mailfrom": "foobar@hosed3.example.com",
+        "helo": "hosed",
+        "spec": "3.1.1/1"
+      },
+      "non-ascii-policy": {
+        "result": "permerror",
+        "description": "SPF policies are restricted to 7-bit ascii.",
+        "host": "1.2.3.4",
+        "mailfrom": "foobar@hosed.example.com",
+        "helo": "hosed",
+        "spec": "3.1.1/1"
+      },
+      "non-ascii-non-spf": {
+        "result": "fail",
+        "description": "Non-ascii content in non-SPF related records.",
+        "host": "1.2.3.4",
+        "spec": "3.1.1/1",
+        "explanation": "DEFAULT",
+        "comment": "Non-SPF related TXT records are none of our business.  (But what about SPF records?)",
+        "helo": "hosed",
+        "mailfrom": "foobar@nothosed.example.com"
+      },
+      "non-ascii-mech": {
+        "result": "permerror",
+        "description": "SPF policies are restricted to 7-bit ascii.",
+        "comment": "Checking a possibly different code path for non-ascii chars.",
+        "host": "1.2.3.4",
+        "mailfrom": "foobar@hosed2.example.com",
+        "helo": "hosed",
+        "spec": "3.1.1/1"
+      },
+      "domain-literal": {
+        "helo": "OEMCOMPUTER",
+        "result": "none",
+        "mailfrom": "foo@[1.2.3.5]",
+        "spec": "4.3/1",
+        "host": "1.2.3.5"
+      },
+      "helo-domain-literal": {
+        "helo": "[1.2.3.5]",
+        "result": "none",
+        "mailfrom": "",
+        "spec": "4.3/1",
+        "host": "1.2.3.5"
+      },
+      "emptylabel": {
+        "helo": "mail.example.net",
+        "result": "none",
+        "mailfrom": "lyme.eater@A...example.com",
+        "spec": "4.3/1",
+        "host": "1.2.3.5"
+      },
+      "nolocalpart": {
+        "result": "fail",
+        "helo": "mail.example.net",
+        "host": "1.2.3.4",
+        "mailfrom": "@example.net",
+        "spec": "4.3/2",
+        "explanation": "postmaster"
+      },
+      "longlabel": {
+        "result": "fail",
+        "description": "DNS labels limited to 63 chars.",
+        "host": "1.2.3.5",
+        "mailfrom": "lyme.eater@A12345678901234567890123456789012345678901234567890123456789012.example.com",
+        "helo": "mail.example.net",
+        "spec": "4.3/1"
+      },
+      "helo-not-fqdn": {
+        "helo": "A2345678",
+        "result": "none",
+        "mailfrom": "",
+        "spec": "4.3/1",
+        "host": "1.2.3.5"
+      },
+      "toolonglabel": {
+        "result": "none",
+        "description": "DNS labels limited to 63 chars.",
+        "comment": "For initial processing, a long label results in None, not TempError",
+        "host": "1.2.3.5",
+        "mailfrom": "lyme.eater@A123456789012345678901234567890123456789012345678901234567890123.example.com",
+        "helo": "mail.example.net",
+        "spec": "4.3/1"
+      },
+      "two-spaces": {
+        "result": "fail",
+        "description": "ABNF for term separation is one or more spaces, not just one.",
+        "host": "1.2.3.4",
+        "mailfrom": "actually@fine.example.com",
+        "helo": "hosed",
+        "spec": "4.6.1"
+      }
+    },
+    "description": "Initial processing"
+  },
+  {
+    "zonedata": {
+      "txtonly.example.net": [
+        {
+          "TXT": "v=spf1 -all"
+        }
+      ],
+      "alltimeout.example.net": [
+        "TIMEOUT"
+      ],
+      "spfonly.example.net": [
+        {
+          "SPF": "v=spf1 -all"
+        },
+        {
+          "TXT": "NONE"
+        }
+      ],
+      "both.example.net": [
+        {
+          "TXT": "v=spf1 -all"
+        },
+        {
+          "SPF": "v=spf1 -all"
+        }
+      ],
+      "spftimeout.example.net": [
+        {
+          "TXT": "v=spf1 -all"
+        },
+        "TIMEOUT"
+      ],
+      "nospftxttimeout.example.net": [
+        {
+          "SPF": "v=spf3 !a:yahoo.com -all"
+        },
+        {
+          "TXT": "NONE"
+        },
+        "TIMEOUT"
+      ],
+      "txttimeout.example.net": [
+        {
+          "SPF": "v=spf1 -all"
+        },
+        {
+          "TXT": "NONE"
+        },
+        "TIMEOUT"
+      ]
+    },
+    "tests": {
+      "spftimeout": {
+        "result": [
+          "fail",
+          "temperror"
+        ],
+        "description": "TXT record present, but SPF lookup times out. Result is temperror if checking SPF records only.",
+        "comment": "This actually happens for a popular braindead DNS server.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@spftimeout.example.net",
+        "helo": "mail.example.net",
+        "spec": "4.4/1"
+      },
+      "spfonly": {
+        "result": [
+          "fail",
+          "none"
+        ],
+        "description": "Result is none if checking TXT records only.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@spfonly.example.net",
+        "helo": "mail.example.net",
+        "spec": "4.4/1"
+      },
+      "both": {
+        "helo": "mail.example.net",
+        "result": "fail",
+        "mailfrom": "foo@both.example.net",
+        "spec": "4.4/1",
+        "host": "1.2.3.4"
+      },
+      "txttimeout": {
+        "result": [
+          "fail",
+          "temperror"
+        ],
+        "description": "SPF record present, but TXT lookup times out. If only TXT records are checked, result is temperror.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@txttimeout.example.net",
+        "helo": "mail.example.net",
+        "spec": "4.4/1"
+      },
+      "alltimeout": {
+        "result": "temperror",
+        "description": "Both TXT and SPF queries time out",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@alltimeout.example.net",
+        "helo": "mail.example.net",
+        "spec": "4.4/2"
+      },
+      "txtonly": {
+        "result": [
+          "fail",
+          "none"
+        ],
+        "description": "Result is none if checking SPF records only.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@txtonly.example.net",
+        "helo": "mail.example.net",
+        "spec": "4.4/1"
+      },
+      "nospftxttimeout": {
+        "result": [
+          "temperror",
+          "none"
+        ],
+        "description": "No SPF record present, and TXT lookup times out. If only TXT records are checked, result is temperror.",
+        "comment": "Because TXT records is where v=spf1 records will likely be, returning temperror will try again later.  A timeout due to a braindead server is unlikely in the case of TXT, as opposed to the newer SPF RR.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@nospftxttimeout.example.net",
+        "helo": "mail.example.net",
+        "spec": "4.4/1"
+      }
+    },
+    "description": "Record lookup"
+  },
+  {
+    "zonedata": {
+      "mail.example1.com": [
+        {
+          "A": "1.2.3.4"
+        }
+      ],
+      "example5.com": [
+        {
+          "SPF": "v=spf1 +all"
+        },
+        {
+          "TXT": "v=spf1 -all"
+        },
+        {
+          "TXT": "v=spf1 +all"
+        }
+      ],
+      "example8.com": [
+        {
+          "SPF": "V=spf1 -all"
+        },
+        {
+          "SPF": "v=spf1 -all"
+        },
+        {
+          "TXT": "v=spf1 +all"
+        }
+      ],
+      "example6.com": [
+        {
+          "SPF": "v=spf1 -all"
+        },
+        {
+          "SPF": "V=sPf1 +all"
+        }
+      ],
+      "example7.com": [
+        {
+          "SPF": "v=spf1 -all"
+        },
+        {
+          "SPF": "v=spf1 -all"
+        }
+      ],
+      "example3.com": [
+        {
+          "SPF": "v=spf10"
+        },
+        {
+          "SPF": "v=spf1 mx"
+        },
+        {
+          "MX": [
+            0,
+            "mail.example1.com"
+          ]
+        }
+      ],
+      "example9.com": [
+        {
+          "SPF": "v=SpF1 ~all"
+        }
+      ],
+      "example4.com": [
+        {
+          "SPF": "v=spf1 +all"
+        },
+        {
+          "TXT": "v=spf1 -all"
+        }
+      ],
+      "example1.com": [
+        {
+          "SPF": "v=spf1"
+        }
+      ],
+      "example2.com": [
+        {
+          "SPF": [
+            "v=spf1",
+            "mx"
+          ]
+        }
+      ]
+    },
+    "tests": {
+      "multispf2": {
+        "result": [
+          "permerror",
+          "pass"
+        ],
+        "description": "Older implementations ignoring SPF-type records will give pass because there is a (single) TXT record.  But RFC 4408 requires permerror because the SPF records override and there are more than one.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@example8.com",
+        "helo": "mail.example1.com",
+        "spec": "4.5/6"
+      },
+      "multitxt2": {
+        "result": "permerror",
+        "description": "Multiple records is a permerror, v=spf1 is case insensitive",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@example6.com",
+        "helo": "mail.example1.com",
+        "spec": "4.5/6"
+      },
+      "nospace2": {
+        "helo": "mail.example1.com",
+        "result": "pass",
+        "mailfrom": "foo@example3.com",
+        "spec": "4.5/4",
+        "host": "1.2.3.4"
+      },
+      "multitxt1": {
+        "result": [
+          "pass",
+          "permerror"
+        ],
+        "description": "Older implementations will give permerror/unknown because of the conflicting TXT records.  However, RFC 4408 says the SPF records overrides them.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@example5.com",
+        "helo": "mail.example1.com",
+        "spec": "4.5/5"
+      },
+      "spfoverride": {
+        "result": [
+          "pass",
+          "fail"
+        ],
+        "description": "SPF records override TXT records.  Older implementation may check TXT records only.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@example4.com",
+        "helo": "mail.example1.com",
+        "spec": "4.5/5"
+      },
+      "nospace1": {
+        "result": "none",
+        "description": "Version must be terminated by space or end of record.  TXT pieces are joined without intervening spaces.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@example2.com",
+        "helo": "mail.example1.com",
+        "spec": "4.5/4"
+      },
+      "multispf1": {
+        "result": [
+          "permerror",
+          "fail"
+        ],
+        "description": "Multiple records is a permerror, even when they are identical. However, this situation cannot be reliably reproduced with live DNS since cache and resolvers are allowed to combine identical records.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@example7.com",
+        "helo": "mail.example1.com",
+        "spec": "4.5/6"
+      },
+      "case-insensitive": {
+        "result": "softfail",
+        "description": "v=spf1 is case insensitive",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@example9.com",
+        "helo": "mail.example1.com",
+        "spec": "4.5/6"
+      },
+      "empty": {
+        "result": "neutral",
+        "description": "Empty SPF record.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@example1.com",
+        "helo": "mail1.example1.com",
+        "spec": "4.5/4"
+      },
+      "nospf": {
+        "helo": "mail.example1.com",
+        "result": "none",
+        "mailfrom": "foo@mail.example1.com",
+        "spec": "4.5/7",
+        "host": "1.2.3.4"
+      }
+    },
+    "description": "Selecting records"
+  },
+  {
+    "zonedata": {
+      "t11.example.com": [
+        {
+          "SPF": "v=spf1 a:a123456789012345678901234567890123456789012345678901234567890123.example.com -all"
+        }
+      ],
+      "t2.example.com": [
+        {
+          "SPF": "v=spf1 moo.cow-far_out=man:dog/cat ip4:1.2.3.4 -all"
+        }
+      ],
+      "t3.example.com": [
+        {
+          "SPF": "v=spf1 moo.cow/far_out=man:dog/cat ip4:1.2.3.4 -all"
+        }
+      ],
+      "t8.example.com": [
+        {
+          "SPF": "v=spf1 ip4:1.2.3.4 redirect:t2.example.com"
+        }
+      ],
+      "t6.example.com": [
+        {
+          "SPF": "v=spf1 ip4:1.2.3.4 redirect=t2.example.com"
+        }
+      ],
+      "t4.example.com": [
+        {
+          "SPF": "v=spf1 moo.cow:far_out=man:dog/cat ip4:1.2.3.4 -all"
+        }
+      ],
+      "t7.example.com": [
+        {
+          "SPF": "v=spf1 ip4:1.2.3.4"
+        }
+      ],
+      "t1.example.com": [
+        {
+          "SPF": "v=spf1 ip4:1.2.3.4 -all moo"
+        }
+      ],
+      "mail.example.com": [
+        {
+          "A": "1.2.3.4"
+        }
+      ],
+      "t10.example.com": [
+        {
+          "SPF": "v=spf1 a:mail.example...com -all"
+        }
+      ],
+      "t12.example.com": [
+        {
+          "SPF": "v=spf1 a:%{H}.bar -all"
+        }
+      ],
+      "t5.example.com": [
+        {
+          "SPF": "v=spf1 redirect=t5.example.com ~all"
+        }
+      ],
+      "t9.example.com": [
+        {
+          "SPF": "v=spf1 a:foo-bar -all"
+        }
+      ]
+    },
+    "tests": {
+      "redirect-after-mechanisms1": {
+        "result": "softfail",
+        "description": "The \"redirect\" modifier has an effect after all the mechanisms.",
+        "comment": "The redirect in this example would violate processing limits, except that it is never used because of the all mechanism.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@t5.example.com",
+        "helo": "mail.example.com",
+        "spec": "4.6.3"
+      },
+      "invalid-domain-long-via-macro": {
+        "result": [
+          "permerror",
+          "fail"
+        ],
+        "description": "target-name that is a valid domain-spec per RFC 4408 but an invalid domain name per RFC 1035 (long label) must be treated as non-existent.",
+        "comment": "A domain label longer than 63 characters that results from macro expansion in a mechanism target-name is valid domain-spec syntax (and is not even subject to syntax checking after macro expansion), even though a DNS query cannot be composed from it.  The spec being unclear about it, this could either be considered a syntax error, or, by analogy to 4.3/1 and 5/10/3, the mechanism chould be treated as a no-match.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@t12.example.com",
+        "helo": "%%%%%%%%%%%%%%%%%%%%%%",
+        "spec": [
+          "4.3/1",
+          "5/10/3"
+        ]
+      },
+      "modifier-charset-bad1": {
+        "result": "permerror",
+        "description": "'=' character immediately after the name and before any \":\" or \"/\"",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@t3.example.com",
+        "helo": "mail.example.com",
+        "spec": "4.6.1/4"
+      },
+      "redirect-is-modifier": {
+        "result": "permerror",
+        "description": "Invalid mechanism.  Redirect is a modifier.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@t8.example.com",
+        "helo": "mail.example.com",
+        "spec": "4.6.1/4"
+      },
+      "invalid-domain-empty-label": {
+        "result": [
+          "permerror",
+          "fail"
+        ],
+        "description": "target-name that is a valid domain-spec per RFC 4408 but an invalid domain name per RFC 1035 (empty label) must be treated as non-existent.",
+        "comment": "An empty domain label, i.e. two successive dots, in a mechanism target-name is valid domain-spec syntax, even though a DNS query cannot be composed from it.  The spec being unclear about it, this could either be considered a syntax error, or, by analogy to 4.3/1 and 5/10/3, the mechanism chould be treated as a no-match.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@t10.example.com",
+        "helo": "mail.example.com",
+        "spec": [
+          "4.3/1",
+          "5/10/3"
+        ]
+      },
+      "invalid-domain": {
+        "result": "permerror",
+        "description": "Domain-spec must end in macro-expand or valid toplabel.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@t9.example.com",
+        "helo": "mail.example.com",
+        "spec": "8.1/2"
+      },
+      "default-result": {
+        "result": "neutral",
+        "description": "Default result is neutral.",
+        "host": "1.2.3.5",
+        "mailfrom": "foo@t7.example.com",
+        "helo": "mail.example.com",
+        "spec": "4.7/1"
+      },
+      "modifier-charset-bad2": {
+        "result": "permerror",
+        "description": "'=' character immediately after the name and before any \":\" or \"/\"",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@t4.example.com",
+        "helo": "mail.example.com",
+        "spec": "4.6.1/4"
+      },
+      "detect-errors-anywhere": {
+        "result": "permerror",
+        "description": "Any syntax errors anywhere in the record MUST be detected.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@t1.example.com",
+        "helo": "mail.example.com",
+        "spec": 4.6
+      },
+      "redirect-after-mechanisms2": {
+        "result": "fail",
+        "description": "The \"redirect\" modifier has an effect after all the mechanisms.",
+        "host": "1.2.3.5",
+        "mailfrom": "foo@t6.example.com",
+        "helo": "mail.example.com",
+        "spec": "4.6.3"
+      },
+      "invalid-domain-long": {
+        "result": [
+          "permerror",
+          "fail"
+        ],
+        "description": "target-name that is a valid domain-spec per RFC 4408 but an invalid domain name per RFC 1035 (long label) must be treated as non-existent.",
+        "comment": "A domain label longer than 63 characters in a mechanism target-name is valid domain-spec syntax, even though a DNS query cannot be composed from it.  The spec being unclear about it, this could either be considered a syntax error, or, by analogy to 4.3/1 and 5/10/3, the mechanism chould be treated as a no-match.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@t11.example.com",
+        "helo": "mail.example.com",
+        "spec": [
+          "4.3/1",
+          "5/10/3"
+        ]
+      },
+      "modifier-charset-good": {
+        "result": "pass",
+        "description": "name = ALPHA *( ALPHA / DIGIT / \"-\" / \"_\" / \".\" )",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@t2.example.com",
+        "helo": "mail.example.com",
+        "spec": "4.6.1/2"
+      }
+    },
+    "description": "Record evaluation"
+  },
+  {
+    "zonedata": {
+      "e2.example.com": [
+        {
+          "SPF": "v=spf1 -all:foobar"
+        }
+      ],
+      "mail.example.com": [
+        {
+          "A": "1.2.3.4"
+        }
+      ],
+      "e4.example.com": [
+        {
+          "SPF": "v=spf1 ?all"
+        }
+      ],
+      "e3.example.com": [
+        {
+          "SPF": "v=spf1 -all/8"
+        }
+      ],
+      "e5.example.com": [
+        {
+          "SPF": "v=spf1 all -all"
+        }
+      ],
+      "e1.example.com": [
+        {
+          "SPF": "v=spf1 -all."
+        }
+      ]
+    },
+    "tests": {
+      "all-double": {
+        "result": "pass",
+        "description": "all              = \"all\"\n",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e5.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.1/1"
+      },
+      "all-arg": {
+        "result": "permerror",
+        "description": "all              = \"all\"\n",
+        "comment": "At least one implementation got this wrong",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e2.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.1/1"
+      },
+      "all-cidr": {
+        "result": "permerror",
+        "description": "all              = \"all\"\n",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e3.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.1/1"
+      },
+      "all-dot": {
+        "result": "permerror",
+        "description": "all              = \"all\"\n",
+        "comment": "At least one implementation got this wrong",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e1.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.1/1"
+      },
+      "all-neutral": {
+        "result": "neutral",
+        "description": "all              = \"all\"\n",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e4.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.1/1"
+      }
+    },
+    "description": "ALL mechanism syntax"
+  },
+  {
+    "zonedata": {
+      "4.3.2.1.in-addr.arpa": [
+        {
+          "PTR": "e3.example.com"
+        },
+        {
+          "PTR": "e4.example.com"
+        },
+        {
+          "PTR": "mail.example.com"
+        }
+      ],
+      "e2.example.com": [
+        {
+          "SPF": "v=spf1 ptr:example.com -all"
+        }
+      ],
+      "1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.E.B.A.B.E.F.A.C.ip6.arpa": [
+        {
+          "PTR": "e3.example.com"
+        }
+      ],
+      "mail.example.com": [
+        {
+          "A": "1.2.3.4"
+        }
+      ],
+      "e5.example.com": [
+        {
+          "SPF": "v=spf1 ptr:"
+        }
+      ],
+      "e4.example.com": [
+        {
+          "SPF": "v=spf1 ptr -all"
+        }
+      ],
+      "e3.example.com": [
+        {
+          "SPF": "v=spf1 ptr -all"
+        },
+        {
+          "A": "1.2.3.4"
+        },
+        {
+          "AAAA": "CAFE:BABE::1"
+        }
+      ],
+      "e1.example.com": [
+        {
+          "SPF": "v=spf1 ptr/0 -all"
+        }
+      ]
+    },
+    "tests": {
+      "ptr-match-implicit": {
+        "result": "pass",
+        "description": "Check all validated domain names to see if they end in the <target-name> domain.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e3.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.5/5"
+      },
+      "ptr-cidr": {
+        "result": "permerror",
+        "description": "PTR              = \"ptr\"    [ \":\" domain-spec ]",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e1.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.5/2"
+      },
+      "ptr-nomatch-invalid": {
+        "result": "fail",
+        "description": "Check all validated domain names to see if they end in the <target-name> domain.",
+        "comment": "This PTR record does not validate",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e4.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.5/5"
+      },
+      "ptr-match-ip6": {
+        "result": "pass",
+        "description": "Check all validated domain names to see if they end in the <target-name> domain.",
+        "host": "CAFE:BABE::1",
+        "mailfrom": "foo@e3.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.5/5"
+      },
+      "ptr-match-target": {
+        "result": "pass",
+        "description": "Check all validated domain names to see if they end in the <target-name> domain.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e2.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.5/5"
+      },
+      "ptr-empty-domain": {
+        "result": "permerror",
+        "description": "domain-spec cannot be empty.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e5.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.5/2"
+      }
+    },
+    "description": "PTR mechanism syntax"
+  },
+  {
+    "zonedata": {
+      "e2a.example.com": [
+        {
+          "AAAA": "1234::1"
+        },
+        {
+          "SPF": "v=spf1 a//0 -all"
+        }
+      ],
+      "e8a.example.com": [
+        {
+          "A": "1.2.3.5"
+        },
+        {
+          "AAAA": "2001:db8:1234::dead:beef"
+        },
+        {
+          "SPF": "v=spf1 a/24 -all"
+        }
+      ],
+      "e6a.example.com": [
+        {
+          "SPF": "v=spf1 a/33 -all"
+        }
+      ],
+      "mail.example.com": [
+        {
+          "A": "1.2.3.4"
+        }
+      ],
+      "e10.example.com": [
+        {
+          "SPF": "v=spf1 a:foo.example.com/24"
+        }
+      ],
+      "e6.example.com": [
+        {
+          "SPF": "v=spf1 a//33 -all"
+        }
+      ],
+      "e5.example.com": [
+        {
+          "SPF": "v=spf1 a:abc.123"
+        }
+      ],
+      "e9.example.com": [
+        {
+          "SPF": "v=spf1 a:example.com:8080"
+        }
+      ],
+      "e2b.example.com": [
+        {
+          "A": "1.1.1.1"
+        },
+        {
+          "SPF": "v=spf1 a//0 -all"
+        }
+      ],
+      "e5a.example.com": [
+        {
+          "SPF": "v=spf1 a:museum"
+        }
+      ],
+      "e13.example.com": [
+        {
+          "SPF": "v=spf1 a:"
+        }
+      ],
+      "e4.example.com": [
+        {
+          "SPF": "v=spf1 a:111.222.33.44"
+        }
+      ],
+      "e3.example.com": [
+        {
+          "SPF": "v=spf1 a:foo.example.com\u0000"
+        }
+      ],
+      "e1.example.com": [
+        {
+          "SPF": "v=spf1 a/0 -all"
+        }
+      ],
+      "foo.example.com": [
+        {
+          "A": "1.1.1.1"
+        },
+        {
+          "A": "1.2.3.5"
+        }
+      ],
+      "e2.example.com": [
+        {
+          "A": "1.1.1.1"
+        },
+        {
+          "AAAA": "1234::2"
+        },
+        {
+          "SPF": "v=spf1 a/0 -all"
+        }
+      ],
+      "e7.example.com": [
+        {
+          "SPF": "v=spf1 a//129 -all"
+        }
+      ],
+      "e8b.example.com": [
+        {
+          "A": "1.2.3.5"
+        },
+        {
+          "AAAA": "2001:db8:1234::dead:beef"
+        },
+        {
+          "SPF": "v=spf1 a//64 -all"
+        }
+      ],
+      "e12.example.com": [
+        {
+          "SPF": "v=spf1 a:example.-com"
+        }
+      ],
+      "e11.example.com": [
+        {
+          "SPF": "v=spf1 a:foo:bar/baz.example.com"
+        }
+      ],
+      "e8.example.com": [
+        {
+          "A": "1.2.3.5"
+        },
+        {
+          "AAAA": "2001:db8:1234::dead:beef"
+        },
+        {
+          "SPF": "v=spf1 a/24//64 -all"
+        }
+      ],
+      "ipv6.example.com": [
+        {
+          "AAAA": "1234::1"
+        },
+        {
+          "A": "1.1.1.1"
+        },
+        {
+          "SPF": "v=spf1 a -all"
+        }
+      ],
+      "foo:bar/baz.example.com": [
+        {
+          "A": "1.2.3.4"
+        }
+      ],
+      "foo.example.xn--zckzah": [
+        {
+          "A": "1.2.3.4"
+        }
+      ],
+      "e14.example.com": [
+        {
+          "SPF": "v=spf1 a:foo.example.xn--zckzah -all"
+        }
+      ],
+      "e5b.example.com": [
+        {
+          "SPF": "v=spf1 a:museum."
+        }
+      ],
+      "e8e.example.com": [
+        {
+          "A": "1.2.3.5"
+        },
+        {
+          "AAAA": "2001:db8:1234::dead:beef"
+        },
+        {
+          "SPF": "v=spf1 a/24/64 -all"
+        }
+      ]
+    },
+    "tests": {
+      "a-dual-cidr-ip6-default": {
+        "result": "fail",
+        "description": "A                = \"a\"      [ \":\" domain-spec ] [ dual-cidr-length ]\ndual-cidr-length = [ ip4-cidr-length ] [ \"/\" ip6-cidr-length ]\n",
+        "host": "2001:db8:1234::cafe:babe",
+        "mailfrom": "foo@e8a.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.3/2"
+      },
+      "a-dual-cidr-ip4-default": {
+        "result": "fail",
+        "description": "A                = \"a\"      [ \":\" domain-spec ] [ dual-cidr-length ]\ndual-cidr-length = [ ip4-cidr-length ] [ \"/\" ip6-cidr-length ]\n",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e8b.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.3/2"
+      },
+      "a-cidr6-0-ip4": {
+        "result": "fail",
+        "description": "Would match if any AAAA records are present in DNS, but not for an IP4 connection.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e2a.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.3/3"
+      },
+      "a-null": {
+        "result": "permerror",
+        "description": "Null octets not allowed in toplabel",
+        "host": "1.2.3.5",
+        "mailfrom": "foo@e3.example.com",
+        "helo": "mail.example.com",
+        "spec": "8.1/2"
+      },
+      "a-dual-cidr-ip4-err": {
+        "result": "permerror",
+        "description": "A                = \"a\"      [ \":\" domain-spec ] [ dual-cidr-length ]\ndual-cidr-length = [ ip4-cidr-length ] [ \"/\" ip6-cidr-length ]\n",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e8e.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.3/2"
+      },
+      "a-bad-cidr6": {
+        "result": "permerror",
+        "description": "A                = \"a\"      [ \":\" domain-spec ] [ dual-cidr-length ]\ndual-cidr-length = [ ip4-cidr-length ] [ \"/\" ip6-cidr-length ]\n",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e7.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.3/2"
+      },
+      "a-cidr4-0-ip6": {
+        "result": "fail",
+        "description": "Matches if any A records are present in DNS.",
+        "host": "1234::1",
+        "mailfrom": "foo@e2.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.3/3"
+      },
+      "a-numeric": {
+        "result": "permerror",
+        "description": "toplabel may not be all numeric",
+        "comment": "A common publishing mistake is using ip4 addresses with A mechanism. This should receive special diagnostic attention in the permerror.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e4.example.com",
+        "helo": "mail.example.com",
+        "spec": "8.1/2"
+      },
+      "a-dash-in-toplabel": {
+        "result": "pass",
+        "description": "toplabel may contain dashes",
+        "comment": "Going from the \"toplabel\" grammar definition, an implementation using regular expressions in incrementally parsing SPF records might erroneously try to match a TLD such as \".xn--zckzah\" (cf. IDN TLDs!) to '( *alphanum ALPHA *alphanum )' first before trying the alternative '( 1*alphanum \"-\" *( alphanum / \"-\" ) alphanum )', essentially causing a non-greedy, and thus, incomplete match.  Make sure a greedy match is performed!",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e14.example.com",
+        "helo": "mail.example.com",
+        "spec": "8.1/2"
+      },
+      "a-cidr6-0-nxdomain": {
+        "result": "fail",
+        "description": "No match if no AAAA records are present in DNS.",
+        "host": "1234::1",
+        "mailfrom": "foo@e2b.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.3/3"
+      },
+      "a-nxdomain": {
+        "result": "fail",
+        "description": "If no ips are returned, A mechanism does not match, even with /0.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e1.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.3/3"
+      },
+      "a-only-toplabel-trailing-dot": {
+        "result": "permerror",
+        "description": "domain-spec may not consist of only a toplabel.",
+        "comment": "\"A trailing dot doesn't help.\"",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e5b.example.com",
+        "helo": "mail.example.com",
+        "spec": "8.1/2"
+      },
+      "a-empty-domain": {
+        "result": "permerror",
+        "description": "domain-spec cannot be empty.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e13.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.3/2"
+      },
+      "a-dual-cidr-ip4-match": {
+        "result": "pass",
+        "description": "A                = \"a\"      [ \":\" domain-spec ] [ dual-cidr-length ]\ndual-cidr-length = [ ip4-cidr-length ] [ \"/\" ip6-cidr-length ]\n",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e8.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.3/2"
+      },
+      "a-cidr4-0": {
+        "result": "pass",
+        "description": "Matches if any A records are present in DNS.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e2.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.3/3"
+      },
+      "a-only-toplabel": {
+        "result": "permerror",
+        "description": "domain-spec may not consist of only a toplabel.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e5a.example.com",
+        "helo": "mail.example.com",
+        "spec": "8.1/2"
+      },
+      "a-colon-domain": {
+        "result": "pass",
+        "description": "domain-spec may contain any visible char except %",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e11.example.com",
+        "helo": "mail.example.com",
+        "spec": "8.1/2"
+      },
+      "a-multi-ip2": {
+        "result": "pass",
+        "description": "A matches any returned IP.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e10.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.3/3"
+      },
+      "a-cidr6": {
+        "result": "fail",
+        "description": "A                = \"a\"      [ \":\" domain-spec ] [ dual-cidr-length ]\ndual-cidr-length = [ ip4-cidr-length ] [ \"/\" ip6-cidr-length ]\n",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e6.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.3/2"
+      },
+      "a-dual-cidr-ip6-match": {
+        "result": "pass",
+        "description": "A                = \"a\"      [ \":\" domain-spec ] [ dual-cidr-length ]\ndual-cidr-length = [ ip4-cidr-length ] [ \"/\" ip6-cidr-length ]\n",
+        "host": "2001:db8:1234::cafe:babe",
+        "mailfrom": "foo@e8.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.3/2"
+      },
+      "a-bad-domain": {
+        "result": "permerror",
+        "description": "domain-spec must pass basic syntax checks; a ':' may appear in domain-spec, but not in top-label",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e9.example.com",
+        "helo": "mail.example.com",
+        "spec": "8.1/2"
+      },
+      "a-bad-toplabel": {
+        "result": "permerror",
+        "description": "toplabel may not begin with a dash",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e12.example.com",
+        "helo": "mail.example.com",
+        "spec": "8.1/2"
+      },
+      "a-ip6-dualstack": {
+        "result": "pass",
+        "description": "Simple IP6 Address match with dual stack.",
+        "host": "1234::1",
+        "mailfrom": "foo@ipv6.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.3/3"
+      },
+      "a-cidr6-0-ip4mapped": {
+        "result": "fail",
+        "description": "Would match if any AAAA records are present in DNS, but not for an IP4 connection.",
+        "host": "::FFFF:1.2.3.4",
+        "mailfrom": "foo@e2a.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.3/3"
+      },
+      "a-multi-ip1": {
+        "result": "pass",
+        "description": "A matches any returned IP.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e10.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.3/3"
+      },
+      "a-cidr6-0-ip6": {
+        "result": "pass",
+        "description": "Matches if any AAAA records are present in DNS.",
+        "host": "1234::1",
+        "mailfrom": "foo@e2a.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.3/3"
+      },
+      "a-colon-domain-ip4mapped": {
+        "result": "pass",
+        "description": "domain-spec may contain any visible char except %",
+        "host": "::FFFF:1.2.3.4",
+        "mailfrom": "foo@e11.example.com",
+        "helo": "mail.example.com",
+        "spec": "8.1/2"
+      },
+      "a-numeric-toplabel": {
+        "result": "permerror",
+        "description": "toplabel may not be all numeric",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e5.example.com",
+        "helo": "mail.example.com",
+        "spec": "8.1/2"
+      },
+      "a-bad-cidr4": {
+        "result": "permerror",
+        "description": "A                = \"a\"      [ \":\" domain-spec ] [ dual-cidr-length ]\ndual-cidr-length = [ ip4-cidr-length ] [ \"/\" ip6-cidr-length ]\n",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e6a.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.3/2"
+      }
+    },
+    "description": "A mechanism syntax"
+  },
+  {
+    "zonedata": {
+      "ip5.example.com": [
+        {
+          "SPF": "v=spf1 ip4:1.2.3.5 -all"
+        }
+      ],
+      "e6.example.com": [
+        {
+          "SPF": "v=spf1 include +all"
+        }
+      ],
+      "e2.example.com": [
+        {
+          "SPF": "v=spf1 include:ip6.example.com all"
+        }
+      ],
+      "erehwon.example.com": [
+        {
+          "TXT": "v=spfl am not an SPF record"
+        }
+      ],
+      "ip7.example.com": [
+        {
+          "SPF": "v=spf1 ip4:1.2.3.7 ?all"
+        }
+      ],
+      "mail.example.com": [
+        {
+          "A": "1.2.3.4"
+        }
+      ],
+      "ip6.example.com": [
+        {
+          "SPF": "v=spf1 ip4:1.2.3.6 ~all"
+        }
+      ],
+      "e7.example.com": [
+        {
+          "SPF": "v=spf1 include:erehwon.example.com -all"
+        }
+      ],
+      "e5.example.com": [
+        {
+          "SPF": "v=spf1 include:e6.example.com -all"
+        }
+      ],
+      "e9.example.com": [
+        {
+          "SPF": "v=spf1 include:ip5.example.com/24 -all"
+        }
+      ],
+      "e8.example.com": [
+        {
+          "SPF": "v=spf1 include: -all"
+        }
+      ],
+      "ip8.example.com": [
+        "TIMEOUT"
+      ],
+      "e4.example.com": [
+        {
+          "SPF": "v=spf1 include:ip8.example.com -all"
+        }
+      ],
+      "e3.example.com": [
+        {
+          "SPF": "v=spf1 include:ip7.example.com -all"
+        }
+      ],
+      "e1.example.com": [
+        {
+          "SPF": "v=spf1 include:ip5.example.com ~all"
+        }
+      ]
+    },
+    "tests": {
+      "include-cidr": {
+        "result": "permerror",
+        "description": "include          = \"include\"  \":\" domain-spec",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e9.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.2/1"
+      },
+      "include-empty-domain": {
+        "result": "permerror",
+        "description": "domain-spec cannot be empty.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e8.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.2/1"
+      },
+      "include-syntax-error": {
+        "result": "permerror",
+        "description": "include          = \"include\"  \":\" domain-spec",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e6.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.2/1"
+      },
+      "include-neutral": {
+        "result": "fail",
+        "description": "recursive check_host() result of neutral causes include to not match.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e3.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.2/9"
+      },
+      "include-fail": {
+        "result": "softfail",
+        "description": "recursive check_host() result of fail causes include to not match.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e1.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.2/9"
+      },
+      "include-permerror": {
+        "result": "permerror",
+        "description": "recursive check_host() result of permerror causes include to permerror",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e5.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.2/9"
+      },
+      "include-temperror": {
+        "result": "temperror",
+        "description": "recursive check_host() result of temperror causes include to temperror",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e4.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.2/9"
+      },
+      "include-softfail": {
+        "result": "pass",
+        "description": "recursive check_host() result of softfail causes include to not match.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e2.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.2/9"
+      },
+      "include-none": {
+        "result": "permerror",
+        "description": "recursive check_host() result of none causes include to permerror",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e7.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.2/9"
+      }
+    },
+    "description": "Include mechanism semantics and syntax"
+  },
+  {
+    "zonedata": {
+      "e2a.example.com": [
+        {
+          "AAAA": "1234::1"
+        },
+        {
+          "MX": [
+            0,
+            "e2a.example.com"
+          ]
+        },
+        {
+          "SPF": "v=spf1 mx//0 -all"
+        }
+      ],
+      "foo1.example.com": [
+        {
+          "A": "1.1.1.1"
+        },
+        {
+          "A": "1.2.3.5"
+        }
+      ],
+      "e11.example.com": [
+        {
+          "SPF": "v=spf1 mx:foo:bar/baz.example.com"
+        }
+      ],
+      "mail.example.com": [
+        {
+          "A": "1.2.3.4"
+        },
+        {
+          "MX": [
+            0,
+            ""
+          ]
+        },
+        {
+          "SPF": "v=spf1 mx"
+        }
+      ],
+      "e10.example.com": [
+        {
+          "SPF": "v=spf1 mx:foo.example.com/24"
+        }
+      ],
+      "e6.example.com": [
+        {
+          "SPF": "v=spf1 mx//33 -all"
+        }
+      ],
+      "e5.example.com": [
+        {
+          "SPF": "v=spf1 mx:abc.123"
+        }
+      ],
+      "e9.example.com": [
+        {
+          "SPF": "v=spf1 mx:example.com:8080"
+        }
+      ],
+      "e2b.example.com": [
+        {
+          "A": "1.1.1.1"
+        },
+        {
+          "MX": [
+            0,
+            "e2b.example.com"
+          ]
+        },
+        {
+          "SPF": "v=spf1 mx//0 -all"
+        }
+      ],
+      "e13.example.com": [
+        {
+          "SPF": "v=spf1 mx: -all"
+        }
+      ],
+      "e4.example.com": [
+        {
+          "SPF": "v=spf1 mx"
+        },
+        {
+          "A": "1.2.3.4"
+        }
+      ],
+      "e3.example.com": [
+        {
+          "SPF": "v=spf1 mx:foo.example.com\u0000"
+        }
+      ],
+      "e1.example.com": [
+        {
+          "SPF": "v=spf1 mx/0 -all"
+        },
+        {
+          "MX": [
+            0,
+            "e1.example.com"
+          ]
+        }
+      ],
+      "foo.example.com": [
+        {
+          "MX": [
+            0,
+            "foo1.example.com"
+          ]
+        }
+      ],
+      "e2.example.com": [
+        {
+          "A": "1.1.1.1"
+        },
+        {
+          "AAAA": "1234::2"
+        },
+        {
+          "MX": [
+            0,
+            "e2.example.com"
+          ]
+        },
+        {
+          "SPF": "v=spf1 mx/0 -all"
+        }
+      ],
+      "e7.example.com": [
+        {
+          "SPF": "v=spf1 mx//129 -all"
+        }
+      ],
+      "e12.example.com": [
+        {
+          "SPF": "v=spf1 mx:example.-com"
+        }
+      ],
+      "e6a.example.com": [
+        {
+          "SPF": "v=spf1 mx/33 -all"
+        }
+      ],
+      "foo:bar/baz.example.com": [
+        {
+          "MX": [
+            0,
+            "foo:bar/baz.example.com"
+          ]
+        },
+        {
+          "A": "1.2.3.4"
+        }
+      ]
+    },
+    "tests": {
+      "mx-cidr6-0-ip6": {
+        "result": "pass",
+        "description": "Matches if any AAAA records for any MX records are present in DNS.",
+        "host": "1234::1",
+        "mailfrom": "foo@e2a.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.3/3"
+      },
+      "mx-nxdomain": {
+        "result": "fail",
+        "description": "If no ips are returned, MX mechanism does not match, even with /0.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e1.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.4/3"
+      },
+      "mx-cidr6-0-ip4mapped": {
+        "result": "fail",
+        "description": "Would match if any AAAA records for MX records are present in DNS, but not for an IP4 connection.",
+        "host": "::FFFF:1.2.3.4",
+        "mailfrom": "foo@e2a.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.4/3"
+      },
+      "mx-implicit": {
+        "result": "neutral",
+        "description": "If the target name has no MX records, check_host() MUST NOT pretend the target is its single MX, and MUST NOT default to an A lookup on the target-name directly.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e4.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.4/4"
+      },
+      "mx-bad-domain": {
+        "result": "permerror",
+        "description": "domain-spec must pass basic syntax checks",
+        "comment": "A ':' may appear in domain-spec, but not in top-label.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e9.example.com",
+        "helo": "mail.example.com",
+        "spec": "8.1/2"
+      },
+      "mx-multi-ip2": {
+        "result": "pass",
+        "description": "MX matches any returned IP.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e10.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.4/3"
+      },
+      "mx-cidr6": {
+        "result": "fail",
+        "description": "MX                = \"mx\"      [ \":\" domain-spec ] [ dual-cidr-length ]\ndual-cidr-length = [ ip4-cidr-length ] [ \"/\" ip6-cidr-length ]\n",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e6.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.4/2"
+      },
+      "mx-numeric-top-label": {
+        "result": "permerror",
+        "description": "Top-label may not be all numeric",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e5.example.com",
+        "helo": "mail.example.com",
+        "spec": "8.1/2"
+      },
+      "mx-cidr6-0-ip4": {
+        "result": "fail",
+        "description": "Would match if any AAAA records for MX records are present in DNS, but not for an IP4 connection.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e2a.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.4/3"
+      },
+      "mx-colon-domain": {
+        "result": "pass",
+        "description": "Domain-spec may contain any visible char except %",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e11.example.com",
+        "helo": "mail.example.com",
+        "spec": "8.1/2"
+      },
+      "mx-cidr4-0-ip6": {
+        "result": "fail",
+        "description": "cidr4 doesn't apply to IP6 connections.",
+        "host": "1234::1",
+        "mailfrom": "foo@e2.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.4/3"
+      },
+      "mx-bad-toplab": {
+        "result": "permerror",
+        "description": "Toplabel may not begin with -",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e12.example.com",
+        "helo": "mail.example.com",
+        "spec": "8.1/2"
+      },
+      "mx-colon-domain-ip4mapped": {
+        "result": "pass",
+        "description": "Domain-spec may contain any visible char except %",
+        "host": "::FFFF:1.2.3.4",
+        "mailfrom": "foo@e11.example.com",
+        "helo": "mail.example.com",
+        "spec": "8.1/2"
+      },
+      "mx-empty-domain": {
+        "result": "permerror",
+        "description": "domain-spec cannot be empty.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e13.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.2/1"
+      },
+      "mx-bad-cidr4": {
+        "result": "permerror",
+        "description": "MX                = \"mx\"      [ \":\" domain-spec ] [ dual-cidr-length ]\ndual-cidr-length = [ ip4-cidr-length ] [ \"/\" ip6-cidr-length ]\n",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e6a.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.4/2"
+      },
+      "mx-null": {
+        "result": "permerror",
+        "description": "Null not allowed in top-label.",
+        "host": "1.2.3.5",
+        "mailfrom": "foo@e3.example.com",
+        "helo": "mail.example.com",
+        "spec": "8.1/2"
+      },
+      "mx-empty": {
+        "result": "neutral",
+        "description": "test null MX",
+        "comment": "Some implementations have had trouble with null MX",
+        "host": "1.2.3.4",
+        "mailfrom": "",
+        "helo": "mail.example.com",
+        "spec": "5.4/3"
+      },
+      "mx-bad-cidr6": {
+        "result": "permerror",
+        "description": "MX                = \"mx\"      [ \":\" domain-spec ] [ dual-cidr-length ]\ndual-cidr-length = [ ip4-cidr-length ] [ \"/\" ip6-cidr-length ]\n",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e7.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.4/2"
+      },
+      "mx-cidr6-0-nxdomain": {
+        "result": "fail",
+        "description": "No match if no AAAA records for any MX records are present in DNS.",
+        "host": "1234::1",
+        "mailfrom": "foo@e2b.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.4/3"
+      },
+      "mx-multi-ip1": {
+        "result": "pass",
+        "description": "MX matches any returned IP.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e10.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.4/3"
+      },
+      "mx-cidr4-0": {
+        "result": "pass",
+        "description": "Matches if any A records for any MX records are present in DNS.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e2.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.4/3"
+      }
+    },
+    "description": "MX mechanism syntax"
+  },
+  {
+    "zonedata": {
+      "e2.example.com": [
+        {
+          "SPF": "v=spf1 exists"
+        }
+      ],
+      "err.example.com": [
+        "TIMEOUT"
+      ],
+      "e6.example.com": [
+        {
+          "SPF": "v=spf1 exists:err.example.com -all"
+        }
+      ],
+      "e5.example.com": [
+        {
+          "SPF": "v=spf1 exists:mail6.example.com -all"
+        }
+      ],
+      "mail.example.com": [
+        {
+          "A": "1.2.3.4"
+        }
+      ],
+      "mail6.example.com": [
+        {
+          "AAAA": "CAFE:BABE::4"
+        }
+      ],
+      "e4.example.com": [
+        {
+          "SPF": "v=spf1 exists:mail.example.com"
+        }
+      ],
+      "e3.example.com": [
+        {
+          "SPF": "v=spf1 exists:mail.example.com/24"
+        }
+      ],
+      "e1.example.com": [
+        {
+          "SPF": "v=spf1 exists:"
+        }
+      ]
+    },
+    "tests": {
+      "exists-ip4": {
+        "result": "pass",
+        "description": "mechanism matches if any DNS A RR exists",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e4.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.7/3"
+      },
+      "exists-implicit": {
+        "result": "permerror",
+        "description": "exists           = \"exists\"   \":\" domain-spec",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e2.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.7/2"
+      },
+      "exists-ip6": {
+        "result": "pass",
+        "description": "The lookup type is A even when the connection is ip6",
+        "host": "CAFE:BABE::3",
+        "mailfrom": "foo@e4.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.7/3"
+      },
+      "exists-empty-domain": {
+        "result": "permerror",
+        "description": "domain-spec cannot be empty.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e1.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.7/2"
+      },
+      "exists-ip6only": {
+        "result": "fail",
+        "description": "The lookup type is A even when the connection is ip6",
+        "host": "CAFE:BABE::3",
+        "mailfrom": "foo@e5.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.7/3"
+      },
+      "exists-dnserr": {
+        "result": [
+          "fail",
+          "temperror"
+        ],
+        "description": "Result for DNS error is being clarified in spfbis",
+        "host": "CAFE:BABE::3",
+        "mailfrom": "foo@e6.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.7/3"
+      },
+      "exists-cidr": {
+        "result": "permerror",
+        "description": "exists           = \"exists\"   \":\" domain-spec",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e3.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.7/2"
+      }
+    },
+    "description": "EXISTS mechanism syntax"
+  },
+  {
+    "zonedata": {
+      "e7.example.com": [
+        {
+          "SPF": "v=spf1 -ip4:1.2.3.4 ip6:::FFFF:1.2.3.4"
+        }
+      ],
+      "e2.example.com": [
+        {
+          "SPF": "v=spf1 ip4:1.2.3.4/32 -all"
+        }
+      ],
+      "mail.example.com": [
+        {
+          "A": "1.2.3.4"
+        }
+      ],
+      "e6.example.com": [
+        {
+          "SPF": "v=spf1 ip4:1.2.3.4//32"
+        }
+      ],
+      "e5.example.com": [
+        {
+          "SPF": "v=spf1 ip4"
+        }
+      ],
+      "e9.example.com": [
+        {
+          "SPF": "v=spf1 ip4:1.2.3"
+        }
+      ],
+      "e8.example.com": [
+        {
+          "SPF": "v=spf1 ip4:1.2.3.4:8080"
+        }
+      ],
+      "e4.example.com": [
+        {
+          "SPF": "v=spf1 ip4:1.2.3.4/032 -all"
+        }
+      ],
+      "e3.example.com": [
+        {
+          "SPF": "v=spf1 ip4:1.2.3.4/33 -all"
+        }
+      ],
+      "e1.example.com": [
+        {
+          "SPF": "v=spf1 ip4:1.1.1.1/0 -all"
+        }
+      ]
+    },
+    "tests": {
+      "cidr4-032": {
+        "result": "permerror",
+        "description": "Invalid CIDR should get permerror.",
+        "comment": "Leading zeros are not explicitly prohibited by the RFC. However, since the RFC explicity prohibits leading zeros in ip4-network, our interpretation is that CIDR should be also.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e4.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.6/2"
+      },
+      "bare-ip4": {
+        "result": "permerror",
+        "description": "IP4              = \"ip4\"      \":\" ip4-network   [ ip4-cidr-length ]",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e5.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.6/2"
+      },
+      "cidr4-0": {
+        "result": "pass",
+        "description": "ip4-cidr-length  = \"/\" 1*DIGIT",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e1.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.6/2"
+      },
+      "ip4-dual-cidr": {
+        "result": "permerror",
+        "description": "dual-cidr-length not permitted on ip4",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e6.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.6/2"
+      },
+      "cidr4-33": {
+        "result": "permerror",
+        "description": "Invalid CIDR should get permerror.",
+        "comment": "The RFC is silent on ip4 CIDR > 32 or ip6 CIDR > 128.  However, since there is no reasonable interpretation (except a noop), we have read between the lines to see a prohibition on invalid CIDR.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e3.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.6/2"
+      },
+      "bad-ip4-short": {
+        "result": "permerror",
+        "description": "It is not permitted to omit parts of the IP address instead of using CIDR notations.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e9.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.6/4"
+      },
+      "ip4-mapped-ip6": {
+        "result": "fail",
+        "description": "IP4 mapped IP6 connections MUST be treated as IP4",
+        "host": "::FFFF:1.2.3.4",
+        "mailfrom": "foo@e7.example.com",
+        "helo": "mail.example.com",
+        "spec": "5/9/2"
+      },
+      "bad-ip4-port": {
+        "result": "permerror",
+        "description": "IP4              = \"ip4\"      \":\" ip4-network   [ ip4-cidr-length ]",
+        "comment": "This has actually been published in SPF records.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e8.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.6/2"
+      },
+      "cidr4-32": {
+        "result": "pass",
+        "description": "ip4-cidr-length  = \"/\" 1*DIGIT",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e2.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.6/2"
+      }
+    },
+    "description": "IP4 mechanism syntax"
+  },
+  {
+    "comment": "IP4 only implementations may skip tests where host is not IP4",
+    "zonedata": {
+      "e3.example.com": [
+        {
+          "SPF": "v=spf1 ip6:::1.1.1.1/129"
+        }
+      ],
+      "e2.example.com": [
+        {
+          "SPF": "v=spf1 ip6:::1.1.1.1/0"
+        }
+      ],
+      "mail.example.com": [
+        {
+          "A": "1.2.3.4"
+        }
+      ],
+      "e4.example.com": [
+        {
+          "SPF": "v=spf1 ip6:::1.1.1.1//33"
+        }
+      ],
+      "e6.example.com": [
+        {
+          "SPF": "v=spf1 ip6::CAFE::BABE"
+        }
+      ],
+      "e5.example.com": [
+        {
+          "SPF": "v=spf1 ip6:CAFE:BABE:8000::/33"
+        }
+      ],
+      "e1.example.com": [
+        {
+          "SPF": "v=spf1 -all ip6"
+        }
+      ]
+    },
+    "tests": {
+      "bare-ip6": {
+        "result": "permerror",
+        "description": "IP6              = \"ip6\"      \":\" ip6-network   [ ip6-cidr-length ]",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e1.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.6/2"
+      },
+      "cidr6-0-ip4": {
+        "result": [
+          "neutral",
+          "pass"
+        ],
+        "description": "IP4 connections do not match ip6.",
+        "comment": "There is controversy over ip4 mapped connections.  RFC4408 clearly requires such connections to be considered as ip4.  However, some interpret the RFC to mean that such connections should *also* match appropriate ip6 mechanisms (but not, inexplicably, A or MX mechanisms).  Until there is consensus, both results are acceptable.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e2.example.com",
+        "helo": "mail.example.com",
+        "spec": "5/9/2"
+      },
+      "ip6-bad1": {
+        "result": "permerror",
+        "description": "",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e6.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.6/2"
+      },
+      "cidr6-33": {
+        "result": "pass",
+        "description": "make sure ip4 cidr restriction are not used for ip6",
+        "host": "CAFE:BABE:8000::",
+        "mailfrom": "foo@e5.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.6/2"
+      },
+      "cidr6-ip4": {
+        "result": [
+          "neutral",
+          "pass"
+        ],
+        "description": "Even if the SMTP connection is via IPv6, an IPv4-mapped IPv6 IP address (see RFC 3513, Section 2.5.5) MUST still be considered an IPv4 address.",
+        "comment": "There is controversy over ip4 mapped connections.  RFC4408 clearly requires such connections to be considered as ip4.  However, some interpret the RFC to mean that such connections should *also* match appropriate ip6 mechanisms (but not, inexplicably, A or MX mechanisms).  Until there is consensus, both results are acceptable.",
+        "host": "::FFFF:1.2.3.4",
+        "mailfrom": "foo@e2.example.com",
+        "helo": "mail.example.com",
+        "spec": "5/9/2"
+      },
+      "cidr6-33-ip4": {
+        "result": "neutral",
+        "description": "make sure ip4 cidr restriction are not used for ip6",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e5.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.6/2"
+      },
+      "cidr6-129": {
+        "result": "permerror",
+        "description": "Invalid CIDR",
+        "comment": "IP4 only implementations MUST fully syntax check all mechanisms, even if they otherwise ignore them.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e3.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.6/2"
+      },
+      "cidr6-bad": {
+        "result": "permerror",
+        "description": "dual-cidr syntax not used for ip6",
+        "comment": "IP4 only implementations MUST fully syntax check all mechanisms, even if they otherwise ignore them.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e4.example.com",
+        "helo": "mail.example.com",
+        "spec": "5.6/2"
+      },
+      "cidr6-0": {
+        "result": "pass",
+        "description": "Match any IP6",
+        "host": "DEAF:BABE::CAB:FEE",
+        "mailfrom": "foo@e2.example.com",
+        "helo": "mail.example.com",
+        "spec": "5/8"
+      }
+    },
+    "description": "IP6 mechanism syntax"
+  },
+  {
+    "comment": "Implementing exp= is optional.  If not implemented, the test driver should not check the explanation field.",
+    "zonedata": {
+      "e17.example.com": [
+        {
+          "SPF": "v=spf1 redirect=-all ?all"
+        }
+      ],
+      "e10.example.com": [
+        {
+          "SPF": "v=spf1 redirect=erehwon.example.com"
+        }
+      ],
+      "e21msg.example.com": [
+        "TIMEOUT"
+      ],
+      "e13msg.example.com": [
+        {
+          "TXT": "The %{x}-files."
+        }
+      ],
+      "e9.example.com": [
+        {
+          "SPF": "v=spf1 -all foo=%abc"
+        }
+      ],
+      "e13.example.com": [
+        {
+          "SPF": "v=spf1 exp=e13msg.example.com -all"
+        }
+      ],
+      "e3.example.com": [
+        {
+          "SPF": "v=spf1 exp=exp1.example.com redirect=e4.example.com"
+        }
+      ],
+      "twoexp.example.com": [
+        {
+          "TXT": "one"
+        },
+        {
+          "TXT": "two"
+        }
+      ],
+      "e16.example.com": [
+        {
+          "SPF": "v=spf1 exp=-all"
+        }
+      ],
+      "e2.example.com": [
+        {
+          "SPF": "v=spf1 -all"
+        }
+      ],
+      "badexp.example.com": [
+        {
+          "TXT": "\u00ef\u00bb\u00bfExplanation"
+        }
+      ],
+      "e12.example.com": [
+        {
+          "SPF": "v=spf1 exp= -all"
+        }
+      ],
+      "e21.example.com": [
+        {
+          "SPF": "v=spf1 exp=e21msg.example.com -all"
+        }
+      ],
+      "tworecs.example.com": [
+        {
+          "SPF": "v=spf1 exp=twoexp.example.com -all"
+        }
+      ],
+      "nonascii.example.com": [
+        {
+          "SPF": "v=spf1 exp=badexp.example.com -all"
+        }
+      ],
+      "e20.example.com": [
+        {
+          "SPF": "v=spf1 default=+"
+        }
+      ],
+      "e18.example.com": [
+        {
+          "SPF": "v=spf1 ?all redirect="
+        }
+      ],
+      "e6.example.com": [
+        {
+          "SPF": "v=spf1 =all"
+        }
+      ],
+      "mail.example.com": [
+        {
+          "A": "1.2.3.4"
+        }
+      ],
+      "exp3.example.com": [
+        {
+          "TXT": "Correct!"
+        }
+      ],
+      "e5.example.com": [
+        {
+          "SPF": "v=spf1 1up=foo"
+        }
+      ],
+      "e11msg.example.com": [
+        {
+          "TXT": "Answer a fool according to his folly."
+        },
+        {
+          "TXT": "Do not answer a fool according to his folly."
+        }
+      ],
+      "e8.example.com": [
+        {
+          "SPF": "v=spf1 -all exp=exp4.example.com"
+        }
+      ],
+      "e4.example.com": [
+        {
+          "SPF": "v=spf1 -all exp=exp2.example.com"
+        }
+      ],
+      "exp4.example.com": [
+        {
+          "TXT": "%{l} in implementation"
+        }
+      ],
+      "e15.example.com": [
+        {
+          "SPF": "v=spf1 redirect=e12.example.com -all redirect=e12.example.com"
+        }
+      ],
+      "exp2.example.com": [
+        {
+          "TXT": "See me."
+        }
+      ],
+      "e1.example.com": [
+        {
+          "SPF": "v=spf1 exp=exp1.example.com redirect=e2.example.com"
+        }
+      ],
+      "e11.example.com": [
+        {
+          "SPF": "v=spf1 -all exp=e11msg.example.com"
+        }
+      ],
+      "exp1.example.com": [
+        {
+          "TXT": "No-see-um"
+        }
+      ],
+      "e7.example.com": [
+        {
+          "SPF": "v=spf1 include:e3.example.com -all exp=exp3.example.com"
+        }
+      ],
+      "e22.example.com": [
+        {
+          "SPF": "v=spf1 exp=mail.example.com -all"
+        }
+      ],
+      "e19.example.com": [
+        {
+          "SPF": "v=spf1 default=pass"
+        }
+      ],
+      "e14.example.com": [
+        {
+          "SPF": "v=spf1 exp=e13msg.example.com -all exp=e11msg.example.com"
+        }
+      ]
+    },
+    "tests": {
+      "exp-no-txt": {
+        "result": "fail",
+        "description": "Ignore exp if no TXT records.\n",
+        "host": "1.2.3.4",
+        "spec": "6.2/4",
+        "explanation": "DEFAULT",
+        "comment": "If domain-spec is empty, or there are any DNS processing errors (any RCODE other than 0), or if no records are returned, or if more than one record is returned, or if there are syntax errors in the explanation string, then proceed as if no exp modifier was given.",
+        "helo": "mail.example.com",
+        "mailfrom": "foo@e22.example.com"
+      },
+      "invalid-modifier": {
+        "result": "permerror",
+        "description": "unknown-modifier = name \"=\" macro-string\nname             = ALPHA *( ALPHA / DIGIT / \"-\" / \"_\" / \".\" )\n",
+        "comment": "Unknown modifier name must begin with alpha.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e5.example.com",
+        "helo": "mail.example.com",
+        "spec": "A/3"
+      },
+      "explanation-syntax-error": {
+        "result": "fail",
+        "description": "Ignore exp if the explanation string has a syntax error.\n",
+        "host": "1.2.3.4",
+        "spec": "6.2/4",
+        "explanation": "DEFAULT",
+        "comment": "If domain-spec is empty, or there are any DNS processing errors (any RCODE other than 0), or if no records are returned, or if more than one record is returned, or if there are syntax errors in the explanation string, then proceed as if no exp modifier was given.",
+        "helo": "mail.example.com",
+        "mailfrom": "foo@e13.example.com"
+      },
+      "redirect-empty-domain": {
+        "result": "permerror",
+        "description": "redirect = \"redirect\" \"=\" domain-spec\n",
+        "comment": "Unlike for exp, there is no instruction to override the permerror for an empty domain-spec (which is invalid syntax).",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e18.example.com",
+        "helo": "mail.example.com",
+        "spec": "6.2/4"
+      },
+      "exp-dns-error": {
+        "result": "fail",
+        "description": "Ignore exp if DNS error.\n",
+        "host": "1.2.3.4",
+        "spec": "6.2/4",
+        "explanation": "DEFAULT",
+        "comment": "If domain-spec is empty, or there are any DNS processing errors (any RCODE other than 0), or if no records are returned, or if more than one record is returned, or if there are syntax errors in the explanation string, then proceed as if no exp modifier was given.",
+        "helo": "mail.example.com",
+        "mailfrom": "foo@e21.example.com"
+      },
+      "exp-twice": {
+        "result": "permerror",
+        "description": "exp= appears twice.\n",
+        "comment": "These two modifiers (exp,redirect) MUST NOT appear in a record more than once each. If they do, then check_host() exits with a result of \"PermError\".",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e14.example.com",
+        "helo": "mail.example.com",
+        "spec": "6/2"
+      },
+      "redirect-cancels-exp": {
+        "result": "fail",
+        "description": "when executing \"redirect\", exp= from the original domain MUST NOT be used.",
+        "host": "1.2.3.4",
+        "explanation": "DEFAULT",
+        "mailfrom": "foo@e1.example.com",
+        "helo": "mail.example.com",
+        "spec": "6.2/13"
+      },
+      "non-ascii-exp": {
+        "result": "fail",
+        "description": "SPF explanation text is restricted to 7-bit ascii.",
+        "host": "1.2.3.4",
+        "spec": "6.2/5",
+        "explanation": "DEFAULT",
+        "comment": "Checking a possibly different code path for non-ascii chars.",
+        "helo": "hosed",
+        "mailfrom": "foobar@nonascii.example.com"
+      },
+      "exp-empty-domain": {
+        "result": "permerror",
+        "description": "PermError if exp= domain-spec is empty.\n",
+        "comment": "Section 6.2/4 says, \"If domain-spec is empty, or there are any DNS processing errors (any RCODE other than 0), or if no records are returned, or if more than one record is returned, or if there are syntax errors in the explanation string, then proceed as if no exp modifier was given.\"  However, \"if domain-spec is empty\" conflicts with the grammar given for the exp modifier.  This was reported as an erratum, and the solution chosen was to report explicit \"exp=\" as PermError, but ignore problems due to macro expansion, DNS, or invalid explanation string.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e12.example.com",
+        "helo": "mail.example.com",
+        "spec": "6.2/4"
+      },
+      "redirect-syntax-error": {
+        "result": "permerror",
+        "description": "redirect      = \"redirect\" \"=\" domain-spec\n",
+        "comment": "A literal application of the grammar causes modifier syntax errors (except for macro syntax) to become unknown-modifier.\n\n  modifier = explanation | redirect | unknown-modifier\n\nHowever, it is generally agreed, with precedent in other RFCs, that unknown-modifier should not be \"greedy\", and should not match known modifier names.  There should have been explicit prose to this effect, and some has been proposed as an erratum.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e17.example.com",
+        "helo": "mail.example.com",
+        "spec": "6.1/2"
+      },
+      "include-ignores-exp": {
+        "result": "fail",
+        "description": "when executing \"include\", exp= from the target domain MUST NOT be used.",
+        "host": "1.2.3.4",
+        "explanation": "Correct!",
+        "mailfrom": "foo@e7.example.com",
+        "helo": "mail.example.com",
+        "spec": "6.2/13"
+      },
+      "exp-multiple-txt": {
+        "result": "fail",
+        "description": "Ignore exp if multiple TXT records.\n",
+        "host": "1.2.3.4",
+        "spec": "6.2/4",
+        "explanation": "DEFAULT",
+        "comment": "If domain-spec is empty, or there are any DNS processing errors (any RCODE other than 0), or if no records are returned, or if more than one record is returned, or if there are syntax errors in the explanation string, then proceed as if no exp modifier was given.",
+        "helo": "mail.example.com",
+        "mailfrom": "foo@e11.example.com"
+      },
+      "redirect-twice": {
+        "result": "permerror",
+        "description": "redirect= appears twice.\n",
+        "comment": "These two modifiers (exp,redirect) MUST NOT appear in a record more than once each. If they do, then check_host() exits with a result of \"PermError\".",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e15.example.com",
+        "helo": "mail.example.com",
+        "spec": "6/2"
+      },
+      "unknown-modifier-syntax": {
+        "result": "permerror",
+        "description": "unknown-modifier = name \"=\" macro-string\n",
+        "comment": "Unknown modifiers must have valid macro syntax.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e9.example.com",
+        "helo": "mail.example.com",
+        "spec": "A/3"
+      },
+      "dorky-sentinel": {
+        "result": "fail",
+        "description": "An implementation that uses a legal expansion as a sentinel.  We cannot check them all, but we can check this one.",
+        "host": "1.2.3.4",
+        "spec": "8.1/6",
+        "explanation": "Macro Error in implementation",
+        "comment": "Spaces are allowed in local-part.",
+        "helo": "mail.example.com",
+        "mailfrom": "Macro Error@e8.example.com"
+      },
+      "two-exp-records": {
+        "result": "fail",
+        "description": "Must ignore exp= if DNS returns more than one TXT record.",
+        "host": "1.2.3.4",
+        "explanation": "DEFAULT",
+        "mailfrom": "foobar@tworecs.example.com",
+        "helo": "hosed",
+        "spec": "6.2/4"
+      },
+      "redirect-cancels-prior-exp": {
+        "result": "fail",
+        "description": "when executing \"redirect\", exp= from the original domain MUST NOT be used.",
+        "host": "1.2.3.4",
+        "explanation": "See me.",
+        "mailfrom": "foo@e3.example.com",
+        "helo": "mail.example.com",
+        "spec": "6.2/13"
+      },
+      "default-modifier-obsolete": {
+        "result": "neutral",
+        "description": "Unknown modifiers do not modify the RFC SPF result.\n",
+        "comment": "Some implementations may have a leftover default= modifier from earlier drafts.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e19.example.com",
+        "helo": "mail.example.com",
+        "spec": "6/3"
+      },
+      "empty-modifier-name": {
+        "result": "permerror",
+        "description": "name             = ALPHA *( ALPHA / DIGIT / \"-\" / \"_\" / \".\" )\n",
+        "comment": "Unknown modifier name must not be empty.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e6.example.com",
+        "helo": "mail.example.com",
+        "spec": "A/3"
+      },
+      "redirect-none": {
+        "result": "permerror",
+        "description": "If no SPF record is found, or if the target-name is malformed, the result is a \"PermError\" rather than \"None\".",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e10.example.com",
+        "helo": "mail.example.com",
+        "spec": "6.1/4"
+      },
+      "default-modifier-obsolete2": {
+        "result": "neutral",
+        "description": "Unknown modifiers do not modify the RFC SPF result.\n",
+        "comment": "Some implementations may have a leftover default= modifier from earlier drafts.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e20.example.com",
+        "helo": "mail.example.com",
+        "spec": "6/3"
+      },
+      "exp-syntax-error": {
+        "result": "permerror",
+        "description": "explanation      = \"exp\" \"=\" domain-spec\n",
+        "comment": "A literal application of the grammar causes modifier syntax errors (except for macro syntax) to become unknown-modifier.\n\n  modifier = explanation | redirect | unknown-modifier\n\nHowever, it is generally agreed, with precedent in other RFCs, that unknown-modifier should not be \"greedy\", and should not match known modifier names.  There should have been explicit prose to this effect, and some has been proposed as an erratum.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e16.example.com",
+        "helo": "mail.example.com",
+        "spec": "6.2/1"
+      }
+    },
+    "description": "Semantics of exp and other modifiers"
+  },
+  {
+    "zonedata": {
+      "a.spf.example.com": [
+        {
+          "SPF": "v=spf1 include:o.spf.example.com. ~all"
+        }
+      ],
+      "e10.example.com": [
+        {
+          "SPF": "v=spf1 -include:_spfh.%{d2} ip4:1.2.3.0/24 -all"
+        }
+      ],
+      "e6.example.com": [
+        {
+          "SPF": "v=spf1 -all exp=e6msg.example.com"
+        }
+      ],
+      "e9.example.com": [
+        {
+          "SPF": "v=spf1 a:%{H} -all"
+        }
+      ],
+      "3.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.E.B.A.B.E.F.A.C.ip6.arpa": [
+        {
+          "PTR": "mx.example.com"
+        }
+      ],
+      "40.218.168.192.example.com": [
+        {
+          "TXT": "Connections from %{c} not authorized."
+        }
+      ],
+      "e1e.example.com": [
+        {
+          "SPF": "v=spf1 exists:foo%(ir).sbl.example.com ?all"
+        }
+      ],
+      "e1t.example.com": [
+        {
+          "SPF": "v=spf1 exists:foo%.sbl.example.com ?all"
+        }
+      ],
+      "mx.example.com": [
+        {
+          "A": "192.168.218.41"
+        },
+        {
+          "A": "192.168.218.42"
+        },
+        {
+          "AAAA": "CAFE:BABE::2"
+        },
+        {
+          "AAAA": "CAFE:BABE::3"
+        }
+      ],
+      "example.com.d.spf.example.com": [
+        {
+          "SPF": "v=spf1 redirect=a.spf.example.com"
+        }
+      ],
+      "e3.example.com": [
+        {
+          "SPF": "v=spf1 -all exp=%{ir}.example.com"
+        }
+      ],
+      "e1a.example.com": [
+        {
+          "SPF": "v=spf1 a:macro%%percent%_%_space%-url-space.example.com -all"
+        }
+      ],
+      "e6msg.example.com": [
+        {
+          "TXT": "connect from %{p}"
+        }
+      ],
+      "mx.e7.example.com.should.example.com": [
+        {
+          "A": "127.0.0.2"
+        }
+      ],
+      "o.spf.example.com": [
+        {
+          "SPF": "v=spf1 ip4:192.168.218.40"
+        }
+      ],
+      "e2.example.com": [
+        {
+          "SPF": "v=spf1 -all exp=%{r}.example.com"
+        }
+      ],
+      "1.2.3.4.gladstone.philip.user.example.com": [
+        {
+          "A": "127.0.0.2"
+        }
+      ],
+      "e12.example.com": [
+        {
+          "SPF": "v=spf1 exists:%{l2r+-}.user.%{d2}"
+        }
+      ],
+      "msg.example.com": [
+        {
+          "TXT": "This is a test."
+        }
+      ],
+      "e11.example.com": [
+        {
+          "SPF": "v=spf1 exists:%{i}.%{l2r-}.user.%{d2}"
+        }
+      ],
+      "41.218.168.192.in-addr.arpa": [
+        {
+          "PTR": "mx.example.com"
+        }
+      ],
+      "msg8.example.com": [
+        {
+          "TXT": "http://example.com/why.html?l=%{L}"
+        }
+      ],
+      "_spfh.example.com": [
+        {
+          "SPF": "v=spf1 -a:%{h} +all"
+        }
+      ],
+      "e1.example.com": [
+        {
+          "SPF": "v=spf1 -exists:%(ir).sbl.example.com ?all"
+        }
+      ],
+      "1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.E.B.A.B.E.F.A.C.ip6.arpa": [
+        {
+          "PTR": "mx.example.com"
+        }
+      ],
+      "bar.foo.user.example.com": [
+        {
+          "A": "127.0.0.2"
+        }
+      ],
+      "e5.example.com": [
+        {
+          "SPF": "v=spf1 a:%{a}.example.com -all"
+        }
+      ],
+      "example.com": [
+        {
+          "A": "192.168.90.76"
+        },
+        {
+          "SPF": "v=spf1 redirect=%{d}.d.spf.example.com."
+        }
+      ],
+      "msgbas2x.cos.example.com": [
+        {
+          "A": "192.168.218.40"
+        }
+      ],
+      "e4.example.com": [
+        {
+          "SPF": "v=spf1 -all exp=e4msg.example.com"
+        }
+      ],
+      "mx.example.com.ok.example.com": [
+        {
+          "A": "127.0.0.2"
+        }
+      ],
+      "42.218.168.192.in-addr.arpa": [
+        {
+          "PTR": "mx.example.com"
+        },
+        {
+          "PTR": "mx.e7.example.com"
+        }
+      ],
+      "somewhat.long.exp.example.com.somewhat.long.exp.example.com.somewhat.long.exp.example.com.somewhat.long.exp.example.com.somewhat.long.exp.example.com.somewhat.long.exp.example.com.somewhat.long.exp.example.com.somewhat.long.exp.example.com.example.com": [
+        {
+          "TXT": "Congratulations!  That was tricky."
+        }
+      ],
+      "exp.example.com": [
+        {
+          "SPF": "v=spf1 exp=msg.example.com. -all"
+        }
+      ],
+      "40.218.168.192.in-addr.arpa": [
+        {
+          "PTR": "mx.example.com"
+        }
+      ],
+      "e4msg.example.com": [
+        {
+          "TXT": "%{c} is queried as %{ir}.%{v}.arpa"
+        }
+      ],
+      "e7.example.com": [
+        {
+          "SPF": "v=spf1 exists:%{p}.should.example.com ~exists:%{p}.ok.example.com"
+        }
+      ],
+      "e8.example.com": [
+        {
+          "SPF": "v=spf1 -all exp=msg8.%{D2}"
+        }
+      ],
+      "macro%percent  space%20url-space.example.com": [
+        {
+          "A": "1.2.3.4"
+        }
+      ],
+      "somewhat.long.exp.example.com": [
+        {
+          "SPF": "v=spf1 -all exp=foobar.%{o}.%{o}.%{o}.%{o}.%{o}.%{o}.%{o}.%{o}.example.com"
+        }
+      ],
+      "mx.e7.example.com": [
+        {
+          "A": "192.168.218.42"
+        }
+      ]
+    },
+    "tests": {
+      "upper-macro": {
+        "result": "fail",
+        "description": "Uppercased macros expand exactly as their lowercased equivalents, and are then URL escaped.",
+        "host": "192.168.218.42",
+        "explanation": "http://example.com/why.html?l=jack%26jill%3Dup",
+        "mailfrom": "jack&jill=up@e8.example.com",
+        "helo": "msgbas2x.cos.example.com",
+        "spec": "8.1/26"
+      },
+      "hello-macro": {
+        "result": "pass",
+        "description": "h = HELO/EHLO domain",
+        "host": "192.168.218.40",
+        "mailfrom": "test@e9.example.com",
+        "helo": "msgbas2x.cos.example.com",
+        "spec": "8.1/6"
+      },
+      "macro-reverse-split-on-dash": {
+        "result": "pass",
+        "description": "Macro value transformation (splitting on arbitrary characters, reversal, number of right-hand parts to use)",
+        "host": "1.2.3.4",
+        "mailfrom": "philip-gladstone-test@e11.example.com",
+        "helo": "mail.example.com",
+        "spec": [
+          "8.1/15",
+          "8.1/16",
+          "8.1/17",
+          "8.1/18"
+        ]
+      },
+      "invalid-embedded-macro-char": {
+        "result": "permerror",
+        "description": "A '%' character not followed by a '{', '%', '-', or '_' character is a syntax error.",
+        "host": "192.168.218.40",
+        "mailfrom": "test@e1e.example.com",
+        "helo": "msgbas2x.cos.example.com",
+        "spec": "8.1/9"
+      },
+      "exp-txt-macro-char": {
+        "result": "fail",
+        "description": "For IPv4 addresses, both the \"i\" and \"c\" macros expand to the standard dotted-quad format.",
+        "host": "192.168.218.40",
+        "explanation": "Connections from 192.168.218.40 not authorized.",
+        "mailfrom": "test@e3.example.com",
+        "helo": "msgbas2x.cos.example.com",
+        "spec": "8.1/20"
+      },
+      "undef-macro": {
+        "result": "permerror",
+        "description": "Allowed macros chars are 'slodipvh' plus 'crt' in explanation.",
+        "host": "CAFE:BABE::192.168.218.40",
+        "mailfrom": "test@e5.example.com",
+        "helo": "msgbas2x.cos.example.com",
+        "spec": "8.1/6"
+      },
+      "trailing-dot-exp": {
+        "result": "fail",
+        "description": "trailing dot is not removed from explanation",
+        "host": "192.168.218.40",
+        "spec": 8.1,
+        "explanation": "This is a test.",
+        "comment": "A simple way for an implementation to ignore trailing dots on domains is to remove it when present.  But be careful not to remove it for explanation text.",
+        "helo": "msgbas2x.cos.example.com",
+        "mailfrom": "test@exp.example.com"
+      },
+      "invalid-macro-char": {
+        "result": "permerror",
+        "description": "A '%' character not followed by a '{', '%', '-', or '_' character is a syntax error.",
+        "host": "192.168.218.40",
+        "mailfrom": "test@e1.example.com",
+        "helo": "msgbas2x.cos.example.com",
+        "spec": "8.1/9"
+      },
+      "v-macro-ip6": {
+        "result": "fail",
+        "description": "v = the string \"in-addr\" if <ip> is ipv4, or \"ip6\" if <ip> is ipv6",
+        "host": "CAFE:BABE::1",
+        "explanation": "cafe:babe::1 is queried as 1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.E.B.A.B.E.F.A.C.ip6.arpa",
+        "mailfrom": "test@e4.example.com",
+        "helo": "msgbas2x.cos.example.com",
+        "spec": "8.1/6"
+      },
+      "macro-multiple-delimiters": {
+        "result": "pass",
+        "description": "Multiple delimiters may be specified in a macro expression.\n  macro-expand = ( \"%{\" macro-letter transformers *delimiter \"}\" )\n                 / \"%%\" / \"%_\" / \"%-\"",
+        "host": "1.2.3.4",
+        "mailfrom": "foo-bar+zip+quux@e12.example.com",
+        "helo": "mail.example.com",
+        "spec": [
+          "8.1/15",
+          "8.1/16"
+        ]
+      },
+      "trailing-dot-domain": {
+        "result": "pass",
+        "description": "trailing dot is ignored for domains",
+        "host": "192.168.218.40",
+        "mailfrom": "test@example.com",
+        "helo": "msgbas2x.cos.example.com",
+        "spec": "8.1/16"
+      },
+      "v-macro-ip4": {
+        "result": "fail",
+        "description": "v = the string \"in-addr\" if <ip> is ipv4, or \"ip6\" if <ip> is ipv6",
+        "host": "192.168.218.40",
+        "explanation": "192.168.218.40 is queried as 40.218.168.192.in-addr.arpa",
+        "mailfrom": "test@e4.example.com",
+        "helo": "msgbas2x.cos.example.com",
+        "spec": "8.1/6"
+      },
+      "p-macro-ip6-valid": {
+        "result": "fail",
+        "description": "p = the validated domain name of <ip>",
+        "host": "CAFE:BABE::3",
+        "spec": "8.1/22",
+        "explanation": "connect from mx.example.com",
+        "comment": "If a subdomain of the <domain> is present, it SHOULD be used.",
+        "helo": "msgbas2x.cos.example.com",
+        "mailfrom": "test@e6.example.com"
+      },
+      "domain-name-truncation": {
+        "result": "fail",
+        "description": "When the result of macro expansion is used in a domain name query, if the expanded domain name exceeds 253 characters, the left side is truncated to fit, by removing successive domain labels until the total length does not exceed 253 characters.",
+        "host": "192.168.218.40",
+        "explanation": "Congratulations!  That was tricky.",
+        "mailfrom": "test@somewhat.long.exp.example.com",
+        "helo": "msgbas2x.cos.example.com",
+        "spec": "8.1/25"
+      },
+      "invalid-hello-macro": {
+        "result": "fail",
+        "description": "h = HELO/EHLO domain, but HELO is invalid",
+        "comment": "Domain-spec must end in either a macro, or a valid toplabel. It is not correct to check syntax after macro expansion.",
+        "host": "192.168.218.40",
+        "mailfrom": "test@e9.example.com",
+        "helo": "JUMPIN' JUPITER",
+        "spec": "8.1/2"
+      },
+      "macro-mania-in-domain": {
+        "result": "pass",
+        "description": "macro-encoded percents (%%), spaces (%_), and URL-percent-encoded spaces (%-)",
+        "host": "1.2.3.4",
+        "mailfrom": "test@e1a.example.com",
+        "helo": "mail.example.com",
+        "spec": "8.1/3, 8.1/4"
+      },
+      "p-macro-multiple": {
+        "result": [
+          "pass",
+          "softfail"
+        ],
+        "description": "p = the validated domain name of <ip>",
+        "comment": "If a subdomain of the <domain> is present, it SHOULD be used.",
+        "host": "192.168.218.42",
+        "mailfrom": "test@e7.example.com",
+        "helo": "msgbas2x.cos.example.com",
+        "spec": "8.1/22"
+      },
+      "invalid-trailing-macro-char": {
+        "result": "permerror",
+        "description": "A '%' character not followed by a '{', '%', '-', or '_' character is a syntax error.",
+        "host": "192.168.218.40",
+        "mailfrom": "test@e1t.example.com",
+        "helo": "msgbas2x.cos.example.com",
+        "spec": "8.1/9"
+      },
+      "p-macro-ip4-novalid": {
+        "result": "fail",
+        "description": "p = the validated domain name of <ip>",
+        "host": "192.168.218.40",
+        "spec": "8.1/22",
+        "explanation": "connect from unknown",
+        "comment": "The PTR in this example does not validate.",
+        "helo": "msgbas2x.cos.example.com",
+        "mailfrom": "test@e6.example.com"
+      },
+      "exp-only-macro-char": {
+        "result": "permerror",
+        "description": "The following macro letters are allowed only in \"exp\" text: c, r, t",
+        "host": "192.168.218.40",
+        "mailfrom": "test@e2.example.com",
+        "helo": "msgbas2x.cos.example.com",
+        "spec": "8.1/8"
+      },
+      "p-macro-ip4-valid": {
+        "result": "fail",
+        "description": "p = the validated domain name of <ip>",
+        "host": "192.168.218.41",
+        "spec": "8.1/22",
+        "explanation": "connect from mx.example.com",
+        "comment": "If a subdomain of the <domain> is present, it SHOULD be used.",
+        "helo": "msgbas2x.cos.example.com",
+        "mailfrom": "test@e6.example.com"
+      },
+      "hello-domain-literal": {
+        "result": "fail",
+        "description": "h = HELO/EHLO domain, but HELO is a domain literal",
+        "comment": "Domain-spec must end in either a macro, or a valid toplabel. It is not correct to check syntax after macro expansion.",
+        "host": "192.168.218.40",
+        "mailfrom": "test@e9.example.com",
+        "helo": "[192.168.218.40]",
+        "spec": "8.1/2"
+      },
+      "require-valid-helo": {
+        "result": "fail",
+        "description": "Example of requiring valid helo in sender policy.  This is a complex policy testing several points at once.",
+        "host": "1.2.3.4",
+        "mailfrom": "test@e10.example.com",
+        "helo": "OEMCOMPUTER",
+        "spec": "8.1/6"
+      },
+      "p-macro-ip6-novalid": {
+        "result": "fail",
+        "description": "p = the validated domain name of <ip>",
+        "host": "CAFE:BABE::1",
+        "spec": "8.1/22",
+        "explanation": "connect from unknown",
+        "comment": "The PTR in this example does not validate.",
+        "helo": "msgbas2x.cos.example.com",
+        "mailfrom": "test@e6.example.com"
+      }
+    },
+    "description": "Macro expansion rules"
+  },
+  {
+    "zonedata": {
+      "e6.example.com": [
+        {
+          "SPF": "v=spf1 a mx a mx a mx a mx a ptr ip4:1.2.3.4 -all"
+        },
+        {
+          "A": "1.2.3.8"
+        },
+        {
+          "MX": [
+            10,
+            "e6.example.com"
+          ]
+        }
+      ],
+      "e2.example.com": [
+        {
+          "SPF": "v=spf1 include:e3.example.com"
+        },
+        {
+          "A": "1.2.3.7"
+        }
+      ],
+      "e10.example.com": [
+        {
+          "SPF": "v=spf1 a -all"
+        },
+        {
+          "A": "1.2.3.1"
+        },
+        {
+          "A": "1.2.3.2"
+        },
+        {
+          "A": "1.2.3.3"
+        },
+        {
+          "A": "1.2.3.4"
+        },
+        {
+          "A": "1.2.3.5"
+        },
+        {
+          "A": "1.2.3.6"
+        },
+        {
+          "A": "1.2.3.7"
+        },
+        {
+          "A": "1.2.3.8"
+        },
+        {
+          "A": "1.2.3.9"
+        },
+        {
+          "A": "1.2.3.10"
+        },
+        {
+          "A": "1.2.3.11"
+        },
+        {
+          "A": "1.2.3.12"
+        }
+      ],
+      "mail.example.com": [
+        {
+          "A": "1.2.3.4"
+        }
+      ],
+      "e7.example.com": [
+        {
+          "SPF": "v=spf1 a mx a mx a mx a mx a ptr a ip4:1.2.3.4 -all"
+        },
+        {
+          "A": "1.2.3.20"
+        }
+      ],
+      "e5.example.com": [
+        {
+          "SPF": "v=spf1 ptr"
+        },
+        {
+          "A": "1.2.3.5"
+        }
+      ],
+      "e9.example.com": [
+        {
+          "SPF": "v=spf1 a include:inc.example.com a ip4:1.2.3.4 -all"
+        },
+        {
+          "A": "1.2.3.21"
+        }
+      ],
+      "5.3.2.1.in-addr.arpa": [
+        {
+          "PTR": "e1.example.com."
+        },
+        {
+          "PTR": "e2.example.com."
+        },
+        {
+          "PTR": "e3.example.com."
+        },
+        {
+          "PTR": "e4.example.com."
+        },
+        {
+          "PTR": "example.com."
+        },
+        {
+          "PTR": "e6.example.com."
+        },
+        {
+          "PTR": "e7.example.com."
+        },
+        {
+          "PTR": "e8.example.com."
+        },
+        {
+          "PTR": "e9.example.com."
+        },
+        {
+          "PTR": "e10.example.com."
+        },
+        {
+          "PTR": "e5.example.com."
+        }
+      ],
+      "e8.example.com": [
+        {
+          "SPF": "v=spf1 a include:inc.example.com ip4:1.2.3.4 mx -all"
+        },
+        {
+          "A": "1.2.3.4"
+        }
+      ],
+      "inc.example.com": [
+        {
+          "SPF": "v=spf1 a a a a a a a a"
+        },
+        {
+          "A": "1.2.3.10"
+        }
+      ],
+      "e4.example.com": [
+        {
+          "SPF": "v=spf1 mx"
+        },
+        {
+          "MX": [
+            0,
+            "mail.example.com"
+          ]
+        },
+        {
+          "MX": [
+            1,
+            "mail.example.com"
+          ]
+        },
+        {
+          "MX": [
+            2,
+            "mail.example.com"
+          ]
+        },
+        {
+          "MX": [
+            3,
+            "mail.example.com"
+          ]
+        },
+        {
+          "MX": [
+            4,
+            "mail.example.com"
+          ]
+        },
+        {
+          "MX": [
+            5,
+            "mail.example.com"
+          ]
+        },
+        {
+          "MX": [
+            6,
+            "mail.example.com"
+          ]
+        },
+        {
+          "MX": [
+            7,
+            "mail.example.com"
+          ]
+        },
+        {
+          "MX": [
+            8,
+            "mail.example.com"
+          ]
+        },
+        {
+          "MX": [
+            9,
+            "mail.example.com"
+          ]
+        },
+        {
+          "MX": [
+            10,
+            "e4.example.com"
+          ]
+        },
+        {
+          "A": "1.2.3.5"
+        }
+      ],
+      "e3.example.com": [
+        {
+          "SPF": "v=spf1 include:e2.example.com"
+        },
+        {
+          "A": "1.2.3.8"
+        }
+      ],
+      "e1.example.com": [
+        {
+          "SPF": "v=spf1 ip4:1.1.1.1 redirect=e1.example.com"
+        },
+        {
+          "A": "1.2.3.6"
+        }
+      ]
+    },
+    "tests": {
+      "include-over-limit": {
+        "result": "permerror",
+        "description": "SPF implementations MUST limit the number of mechanisms and modifiers that do DNS lookups to at most 10 per SPF check.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e9.example.com",
+        "helo": "mail.example.com",
+        "spec": "10.1/6"
+      },
+      "mech-over-limit": {
+        "result": "permerror",
+        "description": "SPF implementations MUST limit the number of mechanisms and modifiers that do DNS lookups to at most 10 per SPF check.",
+        "comment": "We do not check whether an implementation counts mechanisms before or after evaluation.  The RFC is not clear on this.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e7.example.com",
+        "helo": "mail.example.com",
+        "spec": "10.1/6"
+      },
+      "mech-at-limit": {
+        "result": "pass",
+        "description": "SPF implementations MUST limit the number of mechanisms and modifiers that do DNS lookups to at most 10 per SPF check.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e6.example.com",
+        "helo": "mail.example.com",
+        "spec": "10.1/6"
+      },
+      "false-a-limit": {
+        "result": "pass",
+        "description": "unlike MX, PTR, there is no RR limit for A",
+        "comment": "There seems to be a tendency for developers to want to limit A RRs in addition to MX and PTR.  These are IPs, not usable for 3rd party DoS attacks, and hence need no low limit.",
+        "host": "1.2.3.12",
+        "mailfrom": "foo@e10.example.com",
+        "helo": "mail.example.com",
+        "spec": "10.1/7"
+      },
+      "include-loop": {
+        "result": "permerror",
+        "description": "SPF implementations MUST limit the number of mechanisms and modifiers that do DNS lookups to at most 10 per SPF check.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e2.example.com",
+        "helo": "mail.example.com",
+        "spec": "10.1/6"
+      },
+      "mx-limit": {
+        "result": [
+          "neutral",
+          "pass",
+          "permerror"
+        ],
+        "description": "there MUST be a limit of no more than 10 MX looked up and checked.",
+        "comment": "The required result for this test was the subject of much controversy.  Many felt that the RFC *should* have specified permerror, but the consensus was that it failed to actually do so. The preferred result reflects evaluating the 10 allowed MX records in the order returned by the test data - or sorted via priority. If testing with live DNS, the MX order may be random, and a pass result would still be compliant.  The SPF result is effectively random.",
+        "host": "1.2.3.5",
+        "mailfrom": "foo@e4.example.com",
+        "helo": "mail.example.com",
+        "spec": "10.1/7"
+      },
+      "ptr-limit": {
+        "result": [
+          "neutral",
+          "pass"
+        ],
+        "description": "there MUST be a limit of no more than 10 PTR looked up and checked.",
+        "comment": "The result of this test cannot be permerror not only because the RFC does not specify it, but because the sender has no control over the PTR records of spammers. The preferred result reflects evaluating the 10 allowed PTR records in the order returned by the test data. If testing with live DNS, the PTR order may be random, and a pass result would still be compliant.  The SPF result is effectively randomized.",
+        "host": "1.2.3.5",
+        "mailfrom": "foo@e5.example.com",
+        "helo": "mail.example.com",
+        "spec": "10.1/7"
+      },
+      "include-at-limit": {
+        "result": "pass",
+        "description": "SPF implementations MUST limit the number of mechanisms and modifiers that do DNS lookups to at most 10 per SPF check.",
+        "comment": "The part of the RFC that talks about MAY parse the entire record first (4.6) is specific to syntax errors.  Processing limits is a different, non-syntax issue.  Processing limits (10.1) specifically talks about limits during a check.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e8.example.com",
+        "helo": "mail.example.com",
+        "spec": "10.1/6"
+      },
+      "redirect-loop": {
+        "result": "permerror",
+        "description": "SPF implementations MUST limit the number of mechanisms and modifiers that do DNS lookups to at most 10 per SPF check.",
+        "host": "1.2.3.4",
+        "mailfrom": "foo@e1.example.com",
+        "helo": "mail.example.com",
+        "spec": "10.1/6"
+      }
+    },
+    "description": "Processing limits"
+  }
+]
