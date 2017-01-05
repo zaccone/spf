@@ -8,12 +8,14 @@ import (
 	"unicode/utf8"
 )
 
-// DELIMITER is a constant rune other than any allowed delimiter.
-// It indicates lack of allowed delimiters, hence no split in delimiter
-const DELIMITER rune = '*'
+const (
+	// delimiter is a constant rune other than any allowed delimiter.
+	// It indicates lack of allowed delimiters, hence no split in delimiter
+	delimiter rune = '*'
 
-// NEGATIVE is a special value indicating there will be no split on macro.
-const NEGATIVE int = -1
+	// negative is a special value indicating there will be no split on macro.
+	negative int = -1
+)
 
 type macro struct {
 	start  int
@@ -145,7 +147,7 @@ func scanMacro(m *macro, p *Parser) (stateFn, error) {
 
 	switch r {
 	case 's':
-		curItem = item{p.Sender, NEGATIVE, DELIMITER, false}
+		curItem = item{p.Sender, negative, delimiter, false}
 		m.moveon()
 		result, err = parseDelimiter(m, &curItem)
 		if err != nil {
@@ -159,7 +161,7 @@ func scanMacro(m *macro, p *Parser) (stateFn, error) {
 		if err != nil {
 			break
 		}
-		curItem = item{email.User, NEGATIVE, DELIMITER, false}
+		curItem = item{email.User, negative, delimiter, false}
 		m.moveon()
 		result, err = parseDelimiter(m, &curItem)
 		if err != nil {
@@ -173,7 +175,7 @@ func scanMacro(m *macro, p *Parser) (stateFn, error) {
 		if err != nil {
 			break
 		}
-		curItem = item{email.Domain, NEGATIVE, DELIMITER, false}
+		curItem = item{email.Domain, negative, delimiter, false}
 		m.moveon()
 		result, err = parseDelimiter(m, &curItem)
 		if err != nil {
@@ -183,7 +185,7 @@ func scanMacro(m *macro, p *Parser) (stateFn, error) {
 		m.moveon()
 
 	case 'd', 'h':
-		curItem = item{p.Domain, NEGATIVE, DELIMITER, false}
+		curItem = item{p.Domain, negative, delimiter, false}
 		m.moveon()
 		result, err = parseDelimiter(m, &curItem)
 		if err != nil {
@@ -193,7 +195,7 @@ func scanMacro(m *macro, p *Parser) (stateFn, error) {
 		m.moveon()
 
 	case 'i':
-		curItem = item{p.IP.String(), NEGATIVE, DELIMITER, false}
+		curItem = item{p.IP.String(), negative, delimiter, false}
 		m.moveon()
 		result, err = parseDelimiter(m, &curItem)
 		if err != nil {
@@ -298,9 +300,9 @@ func parseDelimiter(m *macro, curItem *item) (string, error) {
 	var parts []string
 	if curItem.cardinality > 0 ||
 		curItem.reversed ||
-		curItem.delimiter != DELIMITER {
+		curItem.delimiter != delimiter {
 
-		if curItem.delimiter == DELIMITER {
+		if curItem.delimiter == delimiter {
 			curItem.delimiter = '.'
 		}
 		parts = strings.Split(curItem.value, string(curItem.delimiter))
@@ -316,11 +318,11 @@ func parseDelimiter(m *macro, curItem *item) (string, error) {
 		parts = []string{curItem.value}
 	}
 
-	if curItem.cardinality == NEGATIVE {
+	if curItem.cardinality == negative {
 		curItem.cardinality = len(parts)
 	}
 
-	if curItem.cardinality > NEGATIVE && curItem.cardinality > len(parts) {
+	if curItem.cardinality > negative && curItem.cardinality > len(parts) {
 		curItem.cardinality = len(parts)
 	}
 	return strings.Join(parts[len(parts)-curItem.cardinality:], "."), nil
