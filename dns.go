@@ -80,7 +80,7 @@ func IsDomainName(s string) bool {
 
 // NormalizeHost appends a root domain (a dot) to the FQDN.
 func NormalizeHost(host string) string {
-	if isEmpty(&host) {
+	if len(host) == 0 {
 		return ""
 	}
 	if host[len(host)-1] != '.' {
