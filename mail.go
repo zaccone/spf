@@ -2,28 +2,35 @@ package spf
 
 import "strings"
 
-const postmaster string = "postmaster"
-
-// Email abstracts e-mail address. There're are two struct's fields - User and
-// Domain.
-type Email struct {
-	User   string
-	Domain string
+// addrSpec abstracts Addr-Spec as it defined by RFC5322
+// https://tools.ietf.org/html/rfc5322#section-3.4.1
+type addrSpec struct {
+	local  string
+	domain string
 }
 
-// SplitEmails parses e-mail string address and retuens *Email structure.
-func SplitEmails(sender, helo string) (*Email, error) {
-	if sender == "" {
-		return &Email{postmaster, helo}, nil
+// parseAddrSpec parses e-mail string address and returns *addrSpec structure.
+// The "postmaster" will be used if no local part specified in addr.
+// The domain will be used if no domain specified in addr.
+func parseAddrSpec(addr, domain string) *addrSpec {
+	const postmaster string = "postmaster"
+
+	if addr == "" || addr == "@" {
+		return &addrSpec{postmaster, domain}
 	}
 
-	fields := strings.SplitN(sender, "@", 2)
-	if fields[0] == "" {
-		fields[0] = postmaster
+	var l, d string
+	i := strings.LastIndexByte(addr, '@')
+	if i < 0 || i == len(addr)-1 { // local[@]
+		d = domain
+	} else {
+		d = addr[i+1:]
+	}
+	if i == 0 { // @domain
+		l = postmaster
+	} else {
+		l = addr[:i]
 	}
 
-	if len(fields) == 2 {
-		return &Email{fields[0], fields[1]}, nil
-	}
-	return &Email{postmaster, sender}, nil
+	return &addrSpec{l, d}
 }

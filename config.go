@@ -1,8 +1,8 @@
 package spf
 
-// Config represents configuration for SPF
-type Config struct {
-	// Nameserver in a format <ip>:<port> represents DNS endpoint where
+// config represents configuration for SPF
+type config struct {
+	// dnsAddr in a format <ip>:<port> represents DNS endpoint where
 	// resolver will point it's queries.
-	Nameserver string
+	dnsAddr string
 }

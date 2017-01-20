@@ -1,36 +1,10 @@
 package spf
 
-import "strings"
-
-const (
-	// SpfPrexif is a constant value for term indicating start of the SPF query
-	spfPrefix     = "v=spf1 "
-	spfPrefixTrim = "v=spf1"
-)
-
-func checkSPFVersion(spf []string) bool {
-	if len(spf) == 0 {
-		return false
-	}
-
-	first := spf[0]
-
-	if len(first) >= len(spfPrefix) && strings.HasPrefix(first, spfPrefix) {
-		return true
-	}
-
-	if len(first) == len(spfPrefixTrim) && first == spfPrefixTrim {
-		return true
-	}
-
-	return false
-}
-
-// IsDomainName is a 1:1 copy of implementation from
+// isDomainName is a 1:1 copy of implementation from
 // original golang codebase:
 // https://github.com/golang/go/blob/master/src/net/dnsclient.go#L116
 // It validates s string for conditions specified in RFC 1035 and RFC 3696
-func IsDomainName(s string) bool {
+func isDomainName(s string) bool {
 	// See RFC 1035, RFC 3696.
 	if len(s) == 0 {
 		return false
@@ -78,8 +52,8 @@ func IsDomainName(s string) bool {
 	return ok
 }
 
-// NormalizeHost appends a root domain (a dot) to the FQDN.
-func NormalizeHost(host string) string {
+// normalizeHost appends a root domain (a dot) to the FQDN.
+func normalizeHost(host string) string {
 	if len(host) == 0 {
 		return ""
 	}

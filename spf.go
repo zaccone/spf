@@ -3,49 +3,70 @@ package spf
 import (
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 
 	"github.com/miekg/dns"
 )
 
-// SPFResult represents SPF defined result - None, Neutral, Pass, Pass, Fail,
-// Softfail, Temperror or Permerror
-type SPFResult int
+// Result represents result of SPF evaluation as it defined by RFC7208
+// https://tools.ietf.org/html/rfc7208#section-2.6
+type Result int
 
-// SPFResult available values. Illegal and SPFEnd are used as a guards values
-// and should be used for validation checking.
 const (
-	Illegal SPFResult = iota
+	_ Result = iota // TODO was Illegal, could be removed
 
+	// None means either (a) no syntactically valid DNS
+	// domain name was extracted from the SMTP session that could be used
+	// as the one to be authorized, or (b) no SPF records were retrieved
+	// from the DNS.
 	None
+	// Neutral result means the ADMD has explicitly stated that it
+	// is not asserting whether the IP address is authorized.
 	Neutral
+	// Pass result is an explicit statement that the client
+	// is authorized to inject mail with the given identity.
 	Pass
+	// Fail result is an explicit statement that the client
+	// is not authorized to use the domain in the given identity.
 	Fail
+	// Softfail result is a weak statement by the publishing ADMD
+	// that the host is probably not authorized.  It has not published
+	// a stronger, more definitive policy that results in a "fail".
 	Softfail
+	// Temperror result means the SPF verifier encountered a transient
+	// (generally DNS) error while performing the check.
+	// A later retry may succeed without further DNS operator action.
 	Temperror
+	// Permerror result means the domain's published records could
+	// not be correctly interpreted.
+	// This signals an error condition that definitely requires
+	// DNS operator intervention to be resolved.
 	Permerror
 
-	SPFEnd
+	internalError
 )
 
-func (spf SPFResult) String() string {
+// String returns string form of the result as defined by RFC7208
+// https://tools.ietf.org/html/rfc7208#section-2.6
+func (spf Result) String() string {
 	switch spf {
 	case None:
-		return "None"
+		return "none"
 	case Neutral:
-		return "Neutral"
+		return "neutral"
 	case Pass:
-		return "Pass"
+		return "pass"
 	case Fail:
-		return "Fail"
+		return "fail"
 	case Softfail:
-		return "Softfail"
+		return "softfail"
 	case Temperror:
-		return "Temperror"
+		return "temperror"
 	case Permerror:
-		return "Permerror"
+		return "permerror"
 	default:
-		return "Permerror"
+		return strconv.Itoa(int(spf))
 	}
 }
 
@@ -57,7 +78,7 @@ func (spf SPFResult) String() string {
 // All the parameters should be parsed and dereferenced from real email fields.
 // This means domain should already be extracted from MAIL FROM field so this
 // function can focus on the core part.
-func CheckHost(ip net.IP, domain, sender string, config *Config) (SPFResult, string, error) {
+func CheckHost(ip net.IP, domain, sender string, cfg *config) (Result, string, error) {
 
 	/*
 	* As per RFC 7208 Section 4.3:
@@ -66,14 +87,14 @@ func CheckHost(ip net.IP, domain, sender string, config *Config) (SPFResult, str
 	* a multi-label
 	* domain name, [...], check_host() immediately returns None
 	 */
-	if !IsDomainName(domain) {
+	if !isDomainName(domain) {
 		return None, "", fmt.Errorf("Invalid domain %v", domain)
 	}
-	domain = NormalizeHost(domain)
+	domain = normalizeHost(domain)
 	query := new(dns.Msg)
 	query.SetQuestion(domain, dns.TypeTXT)
 	c := new(dns.Client)
-	r, _, err := c.Exchange(query, config.Nameserver)
+	r, _, err := c.Exchange(query, cfg.dnsAddr)
 	if err != nil {
 		return Temperror, "", err
 	}
@@ -100,14 +121,12 @@ func CheckHost(ip net.IP, domain, sender string, config *Config) (SPFResult, str
 	subQueries := make([]string, 0, 1)
 	for _, answer := range r.Answer {
 		if ans, ok := answer.(*dns.TXT); ok {
-			for _, txt := range ans.Txt {
-				subQueries = append(subQueries, txt)
-			}
+			subQueries = append(subQueries, ans.Txt...)
 		}
 	}
 
 	spfQuery := strings.Join(subQueries, "")
-	parser := NewParser(sender, domain, ip, spfQuery, config)
+	parser := newParser(sender, domain, ip, spfQuery, cfg)
 
-	return parser.Parse()
+	return parser.parse()
 }

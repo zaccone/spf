@@ -11,65 +11,60 @@ import (
 	"github.com/miekg/dns"
 )
 
-func matchingResult(qualifier tokenType) (SPFResult, error) {
-	if !qualifier.isQualifier() {
-		return SPFEnd, fmt.Errorf("invalid qualifier (%d)", qualifier)
-	}
-
-	var result SPFResult
-
+func matchingResult(qualifier tokenType) (Result, error) {
 	switch qualifier {
 	case qPlus:
-		result = Pass
+		return Pass, nil
 	case qMinus:
-		result = Fail
+		return Fail, nil
 	case qQuestionMark:
-		result = Neutral
+		return Neutral, nil
 	case qTilde:
-		result = Softfail
+		return Softfail, nil
+	default:
+		return internalError, fmt.Errorf("invalid qualifier (%d)", qualifier) // TODO it's fishy; lexer must reject it before
 	}
-	return result, nil
 }
 
-// ParseError represents parsing error, it holds reference to faulty token
+// SyntaxError represents parsing error, it holds reference to faulty token
 // as well as error describing fault
-type ParseError struct {
-	token *Token
+type SyntaxError struct {
+	token *token
 	err   error
 }
 
-func (pe ParseError) Error() string {
-	return fmt.Sprintf("parse error for token %v: %v", pe.token, pe.err.Error())
+func (e SyntaxError) Error() string {
+	return fmt.Sprintf("parse error for token %v: %v", e.token, e.err.Error())
 }
 
-// Parser represents parsing structure. It keeps all arguments provided by top
+// parser represents parsing structure. It keeps all arguments provided by top
 // level CheckHost method as well as tokenized terms from TXT RR. One should
-// call Parser.Parse() for a proper SPF evaluation.
-type Parser struct {
+// call parser.Parse() for a proper SPF evaluation.
+type parser struct {
 	Sender      string
 	Domain      string
 	IP          net.IP
 	Query       string
-	Mechanisms  []*Token
-	Explanation *Token
-	Redirect    *Token
-	Config      *Config
+	Mechanisms  []*token
+	Explanation *token
+	Redirect    *token
+	Config      *config
 }
 
-// NewParser creates new Parser objects and returns its reference.
+// newParser creates new Parser objects and returns its reference.
 // It accepts CheckHost() parameters as well as SPF query (fetched from TXT RR
 // during initial DNS lookup.
-func NewParser(sender, domain string, ip net.IP, query string, config *Config) *Parser {
-	return &Parser{sender, domain, ip, query, make([]*Token, 0, 10), nil, nil, config}
+func newParser(sender, domain string, ip net.IP, query string, cfg *config) *parser {
+	return &parser{sender, domain, ip, query, make([]*token, 0, 10), nil, nil, cfg}
 }
 
-// Parse aggregates all steps required for SPF evaluation.
+// parse aggregates all steps required for SPF evaluation.
 // After lexing and tokenizing step it sorts tokens (and returns Permerror if
 // there is any syntax error) and starts evaluating
-// each token (from left to right). Once a token matches Parse stops and
+// each token (from left to right). Once a token matches parse stops and
 // returns matched result.
-func (p *Parser) Parse() (SPFResult, string, error) {
-	tokens := Lex(p.Query)
+func (p *parser) parse() (Result, string, error) {
+	tokens := lex(p.Query)
 
 	if err := p.sortTokens(tokens); err != nil {
 		return Permerror, "", err
@@ -80,7 +75,7 @@ func (p *Parser) Parse() (SPFResult, string, error) {
 	var err error
 
 	for _, token := range p.Mechanisms {
-		switch token.Mechanism {
+		switch token.mechanism {
 		case tVersion:
 			matches, result, err = p.parseVersion(token)
 		case tAll:
@@ -114,30 +109,30 @@ func (p *Parser) Parse() (SPFResult, string, error) {
 	return result, "", err
 }
 
-func (p *Parser) sortTokens(tokens []*Token) error {
+func (p *parser) sortTokens(tokens []*token) error {
 	all := false
 	for _, token := range tokens {
-		if token.Mechanism.isErr() {
-			return fmt.Errorf("syntax error for token: %v", token.Value)
-		} else if token.Mechanism.isMechanism() && all == false {
+		if token.mechanism.isErr() {
+			return fmt.Errorf("syntax error for token: %v", token.value)
+		} else if token.mechanism.isMechanism() && !all {
 			p.Mechanisms = append(p.Mechanisms, token)
 
-			if token.Mechanism == tAll {
+			if token.mechanism == tAll {
 				all = true
 			}
 		} else {
 
-			if token.Mechanism == tRedirect {
+			if token.mechanism == tRedirect {
 				if p.Redirect == nil {
 					p.Redirect = token
 				} else {
-					return errors.New("modifier redirect musn't appear more than once")
+					return errors.New(`too many "redirect"`)
 				}
-			} else if token.Mechanism == tExp {
+			} else if token.mechanism == tExp {
 				if p.Explanation == nil {
 					p.Explanation = token
 				} else {
-					return errors.New("modifier exp musn't appear more than once")
+					return errors.New(`too many "exp"`)
 				}
 			}
 		}
@@ -150,68 +145,68 @@ func (p *Parser) sortTokens(tokens []*Token) error {
 	return nil
 }
 
-func safeString(s, def string) string {
+func nonemptyString(s, def string) string {
 	if s == "" {
 		return def
 	}
 	return s
 }
 
-func (p *Parser) parseVersion(t *Token) (bool, SPFResult, error) {
-	if t.Value == "spf1" {
+func (p *parser) parseVersion(t *token) (bool, Result, error) {
+	if t.value == "spf1" {
 		return false, None, nil
 	}
-	return true, Permerror, ParseError{t,
-		fmt.Errorf("invalid spf qualifier: %v", t.Value)}
+	return true, Permerror, SyntaxError{t,
+		fmt.Errorf("invalid spf qualifier: %v", t.value)}
 }
 
-func (p *Parser) parseAll(t *Token) (bool, SPFResult, error) {
-	result, err := matchingResult(t.Qualifier)
+func (p *parser) parseAll(t *token) (bool, Result, error) {
+	result, err := matchingResult(t.qualifier)
 	if err != nil {
-		return true, Permerror, ParseError{t, err}
+		return true, Permerror, SyntaxError{t, err}
 	}
 	return true, result, nil
 
 }
 
-func (p *Parser) parseIP4(t *Token) (bool, SPFResult, error) {
-	result, _ := matchingResult(t.Qualifier)
+func (p *parser) parseIP4(t *token) (bool, Result, error) {
+	result, _ := matchingResult(t.qualifier)
 
-	if ip, ipnet, err := net.ParseCIDR(t.Value); err == nil {
+	if ip, ipnet, err := net.ParseCIDR(t.value); err == nil {
 		if ip.To4() == nil {
-			return true, Permerror, ParseError{t, errors.New("address isn't ipv4")}
+			return true, Permerror, SyntaxError{t, errors.New("address isn't ipv4")}
 		}
 		return ipnet.Contains(p.IP), result, nil
 	}
 
-	ip := net.ParseIP(t.Value).To4()
+	ip := net.ParseIP(t.value).To4()
 	if ip == nil {
-		return true, Permerror, ParseError{t, errors.New("address isn't ipv4")}
+		return true, Permerror, SyntaxError{t, errors.New("address isn't ipv4")}
 	}
 	return ip.Equal(p.IP), result, nil
 }
 
-func (p *Parser) parseIP6(t *Token) (bool, SPFResult, error) {
-	result, _ := matchingResult(t.Qualifier)
+func (p *parser) parseIP6(t *token) (bool, Result, error) {
+	result, _ := matchingResult(t.qualifier)
 
-	if ip, ipnet, err := net.ParseCIDR(t.Value); err == nil {
+	if ip, ipnet, err := net.ParseCIDR(t.value); err == nil {
 		if ip.To16() == nil {
-			return true, Permerror, ParseError{t, errors.New("address isn't ipv6")}
+			return true, Permerror, SyntaxError{t, errors.New("address isn't ipv6")}
 		}
 		return ipnet.Contains(p.IP), result, nil
 
 	}
 
-	ip := net.ParseIP(t.Value)
+	ip := net.ParseIP(t.value)
 	if ip.To4() != nil || ip.To16() == nil {
-		return true, Permerror, ParseError{t, errors.New("address isn't ipv6")}
+		return true, Permerror, SyntaxError{t, errors.New("address isn't ipv6")}
 	}
 	return ip.Equal(p.IP), result, nil
 
 }
 
-func (p *Parser) parseA(t *Token) (bbb bool, rrr SPFResult, eee error) {
-	result, _ := matchingResult(t.Qualifier)
+func (p *parser) parseA(t *token) (bbb bool, rrr Result, eee error) {
+	result, _ := matchingResult(t.qualifier)
 	var (
 		host      string
 		v4Network net.IPMask
@@ -219,11 +214,11 @@ func (p *Parser) parseA(t *Token) (bbb bool, rrr SPFResult, eee error) {
 		ok        bool
 		err       error
 	)
-	ok, host, v4Network, v6Network, err = splitToHostNetwork(safeString(t.Value, p.Domain))
-	host = NormalizeHost(host)
+	ok, host, v4Network, v6Network, err = splitToHostNetwork(nonemptyString(t.value, p.Domain))
+	host = normalizeHost(host)
 	// return Permerror if there was syntax error
 	if !ok {
-		return true, Permerror, ParseError{t, err}
+		return true, Permerror, SyntaxError{t, err}
 	}
 
 	ip4Net := net.IPNet{
@@ -239,14 +234,14 @@ func (p *Parser) parseA(t *Token) (bbb bool, rrr SPFResult, eee error) {
 	queries[1].SetQuestion(host, dns.TypeAAAA)
 	for _, query := range queries {
 		c := new(dns.Client)
-		r, _, err := c.Exchange(&query, p.Config.Nameserver)
+		r, _, err := c.Exchange(&query, p.Config.dnsAddr)
 		if err != nil {
-			return true, Temperror, ParseError{t, err}
+			return true, Temperror, SyntaxError{t, err}
 		}
 
 		if r != nil && r.Rcode != dns.RcodeSuccess {
 			if r.Rcode != dns.RcodeNameError {
-				return true, Temperror, ParseError{t,
+				return true, Temperror, SyntaxError{t,
 					fmt.Errorf("unsuccessful DNS response, code %d", r.Rcode)}
 			}
 			return false, None, nil
@@ -272,8 +267,8 @@ func (p *Parser) parseA(t *Token) (bbb bool, rrr SPFResult, eee error) {
 	return false, result, nil
 }
 
-func (p *Parser) parseMX(t *Token) (bool, SPFResult, error) {
-	result, _ := matchingResult(t.Qualifier)
+func (p *parser) parseMX(t *token) (bool, Result, error) {
+	result, _ := matchingResult(t.qualifier)
 
 	var (
 		host    string
@@ -282,29 +277,29 @@ func (p *Parser) parseMX(t *Token) (bool, SPFResult, error) {
 		ok      bool
 		err     error
 	)
-	ok, host, ip4Mask, ip6Mask, err = splitToHostNetwork(safeString(t.Value, p.Domain))
-	host = NormalizeHost(host)
+	ok, host, ip4Mask, ip6Mask, err = splitToHostNetwork(nonemptyString(t.value, p.Domain))
+	host = normalizeHost(host)
 
 	// return Permerror if there was syntax error
 	if !ok {
-		return true, Permerror, ParseError{t, err}
+		return true, Permerror, SyntaxError{t, err}
 	}
 
 	// TODO(zaccone): Ensure returned errors are correct.
 	query := new(dns.Msg)
 	query.SetQuestion(host, dns.TypeMX)
 	c := new(dns.Client)
-	response, _, err := c.Exchange(query, p.Config.Nameserver)
+	response, _, err := c.Exchange(query, p.Config.dnsAddr)
 	if err != nil {
-		return false, None, ParseError{t, err}
+		return false, None, SyntaxError{t, err}
 	}
 
 	if response != nil && response.Rcode != dns.RcodeSuccess {
 		if response.Rcode != dns.RcodeNameError {
-			return true, Temperror, ParseError{t,
+			return true, Temperror, SyntaxError{t,
 				fmt.Errorf("unsuccessful DNS response, code %d", response.Rcode)}
 		}
-		return false, None, ParseError{t, err}
+		return false, None, SyntaxError{t, err}
 
 	}
 
@@ -328,17 +323,17 @@ func (p *Parser) parseMX(t *Token) (bool, SPFResult, error) {
 
 		c := new(dns.Client)
 		for _, query := range queries {
-			response, _, err := c.Exchange(&query, p.Config.Nameserver)
+			res, _, err := c.Exchange(&query, p.Config.dnsAddr)
 
 			if err != nil {
 				return false
 			}
 
-			if response != nil && response.Rcode != dns.RcodeSuccess {
+			if res != nil && res.Rcode != dns.RcodeSuccess {
 				return false
 			}
 
-			for _, a := range response.Answer {
+			for _, a := range res.Answer {
 				switch t := a.(type) {
 				case *dns.A:
 					ip4Net.IP = t.A
@@ -387,16 +382,16 @@ func (p *Parser) parseMX(t *Token) (bool, SPFResult, error) {
 	return false, result, nil
 }
 
-func (p *Parser) parseInclude(t *Token) (bool, SPFResult, error) {
-	result, _ := matchingResult(t.Qualifier)
-	domain := t.Value
+func (p *parser) parseInclude(t *token) (bool, Result, error) {
+	result, _ := matchingResult(t.qualifier)
+	domain := t.value
 	if isEmpty(&domain) {
-		return true, Permerror, ParseError{t, errors.New("empty domain")}
+		return true, Permerror, SyntaxError{t, errors.New("empty domain")}
 	}
 	matchesInclude := false
 	includeResult, _, err := CheckHost(p.IP, domain, p.Sender, p.Config)
 	if err != nil {
-		return false, None, ParseError{t, err}
+		return false, None, SyntaxError{t, err}
 	}
 
 	// it's all fine
@@ -419,31 +414,31 @@ func (p *Parser) parseInclude(t *Token) (bool, SPFResult, error) {
 	return false, None, nil
 }
 
-func (p *Parser) parseExists(t *Token) (bool, SPFResult, error) {
-	result, _ := matchingResult(t.Qualifier)
-	resolvedDomain, err := ParseMacroToken(p, t)
+func (p *parser) parseExists(t *token) (bool, Result, error) {
+	result, _ := matchingResult(t.qualifier)
+	resolvedDomain, err := parseMacroToken(p, t)
 	if err != nil {
-		return true, Permerror, ParseError{t, err}
+		return true, Permerror, SyntaxError{t, err}
 	} else if isEmpty(&resolvedDomain) {
-		return true, Permerror, ParseError{t, errors.New("empty domain")}
+		return true, Permerror, SyntaxError{t, errors.New("empty domain")}
 	}
-	resolvedDomain = NormalizeHost(resolvedDomain)
+	resolvedDomain = normalizeHost(resolvedDomain)
 	var queries [2]dns.Msg
 
 	queries[0].SetQuestion(resolvedDomain, dns.TypeA)
 	queries[1].SetQuestion(resolvedDomain, dns.TypeAAAA)
 	for _, query := range queries {
 		c := new(dns.Client)
-		response, _, err := c.Exchange(&query, p.Config.Nameserver)
+		response, _, err := c.Exchange(&query, p.Config.dnsAddr)
 		if err != nil {
-			return true, Temperror, ParseError{t, err}
+			return true, Temperror, SyntaxError{t, err}
 		}
 
 		if response != nil && response.Rcode != dns.RcodeSuccess {
 			if response.Rcode == dns.RcodeNameError {
 				return false, result, nil
 			}
-			return true, Temperror, ParseError{t,
+			return true, Temperror, SyntaxError{t,
 				fmt.Errorf("unsuccessful DNS response, code %d", response.Rcode)}
 		}
 		/* We can check prematurely and avoid further DNS calls if matching
@@ -457,14 +452,14 @@ func (p *Parser) parseExists(t *Token) (bool, SPFResult, error) {
 	return false, result, nil
 }
 
-func (p *Parser) handleRedirect(oldResult SPFResult) (SPFResult, error) {
+func (p *parser) handleRedirect(oldResult Result) (Result, error) {
 	var err error
 	result := oldResult
 	if result != None || p.Redirect == nil {
 		return result, nil
 	}
 
-	redirectDomain := p.Redirect.Value
+	redirectDomain := p.Redirect.value
 
 	if result, _, err = CheckHost(p.IP, redirectDomain, p.Sender, p.Config); err != nil {
 		//TODO(zaccone): confirm result value
@@ -480,39 +475,37 @@ func (p *Parser) handleRedirect(oldResult SPFResult) (SPFResult, error) {
 	return result, err
 }
 
-func (p *Parser) handleExplanation() (string, error) {
-	resolvedDomain, err := ParseMacroToken(p, p.Explanation)
+func (p *parser) handleExplanation() (string, error) {
+	resolvedDomain, err := parseMacroToken(p, p.Explanation)
 	if err != nil {
-		return "", ParseError{p.Explanation, err}
+		return "", SyntaxError{p.Explanation, err}
 	} else if isEmpty(&resolvedDomain) {
-		return "", ParseError{p.Explanation, errors.New("empty domain")}
+		return "", SyntaxError{p.Explanation, errors.New("empty domain")}
 	}
-	resolvedDomain = NormalizeHost(resolvedDomain)
+	resolvedDomain = normalizeHost(resolvedDomain)
 	query := new(dns.Msg)
 	query.SetQuestion(resolvedDomain, dns.TypeTXT)
 	c := new(dns.Client)
-	response, _, err := c.Exchange(query, p.Config.Nameserver)
+	response, _, err := c.Exchange(query, p.Config.dnsAddr)
 	if err != nil {
-		return "", ParseError{p.Explanation, err}
+		return "", SyntaxError{p.Explanation, err}
 	} else if response != nil && response.Rcode != dns.RcodeSuccess {
-		return "", ParseError{p.Explanation,
+		return "", SyntaxError{p.Explanation,
 			fmt.Errorf("unsuccessful DNS response, code %d", response.Rcode)}
 	}
 
 	explanation := make([]string, 0, len(response.Answer))
 	for _, answer := range response.Answer {
 		if q, ok := answer.(*dns.TXT); ok {
-			for _, txt := range q.Txt {
-				explanation = append(explanation, txt)
-			}
+			explanation = append(explanation, q.Txt...)
 		}
 	}
 
 	// RFC 7208, section 6.2 specifies that result string should be
 	// concatenated with no spaces.
-	parsedExplanation, err := ParseMacro(p, strings.Join(explanation, ""))
+	parsedExplanation, err := parseMacro(p, strings.Join(explanation, ""))
 	if err != nil {
-		return "", ParseError{p.Explanation, err}
+		return "", SyntaxError{p.Explanation, err}
 	}
 	return parsedExplanation, nil
 }
@@ -535,7 +528,7 @@ func splitToHostNetwork(domain string) (bool, string, net.IPMask, net.IPMask, er
 		host = line[0]
 	}
 
-	if !IsDomainName(host) {
+	if !isDomainName(host) {
 		return false, host, nil, nil, fmt.Errorf("invalid hostname %v", host)
 	}
 

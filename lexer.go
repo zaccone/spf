@@ -5,8 +5,8 @@ import (
 	"unicode/utf8"
 )
 
-// Lexer represents lexing structure
-type Lexer struct {
+// lexer represents lexing structure
+type lexer struct {
 	start  int
 	pos    int
 	prev   int
@@ -14,15 +14,15 @@ type Lexer struct {
 	input  string
 }
 
-// Lex reads SPF record and returns list of Tokens along with
+// lex reads SPF record and returns list of Tokens along with
 // their modifiers and values. Parser should parse the Tokens and execute
 // relevant actions
-func Lex(input string) []*Token {
-	var tokens []*Token
-	lexer := &Lexer{0, 0, 0, len(input), input}
+func lex(input string) []*token {
+	var tokens []*token
+	l := &lexer{0, 0, 0, len(input), input}
 	for {
-		token := lexer.Scan()
-		if token.Mechanism == tEOF {
+		token := l.scan()
+		if token.mechanism == tEOF {
 			break
 		}
 		tokens = append(tokens, token)
@@ -30,12 +30,12 @@ func Lex(input string) []*Token {
 	return tokens
 }
 
-// Scan scans input and returns a Token structure
-func (l *Lexer) Scan() *Token {
+// scan scans input and returns a Token structure
+func (l *lexer) scan() *token {
 	for {
 		r, eof := l.next()
 		if eof {
-			return &Token{tEOF, tEOF, ""}
+			return &token{tEOF, tEOF, ""}
 		} else if isWhitespace(r) || l.eof() { // we just scanned some meaningful data
 			token := l.scanIdent()
 			l.scanWhitespaces()
@@ -46,12 +46,12 @@ func (l *Lexer) Scan() *Token {
 }
 
 // Lexer.eof() return true when scanned record has ended, false otherwise
-func (l *Lexer) eof() bool { return l.pos >= l.length }
+func (l *lexer) eof() bool { return l.pos >= l.length }
 
 // Lexer.next() returns next read rune and boolean indicator whether scanned
 // record has ended. Method also moves `pos` value to size (length of read rune),
 // and `prev` to previous `pos` location.
-func (l *Lexer) next() (rune, bool) {
+func (l *lexer) next() (rune, bool) {
 	if l.eof() {
 		return 0, true
 	}
@@ -64,18 +64,18 @@ func (l *Lexer) next() (rune, bool) {
 
 // Lexer.moveon() sets Lexer.start to Lexer.pos. This is usually done once the
 // ident has been scanned.
-func (l *Lexer) moveon() { l.start = l.pos }
+func (l *lexer) moveon() { l.start = l.pos }
 
 // Lexer.back() moves back current Lexer.pos to a previous position.
-func (l *Lexer) back() { l.pos = l.prev }
+func (l *lexer) back() { l.pos = l.prev }
 
 // scanWhitespaces moves position to a first rune which is not a
 // whitespace or tab
-func (l *Lexer) scanWhitespaces() {
+func (l *lexer) scanWhitespaces() {
 	for {
-		if ch, eof := l.next(); eof == true {
+		if ch, eof := l.next(); eof {
 			return
-		} else if isWhitespace(ch) == false {
+		} else if !isWhitespace(ch) {
 			l.back()
 			return
 		}
@@ -87,36 +87,36 @@ func (l *Lexer) scanWhitespaces() {
 // A cursor tries to find delimiters and set proper `mechanism`, `qualifier`
 // and value itself.
 // The default token has `mechanism` set to tErr, that is, error state.
-func (l *Lexer) scanIdent() *Token {
-	t := &Token{tErr, qPlus, ""}
+func (l *lexer) scanIdent() *token {
+	t := &token{tErr, qPlus, ""}
 	cursor := l.start
 	for cursor < l.pos {
 		ch, size := utf8.DecodeRuneInString(l.input[cursor:])
 		cursor += size
 
 		if isQualifier(ch) {
-			t.Qualifier, _ = qualifiers[ch]
+			t.qualifier, _ = qualifiers[ch]
 			l.start = cursor
 			continue
 		} else if isDelimiter(ch) { // add error handling
-			t.Mechanism = tokenTypeFromString(l.input[l.start : cursor-size])
-			t.Value = strings.TrimSpace(l.input[cursor:l.pos])
+			t.mechanism = tokenTypeFromString(l.input[l.start : cursor-size])
+			t.value = strings.TrimSpace(l.input[cursor:l.pos])
 
-			if isEmpty(&t.Value) || checkTokenSyntax(t, ch) == false {
-				t.Qualifier = qErr
-				t.Mechanism = tErr
+			if isEmpty(&t.value) || !checkTokenSyntax(t, ch) {
+				t.qualifier = qErr
+				t.mechanism = tErr
 			}
 
 			break
 		}
 	}
 
-	if t.Mechanism.isErr() {
-		t.Mechanism = tokenTypeFromString(
+	if t.mechanism.isErr() {
+		t.mechanism = tokenTypeFromString(
 			strings.TrimSpace(l.input[l.start:cursor]))
-		if t.Mechanism.isErr() {
-			t.Qualifier = qErr
-			t.Value = ""
+		if t.mechanism.isErr() {
+			t.qualifier = qErr
+			t.value = ""
 		}
 	}
 	return t
