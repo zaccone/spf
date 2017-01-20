@@ -72,7 +72,6 @@ func CheckHost(ip net.IP, domain, sender string, config *Config) (SPFResult, str
 	domain = NormalizeHost(domain)
 	query := new(dns.Msg)
 	query.SetQuestion(domain, dns.TypeTXT)
-	subQueries := make([]string, 0, 1)
 	c := new(dns.Client)
 	r, _, err := c.Exchange(query, config.Nameserver)
 	if err != nil {
@@ -98,6 +97,7 @@ func CheckHost(ip net.IP, domain, sender string, config *Config) (SPFResult, str
 
 	}
 
+	subQueries := make([]string, 0, 1)
 	for _, answer := range r.Answer {
 		if ans, ok := answer.(*dns.TXT); ok {
 			for _, txt := range ans.Txt {

@@ -81,7 +81,6 @@ func (p *Parser) Parse() (SPFResult, string, error) {
 
 	for _, token := range p.Mechanisms {
 		switch token.Mechanism {
-
 		case tVersion:
 			matches, result, err = p.parseVersion(token)
 		case tAll:
@@ -151,11 +150,11 @@ func (p *Parser) sortTokens(tokens []*Token) error {
 	return nil
 }
 
-func (p *Parser) setDomain(t *Token) string {
-	if !isEmpty(&t.Value) {
-		return t.Value
+func safeString(s, def string) string {
+	if s == "" {
+		return def
 	}
-	return p.Domain
+	return s
 }
 
 func (p *Parser) parseVersion(t *Token) (bool, SPFResult, error) {
@@ -211,27 +210,31 @@ func (p *Parser) parseIP6(t *Token) (bool, SPFResult, error) {
 
 }
 
-func (p *Parser) parseA(t *Token) (bool, SPFResult, error) {
-
+func (p *Parser) parseA(t *Token) (bbb bool, rrr SPFResult, eee error) {
 	result, _ := matchingResult(t.Qualifier)
-	domain := p.setDomain(t)
-
-	var host string
-	var v4Network *net.IPMask
-	var v6Network *net.IPMask
-	var ok bool
-	var err error
-	ips4 := make([]net.IP, 0, 1)
-	ips6 := make([]net.IP, 0, 1)
-	ok, host, v4Network, v6Network, err = splitToHostNetwork(domain)
+	var (
+		host      string
+		v4Network net.IPMask
+		v6Network net.IPMask
+		ok        bool
+		err       error
+	)
+	ok, host, v4Network, v6Network, err = splitToHostNetwork(safeString(t.Value, p.Domain))
 	host = NormalizeHost(host)
 	// return Permerror if there was syntax error
 	if !ok {
 		return true, Permerror, ParseError{t, err}
 	}
 
-	var queries [2]dns.Msg
+	ip4Net := net.IPNet{
+		Mask: v4Network,
+	}
 
+	ip6Net := net.IPNet{
+		Mask: v6Network,
+	}
+
+	var queries [2]dns.Msg
 	queries[0].SetQuestion(host, dns.TypeA)
 	queries[1].SetQuestion(host, dns.TypeAAAA)
 	for _, query := range queries {
@@ -247,51 +250,39 @@ func (p *Parser) parseA(t *Token) (bool, SPFResult, error) {
 					fmt.Errorf("unsuccessful DNS response, code %d", r.Rcode)}
 			}
 			return false, None, nil
-
 		}
-		for _, answer := range r.Answer {
-			if ans, ok := answer.(*dns.A); ok {
-				ips4 = append(ips4, ans.A)
-			} else if ans, ok := answer.(*dns.AAAA); ok {
-				ips6 = append(ips6, ans.AAAA)
+		for _, a := range r.Answer {
+			switch t := a.(type) {
+			case *dns.A:
+				ip4Net.IP = t.A
+				if !ip4Net.Contains(p.IP) {
+					continue
+				}
+				return true, result, nil
+			case *dns.AAAA:
+				ip6Net.IP = t.AAAA
+				if !ip6Net.Contains(p.IP) {
+					continue
+				}
+				return true, result, nil
 			}
 		}
-
 	}
 
-	v4Ipnet := net.IPNet{}
-	v4Ipnet.Mask = *v4Network
-
-	v6Ipnet := net.IPNet{}
-	v6Ipnet.Mask = *v6Network
-
-	for _, address := range ips4 {
-		v4Ipnet.IP = address
-		if v4Ipnet.Contains(p.IP) {
-			return true, result, nil
-		}
-	}
-
-	for _, address := range ips6 {
-		v6Ipnet.IP = address
-		if v6Ipnet.Contains(p.IP) {
-			return true, result, nil
-		}
-	}
 	return false, result, nil
 }
 
 func (p *Parser) parseMX(t *Token) (bool, SPFResult, error) {
 	result, _ := matchingResult(t.Qualifier)
 
-	domain := p.setDomain(t)
-
-	var host string
-	var v4Network *net.IPMask
-	var v6Network *net.IPMask
-	var ok bool
-	var err error
-	ok, host, v4Network, v6Network, err = splitToHostNetwork(domain)
+	var (
+		host    string
+		ip4Mask net.IPMask
+		ip6Mask net.IPMask
+		ok      bool
+		err     error
+	)
+	ok, host, ip4Mask, ip6Mask, err = splitToHostNetwork(safeString(t.Value, p.Domain))
 	host = NormalizeHost(host)
 
 	// return Permerror if there was syntax error
@@ -317,88 +308,83 @@ func (p *Parser) parseMX(t *Token) (bool, SPFResult, error) {
 
 	}
 
-	mxs := make([]string, 0, len(response.Answer))
-	for _, answer := range response.Answer {
-		if mx, ok := answer.(*dns.MX); ok {
-			mxs = append(mxs, mx.Mx)
+	if len(response.Answer) == 0 {
+		return false, result, nil
+	}
+
+	firstMatch := func(h string, ip4Mask, ip6Mask net.IPMask) bool {
+		ip4Net := net.IPNet{
+			Mask: ip4Mask,
 		}
+
+		ip6Net := net.IPNet{
+			Mask: ip6Mask,
+		}
+
+		var queries [2]dns.Msg
+
+		queries[0].SetQuestion(h, dns.TypeA)
+		queries[1].SetQuestion(h, dns.TypeAAAA)
+
+		c := new(dns.Client)
+		for _, query := range queries {
+			response, _, err := c.Exchange(&query, p.Config.Nameserver)
+
+			if err != nil {
+				return false
+			}
+
+			if response != nil && response.Rcode != dns.RcodeSuccess {
+				return false
+			}
+
+			for _, a := range response.Answer {
+				switch t := a.(type) {
+				case *dns.A:
+					ip4Net.IP = t.A
+					if !ip4Net.Contains(p.IP) {
+						continue
+					}
+					return true
+				case *dns.AAAA:
+					ip6Net.IP = t.AAAA
+					if !ip6Net.Contains(p.IP) {
+						continue
+					}
+					return true
+				}
+			}
+		}
+
+		return false
 	}
 
 	var wg sync.WaitGroup
-
-	pipe := make(chan bool)
-
-	wg.Add(len(mxs))
+	hits := make(chan bool)
+	for _, a := range response.Answer {
+		mx, ok := a.(*dns.MX)
+		if !ok {
+			continue
+		}
+		wg.Add(1)
+		go func(h string, m4, m6 net.IPMask) {
+			hit := firstMatch(h, m4, m6)
+			hits <- hit
+			wg.Done()
+		}(mx.Mx, ip4Mask, ip6Mask)
+	}
 
 	go func() {
 		wg.Wait()
-		close(pipe)
+		close(hits)
 	}()
 
-	for _, mmx := range mxs {
-		go func(mx string, v4Network, v6Network *net.IPMask) {
-			defer wg.Done()
-			mx = NormalizeHost(mx)
-			v4Ipnet := net.IPNet{}
-			v4Ipnet.Mask = *v4Network
-
-			v6Ipnet := net.IPNet{}
-			v6Ipnet.Mask = *v6Network
-
-			ips4 := make([]net.IP, 0, 1)
-			ips6 := make([]net.IP, 0, 1)
-
-			var queries [2]dns.Msg
-
-			queries[0].SetQuestion(mx, dns.TypeA)
-			queries[1].SetQuestion(mx, dns.TypeAAAA)
-
-			for _, query := range queries {
-				c := new(dns.Client)
-				response, _, err := c.Exchange(&query, p.Config.Nameserver)
-
-				if err != nil {
-					pipe <- false
-					return
-				}
-
-				if response != nil && response.Rcode != dns.RcodeSuccess {
-					pipe <- false
-					return
-				}
-
-				for _, answer := range response.Answer {
-					if ans, ok := answer.(*dns.A); ok {
-						ips4 = append(ips4, ans.A)
-					} else if ans, ok := answer.(*dns.AAAA); ok {
-						ips6 = append(ips6, ans.AAAA)
-					}
-				}
-
-			}
-
-			var contains bool
-
-			for _, address := range ips4 {
-				v4Ipnet.IP = address
-				contains = v4Ipnet.Contains(p.IP)
-				pipe <- contains
-			}
-
-			for _, address := range ips6 {
-				v6Ipnet.IP = address
-				contains = v6Ipnet.Contains(p.IP)
-				pipe <- contains
-			}
-
-		}(mmx, v4Network, v6Network)
+	for hit := range hits {
+		if hit {
+			return true, result, nil
+		}
 	}
-
-	verdict := false
-	for subverdict := range pipe {
-		verdict = verdict || subverdict
-	}
-	return verdict, result, nil
+	return false, result, nil
 }
 
 func (p *Parser) parseInclude(t *Token) (bool, SPFResult, error) {
@@ -446,7 +432,6 @@ func (p *Parser) parseExists(t *Token) (bool, SPFResult, error) {
 
 	queries[0].SetQuestion(resolvedDomain, dns.TypeA)
 	queries[1].SetQuestion(resolvedDomain, dns.TypeAAAA)
-	ips := 0
 	for _, query := range queries {
 		c := new(dns.Client)
 		response, _, err := c.Exchange(&query, p.Config.Nameserver)
@@ -461,13 +446,10 @@ func (p *Parser) parseExists(t *Token) (bool, SPFResult, error) {
 			return true, Temperror, ParseError{t,
 				fmt.Errorf("unsuccessful DNS response, code %d", response.Rcode)}
 		}
-		// else
-		ips += len(response.Answer)
-
 		/* We can check prematurely and avoid further DNS calls if matching
-		* hosts were already found.
+		 * hosts were already found.
 		 */
-		if ips > 0 {
+		if len(response.Answer) > 0 {
 			return true, result, nil
 		}
 	}
@@ -535,7 +517,7 @@ func (p *Parser) handleExplanation() (string, error) {
 	return parsedExplanation, nil
 }
 
-func splitToHostNetwork(domain string) (bool, string, *net.IPMask, *net.IPMask, error) {
+func splitToHostNetwork(domain string) (bool, string, net.IPMask, net.IPMask, error) {
 	var host string
 
 	const v4Len = 32
@@ -596,5 +578,5 @@ func splitToHostNetwork(domain string) (bool, string, *net.IPMask, *net.IPMask, 
 		v6Network = net.CIDRMask(n6, v6Len)
 	}
 
-	return true, host, &v4Network, &v6Network, nil
+	return true, host, v4Network, v6Network, nil
 }
