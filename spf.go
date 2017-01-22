@@ -106,7 +106,7 @@ func CheckHost(ip net.IP, domain, sender string, config *Config) (SPFResult, str
 		}
 	}
 
-	spfQuery := strings.Join(subQueries, " ")
+	spfQuery := strings.Join(subQueries, "")
 	parser := NewParser(sender, domain, ip, spfQuery, config)
 
 	return parser.Parse()
