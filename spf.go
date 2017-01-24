@@ -192,7 +192,7 @@ func isDomainName(s string) bool {
 	if last == '-' || partlen > 63 {
 		return false
 	}
-
+  
 	return ok
 }
 
