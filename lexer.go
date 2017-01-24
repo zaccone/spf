@@ -102,7 +102,7 @@ func (l *lexer) scanIdent() *token {
 			t.mechanism = tokenTypeFromString(l.input[l.start : cursor-size])
 			t.value = strings.TrimSpace(l.input[cursor:l.pos])
 
-			if isEmpty(&t.value) || !checkTokenSyntax(t, ch) {
+			if t.value == "" || !checkTokenSyntax(t, ch) {
 				t.qualifier = qErr
 				t.mechanism = tErr
 			}
@@ -124,9 +124,6 @@ func (l *lexer) scanIdent() *token {
 
 // isWhitespace returns true if the rune is a space, tab, or newline.
 func isWhitespace(ch rune) bool { return ch == ' ' || ch == '\t' || ch == '\n' }
-
-// isEmpty returns true if a string is an empty string
-func isEmpty(s *string) bool { return *s == "" }
 
 // isDelimiter returns true if rune equals to ':' or '=', false otherwise
 func isDelimiter(ch rune) bool { return ch == ':' || ch == '=' }

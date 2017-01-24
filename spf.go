@@ -1,20 +1,52 @@
 package spf
 
 import (
-	"fmt"
+	"errors"
 	"net"
 	"strconv"
 	"strings"
-
-	"github.com/miekg/dns"
 )
+
+// Errors could be used for root couse analysis
+var (
+	ErrDNSTemperror      = errors.New("temporary DNS error")
+	ErrDNSPermerror      = errors.New("permanent DNS error")
+	ErrInvalidDomain     = errors.New("invalid domain name")
+	errInvalidCIDRLength = errors.New("invalid CIDR length")
+	errDNSLimitExceeded  = errors.New("limit exceeded")
+)
+
+// IPMatcherFunc returns true if ip matches to implemented rules
+type IPMatcherFunc func(ip net.IP) bool
+
+// Resolver provides abstraction for DNS layer
+type Resolver interface {
+	// LookupTXT returns the DNS TXT records for the given domain name.
+	LookupTXT(string) ([]string, error)
+	// Exists is used for a DNS A RR lookup (even when the
+	// connection type is IPv6).  If any A record is returned, this
+	// mechanism matches.
+	Exists(string) (bool, error)
+	// MatchIP provides an address lookup, which should be done on the name
+	// using the type of lookup (A or AAAA).
+	// Then IPMatcherFunc used to compare checked IP to the returned address(es).
+	// If any address matches, the mechanism matches
+	MatchIP(string, IPMatcherFunc) (bool, error)
+	// MatchMX is similar to MatchIP but first performs an MX lookup on the
+	// name.  Then it performs an address lookup on each MX name returned.
+	// Then IPMatcherFunc used to compare checked IP to the returned address(es).
+	// If any address matches, the mechanism matches
+	MatchMX(string, IPMatcherFunc) (bool, error)
+}
+
+var defaultResolver Resolver = &DNSResolver{}
 
 // Result represents result of SPF evaluation as it defined by RFC7208
 // https://tools.ietf.org/html/rfc7208#section-2.6
 type Result int
 
 const (
-	_ Result = iota // TODO was Illegal, could be removed
+	_ Result = iota // TODO was Illegal, saved for padding only, however it is not used internally and could be removed
 
 	// None means either (a) no syntactically valid DNS
 	// domain name was extracted from the SMTP session that could be used
@@ -49,8 +81,8 @@ const (
 
 // String returns string form of the result as defined by RFC7208
 // https://tools.ietf.org/html/rfc7208#section-2.6
-func (spf Result) String() string {
-	switch spf {
+func (r Result) String() string {
+	switch r {
 	case None:
 		return "none"
 	case Neutral:
@@ -66,7 +98,7 @@ func (spf Result) String() string {
 	case Permerror:
 		return "permerror"
 	default:
-		return strconv.Itoa(int(spf))
+		return strconv.Itoa(int(r))
 	}
 }
 
@@ -78,8 +110,14 @@ func (spf Result) String() string {
 // All the parameters should be parsed and dereferenced from real email fields.
 // This means domain should already be extracted from MAIL FROM field so this
 // function can focus on the core part.
-func CheckHost(ip net.IP, domain, sender string, cfg *config) (Result, string, error) {
+func CheckHost(ip net.IP, domain, sender string) (Result, string, error) {
+	return checkHost(ip, domain, sender, &limitedResolver{
+		limit:    10,
+		resolver: defaultResolver,
+	})
+}
 
+func checkHost(ip net.IP, domain, sender string, resolver Resolver) (Result, string, error) {
 	/*
 	* As per RFC 7208 Section 4.3:
 	* If the <domain> is malformed (e.g., label longer than 63
@@ -88,45 +126,83 @@ func CheckHost(ip net.IP, domain, sender string, cfg *config) (Result, string, e
 	* domain name, [...], check_host() immediately returns None
 	 */
 	if !isDomainName(domain) {
-		return None, "", fmt.Errorf("Invalid domain %v", domain)
+		return None, "", ErrInvalidDomain
 	}
-	domain = normalizeHost(domain)
-	query := new(dns.Msg)
-	query.SetQuestion(domain, dns.TypeTXT)
-	c := new(dns.Client)
-	r, _, err := c.Exchange(query, cfg.dnsAddr)
-	if err != nil {
+
+	txts, err := resolver.LookupTXT(normalizeFQDN(domain))
+	switch err {
+	case nil:
+		// continue
+	case errDNSLimitExceeded:
+		return Permerror, "", err
+	case ErrDNSPermerror:
+		return None, "", nil
+	default:
 		return Temperror, "", err
 	}
 
-	/*
-	* As per RFC 7208 Section 4.3:
-	* [...] or if the DNS lookup returns "Name Error" (RCODE 3, also
-	* known as "NXDOMAIN" [RFC2308]), check_host() immediately returns
-	* the result "none".
-	*
-	* On the other had, any other RCODE not equal to 0 (success, so no
-	* error) or 3 or timeout occurs, check_host() should return
-	* Temperror which we handle too.
-	 */
-	if r != nil && r.Rcode != dns.RcodeSuccess {
-		if r.Rcode != dns.RcodeNameError {
-			return Temperror, "",
-				fmt.Errorf("unsuccessful DNS response, code %d", r.Rcode)
-		}
-		return None, "", nil
+	return newParser(sender, domain, ip, strings.Join(txts, ""), resolver).parse()
+}
 
+// isDomainName is a 1:1 copy of implementation from
+// original golang codebase:
+// https://github.com/golang/go/blob/master/src/net/dnsclient.go#L116
+// It validates s string for conditions specified in RFC 1035 and RFC 3696
+func isDomainName(s string) bool {
+	// See RFC 1035, RFC 3696.
+	if len(s) == 0 {
+		return false
+	}
+	if len(s) > 255 {
+		return false
 	}
 
-	subQueries := make([]string, 0, 1)
-	for _, answer := range r.Answer {
-		if ans, ok := answer.(*dns.TXT); ok {
-			subQueries = append(subQueries, ans.Txt...)
+	last := byte('.')
+	ok := false // Ok once we've seen a letter.
+	partlen := 0
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		switch {
+		default:
+			return false
+		case 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || c == '_':
+			ok = true
+			partlen++
+		case '0' <= c && c <= '9':
+			// fine
+			partlen++
+		case c == '-':
+			// Byte before dash cannot be dot.
+			if last == '.' {
+				return false
+			}
+			partlen++
+		case c == '.':
+			// Byte before dot cannot be dot, dash.
+			if last == '.' || last == '-' {
+				return false
+			}
+			if partlen > 63 || partlen == 0 {
+				return false
+			}
+			partlen = 0
 		}
+		last = c
+	}
+	if last == '-' || partlen > 63 {
+		return false
 	}
 
-	spfQuery := strings.Join(subQueries, "")
-	parser := newParser(sender, domain, ip, spfQuery, cfg)
+	return ok
+}
 
-	return parser.parse()
+// normalizeFQDN appends a root domain (a dot) to the FQDN.
+func normalizeFQDN(name string) string {
+	if len(name) == 0 {
+		return ""
+	}
+	if name[len(name)-1] != '.' {
+		return name + "."
+	}
+	return name
 }

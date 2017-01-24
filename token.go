@@ -1,5 +1,7 @@
 package spf
 
+import "strconv"
+
 type tokenType int
 
 const (
@@ -45,6 +47,33 @@ var qualifiers = map[rune]tokenType{
 	'-': qMinus,
 	'?': qQuestionMark,
 	'~': qTilde,
+}
+
+func (tok tokenType) String() string {
+	switch tok {
+	case tVersion:
+		return "v"
+	case tAll:
+		return "all"
+	case tIP4:
+		return "ip4"
+	case tIP6:
+		return "ip6"
+	case tMX:
+		return "mx"
+	case tPTR:
+		return "ptr"
+	case tInclude:
+		return "include"
+	case tRedirect:
+		return "redirect"
+	case tExists:
+		return "exists"
+	case tExp:
+		return "exp"
+	default:
+		return strconv.Itoa(int(tok))
+	}
 }
 
 func tokenTypeFromString(s string) tokenType {
@@ -106,7 +135,7 @@ func checkTokenSyntax(tkn *token, delimiter rune) bool {
 	}
 
 	//mechanism include must not have empty content
-	if tkn.mechanism == tInclude && isEmpty(&tkn.value) {
+	if tkn.mechanism == tInclude && tkn.value == "" {
 		return false
 	}
 	if tkn.mechanism.isModifier() && delimiter != '=' {

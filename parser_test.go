@@ -3,6 +3,7 @@ package spf
 import (
 	"fmt"
 	"net"
+	"os"
 	"reflect"
 	"strings"
 	"sync"
@@ -20,7 +21,6 @@ const (
 var (
 	ip   = net.IP{127, 0, 0, 1}
 	ipv6 = net.ParseIP("2001:4860:0:2001::68")
-	cfg  = &config{localDNSAddr}
 )
 
 /* helper functions */
@@ -81,8 +81,13 @@ func zone(zone map[uint16][]string) func(dns.ResponseWriter, *dns.Msg) {
 
 /********************/
 
+func TestMain(m *testing.M) {
+	defaultResolver = NewMiekgDNSResolver(localDNSAddr)
+	os.Exit(m.Run())
+}
+
 func TestNewParserFunction(t *testing.T) {
-	p := newParser(stub, stub, ip, stub, cfg)
+	p := newParser(stub, stub, ip, stub, defaultResolver)
 
 	if p.Sender != stub {
 		t.Error("Sender mismatch, got: ", p.Sender, " expected ", stub)
@@ -224,7 +229,7 @@ func TestTokensSoriting(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		p := newParser(stub, stub, ip, stub, cfg)
+		p := newParser(stub, stub, ip, stub, defaultResolver)
 		_ = p.sortTokens(testcase.Tokens)
 
 		if !reflect.DeepEqual(p.Mechanisms, testcase.ExpTokens) {
@@ -280,7 +285,7 @@ func TestTokensSoritingHandleErrors(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		p := newParser(stub, stub, ip, stub, cfg)
+		p := newParser(stub, stub, ip, stub, defaultResolver)
 		if err := p.sortTokens(testcase.Tokens); err == nil {
 			t.Error("We should have gotten an error, ")
 		}
@@ -298,7 +303,7 @@ type TokenTestCase struct {
 // TODO(marek): Add testfunction for tVersion token
 
 func TestParseAll(t *testing.T) {
-	p := newParser(stub, stub, ip, stub, cfg)
+	p := newParser(stub, stub, ip, stub, defaultResolver)
 	testcases := []TokenTestCase{
 		{&token{tAll, qPlus, ""}, Pass, true},
 		{&token{tAll, qMinus, ""}, Fail, true},
@@ -376,7 +381,7 @@ func TestParseA(t *testing.T) {
 	}
 	defer s.Shutdown()
 
-	p := newParser(domain, "matching.com", net.IP{172, 18, 0, 2}, stub, cfg)
+	p := newParser(domain, "matching.com", net.IP{172, 18, 0, 2}, stub, defaultResolver)
 	testcases := []TokenTestCase{
 		{&token{tA, qPlus, "positive.matching.com"}, Pass, true},
 		{&token{tA, qPlus, "positive.matching.com/32"}, Pass, true},
@@ -404,6 +409,7 @@ func TestParseA(t *testing.T) {
 		{&token{tA, qPlus, "positive.matching.com//128"}, Pass, true},
 		{&token{tA, qPlus, "positive.matching.com/32/"}, Pass, true},
 		{&token{tA, qPlus, "positive.matching.com/0/0"}, Pass, true},
+		{&token{tA, qPlus, "positive.matching.com/24/24"}, Pass, true},
 		{&token{tA, qPlus, "positive.matching.com/33/100"}, Permerror, true},
 		{&token{tA, qPlus, "positive.matching.com/24/129"}, Permerror, true},
 		{&token{tA, qPlus, "positive.matching.com/128/32"}, Permerror, true},
@@ -457,7 +463,7 @@ func TestParseAIpv6(t *testing.T) {
 	}
 	defer s.Shutdown()
 
-	p := newParser(domain, "matching.com", ipv6, stub, cfg)
+	p := newParser(domain, "matching.com", ipv6, stub, defaultResolver)
 	testcases := []TokenTestCase{
 		{&token{tA, qPlus, "positive.matching.com"}, Pass, true},
 		{&token{tA, qPlus, "positive.matching.com//128"}, Pass, true},
@@ -485,7 +491,7 @@ func TestParseAIpv6(t *testing.T) {
 }
 
 func TestParseIp4(t *testing.T) {
-	p := newParser(stub, stub, ip, stub, cfg)
+	p := newParser(stub, stub, ip, stub, defaultResolver)
 	testcases := []TokenTestCase{
 		{&token{tIP4, qPlus, "127.0.0.1"}, Pass, true},
 		{&token{tIP4, qMinus, "127.0.0.1"}, Fail, true},
@@ -517,7 +523,7 @@ func TestParseIp4(t *testing.T) {
 }
 
 func TestParseIp6(t *testing.T) {
-	p := newParser(stub, stub, ipv6, stub, cfg)
+	p := newParser(stub, stub, ipv6, stub, defaultResolver)
 
 	testcases := []TokenTestCase{
 		{&token{tIP6, qPlus, "2001:4860:0:2001::68"}, Pass, true},
@@ -548,7 +554,7 @@ func TestParseIp6(t *testing.T) {
 }
 
 func TestParseIp6WithIp4(t *testing.T) {
-	p := newParser(stub, stub, ip, stub, cfg)
+	p := newParser(stub, stub, ip, stub, defaultResolver)
 
 	testcases := []TokenTestCase{
 		{&token{tIP6, qPlus, "127.0.0.1"}, Permerror, true},
@@ -608,7 +614,7 @@ func TestParseMX(t *testing.T) {
 
 	/* ***************** */
 
-	p := newParser(domain, "matching.com", net.IP{0, 0, 0, 0}, stub, cfg)
+	p := newParser(domain, "matching.com", net.IP{0, 0, 0, 0}, stub, defaultResolver)
 
 	testcases := []TokenTestCase{
 		{&token{tMX, qPlus, "matching.com"}, Pass, true},
@@ -674,7 +680,7 @@ func TestParseMXNegativeTests(t *testing.T) {
 	}
 	defer s.Shutdown()
 
-	p := newParser("matching.com", "matching.com", net.IP{127, 0, 0, 1}, stub, cfg)
+	p := newParser("matching.com", "matching.com", net.IP{127, 0, 0, 1}, stub, defaultResolver)
 
 	testcases := []TokenTestCase{
 		{&token{tMX, qPlus, "matching.com"}, Pass, false},
@@ -743,7 +749,7 @@ func TestParseInclude(t *testing.T) {
 		{173, 20, 21, 1},
 	}
 
-	p := newParser("matching.net", "matching.net", net.IP{0, 0, 0, 0}, stub, cfg)
+	p := newParser("matching.net", "matching.net", net.IP{0, 0, 0, 0}, stub, defaultResolver)
 	testcases := []TokenTestCase{
 		{&token{tInclude, qPlus, "_spf.matching.net"}, Pass, true},
 		{&token{tInclude, qMinus, "_spf.matching.net"}, Fail, true},
@@ -812,7 +818,7 @@ func TestParseIncludeNegative(t *testing.T) {
 		{173, 18, 100, 102},
 		{173, 18, 100, 103},
 	}
-	p := newParser("matching.net", "matching.net", ip, stub, cfg)
+	p := newParser("matching.net", "matching.net", ip, stub, defaultResolver)
 
 	testcases := []TokenTestCase{
 		{&token{tInclude, qMinus, "_spf.matching.net"}, None, false},
@@ -874,7 +880,7 @@ func TestParseExists(t *testing.T) {
 	}
 	defer s.Shutdown()
 
-	p := newParser("matching.com", "matching.com", ip, stub, cfg)
+	p := newParser("matching.com", "matching.com", ip, stub, defaultResolver)
 	testcases := []TokenTestCase{
 		{&token{tExists, qPlus, "positive.matching.net"}, Pass, true},
 		{&token{tExists, qMinus, "positive.matching.net"}, Fail, true},
@@ -897,7 +903,7 @@ func TestParseExists(t *testing.T) {
 	}
 }
 
-type ParseTestCase struct {
+type parseTestCase struct {
 	Query  string
 	IP     net.IP
 	Result Result
@@ -980,13 +986,27 @@ func TestParse(t *testing.T) {
 	}))
 	defer dns.HandleRemove("loop.matching.com.")
 
+	dns.HandleFunc("loop2.matching.net.", zone(map[uint16][]string{
+		dns.TypeTXT: {
+			`loop2.matching.net. 0 IN TXT "v=spf1 redirect:loop2.matching.com -all"`,
+		},
+	}))
+	defer dns.HandleRemove("loop2.matching.net.")
+
+	dns.HandleFunc("loop2.matching.com.", zone(map[uint16][]string{
+		dns.TypeTXT: {
+			`loop2.matching.com. 0 IN TXT "v=spf1 redirect:loop2.matching.net -all"`,
+		},
+	}))
+	defer dns.HandleRemove("loop2.matching.com.")
+
 	s, err := runLocalUDPServer(localDNSAddr)
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
 	defer s.Shutdown()
 
-	ParseTestCases := []ParseTestCase{
+	parseTestCases := []parseTestCase{
 		{"v=spf1 -all", net.IP{127, 0, 0, 1}, Fail},
 		{"v=spf1 mx -all", net.IP{172, 20, 20, 20}, Pass},
 		{"v=spf1 ?mx -all", net.IP{172, 20, 20, 20}, Neutral},
@@ -1018,33 +1038,44 @@ func TestParse(t *testing.T) {
 		// the >>.com<< suffix. This test should give same matching result as
 		// the test above, as effectively the host to be queried is identical.
 		{"v=spf1 ?exists:lb.%{d1r}.com -all", ip, Neutral},
-		// Loop
-		//{"v=spf1 include:loop.matching.com -all", net.IP{10, 0, 0, 1}, Permerror},
+		// 4.6.4 DNS Lookup Limits
+		// Some mechanisms and modifiers (collectively, "terms") cause DNS
+		// queries at the time of evaluation, and some do not.  The following
+		// terms cause DNS queries: the "include", "a", "mx", "ptr", and
+		// "exists" mechanisms, and the "redirect" modifier.  SPF
+		// implementations MUST limit the total number of those terms to 10
+		// during SPF evaluation, to avoid unreasonable load on the DNS.  If
+		// this limit is exceeded, the implementation MUST return "permerror".
+		// The other terms -- the "all", "ip4", and "ip6" mechanisms, and the
+		// "exp" modifier -- do not cause DNS queries at the time of SPF
+		// evaluation (the "exp" modifier only causes a lookup
+		// https://tools.ietf.org/html/rfc7208#section-2.6
+		{"v=spf1 include:loop.matching.com -all", net.IP{10, 0, 0, 1}, Permerror},
+		{"v=spf1 redirect:loop2.matching.com -all", net.IP{10, 0, 0, 1}, Permerror},
 	}
 
-	for _, testcase := range ParseTestCases {
-		/*
-			done := make(chan struct{})
-			go func() {
-				defer close(done)
-		*/
-		p := newParser("matching.com", "matching.com", testcase.IP, testcase.Query, cfg)
-		result, _, err := p.parse()
-		if result != Permerror && result != Temperror && err != nil {
-			t.Errorf("%q Unexpected error while parsing: %s", testcase.Query, err)
+	for _, testcase := range parseTestCases {
+		type R struct {
+			r Result
+			e error
 		}
-		if result != testcase.Result {
-			t.Errorf("%q Expected %v, got %v", testcase.Query, testcase.Result, result)
-		}
-		/*
-			}()
-			select {
-			case <-time.After(3 * time.Second):
-				t.Errorf("%q failed due to timeout", testcase.Query)
-			case <-done:
-				continue
+		done := make(chan R)
+		go func() {
+			result, _, err := newParser("matching.com", "matching.com", testcase.IP, testcase.Query, &limitedResolver{4, defaultResolver}).parse()
+			done <- R{result, err}
+		}()
+		select {
+		case <-time.After(5 * time.Second):
+			t.Errorf("%q failed due to timeout", testcase.Query)
+		case r := <-done:
+			if r.r != Permerror && r.r != Temperror && r.e != nil {
+				t.Errorf("%q Unexpected error while parsing: %s", testcase.Query, r.e)
 			}
-		*/
+			if r.r != testcase.Result {
+				t.Errorf("%q Expected %v, got %v", testcase.Query, testcase.Result, r.r)
+			}
+			continue
+		}
 	}
 }
 
@@ -1133,7 +1164,7 @@ func TestHandleRedirect(t *testing.T) {
 	}
 	defer s.Shutdown()
 
-	ParseTestCases := []ParseTestCase{
+	ParseTestCases := []parseTestCase{
 		{"v=spf1 -all redirect=_spf.matching.net", net.IP{172, 100, 100, 1}, Fail},
 		{"v=spf1 redirect=_spf.matching.net -all", net.IP{172, 100, 100, 1}, Fail},
 		{"v=spf1 redirect=_spf.matching.net", net.IP{172, 100, 100, 1}, Pass},
@@ -1150,7 +1181,7 @@ func TestHandleRedirect(t *testing.T) {
 	}
 
 	for _, testcase := range ParseTestCases {
-		p := newParser("matching.com", "matching.com", testcase.IP, testcase.Query, cfg)
+		p := newParser("matching.com", "matching.com", testcase.IP, testcase.Query, defaultResolver)
 		result, _, _ := p.parse()
 		if result != testcase.Result {
 			t.Errorf("%q Expected %v, got %v", testcase.Query, testcase.Result, result)
@@ -1171,18 +1202,18 @@ func TestHandleExplanation(t *testing.T) {
 	dns.HandleFunc(".", rootZone)
 	defer dns.HandleRemove(".")
 
-	hosts := make(map[uint16][]string)
-	hosts[dns.TypeTXT] = []string{
-		"static.exp.matching.com. 0 IN TXT \"Invalid SPF record\"",
-	}
-	dns.HandleFunc("static.exp.matching.com.", zone(hosts))
+	dns.HandleFunc("static.exp.matching.com.", zone(map[uint16][]string{
+		dns.TypeTXT: {
+			"static.exp.matching.com. 0 IN TXT \"Invalid SPF record\"",
+		},
+	}))
 	defer dns.HandleRemove("static.exp.matching.com.")
 
-	hosts = make(map[uint16][]string)
-	hosts[dns.TypeTXT] = []string{
-		"ip.exp.matching.com. 0 in TXT \"%{i} is not one of %{d}'s designated mail servers.\"",
-	}
-	dns.HandleFunc("ip.exp.matching.com.", zone(hosts))
+	dns.HandleFunc("ip.exp.matching.com.", zone(map[uint16][]string{
+		dns.TypeTXT: {
+			"ip.exp.matching.com. 0 in TXT \"%{i} is not one of %{d}'s designated mail servers.\"",
+		},
+	}))
 	defer dns.HandleRemove("ip.exp.matching.com.")
 
 	s, err := runLocalUDPServer(localDNSAddr)
@@ -1202,12 +1233,13 @@ func TestHandleExplanation(t *testing.T) {
 	}
 
 	for _, testcase := range ExpTestCases {
-		p := newParser("matching.com", "matching.com", ip, testcase.Query, cfg)
+		p := newParser("matching.com", "matching.com", ip, testcase.Query, defaultResolver)
 		_, exp, err := p.parse()
 		if err != nil {
-			t.Error("Unexpected error while parsing: ", err)
-		} else if exp != testcase.Explanation {
-			t.Errorf("Explanation mismatch, expected %s, got %s\n",
+			t.Errorf("%q unexpected error while parsing: %s", testcase.Query, err)
+		}
+		if exp != testcase.Explanation {
+			t.Errorf("%q explanation mismatch, expected %q, got %q", testcase.Query,
 				testcase.Explanation, exp)
 		}
 	}
