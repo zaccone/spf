@@ -253,7 +253,7 @@ func (p *parser) parseInclude(t *token) (bool, Result, error) {
 		return true, Permerror, SyntaxError{t, errors.New("empty domain")}
 	}
 	theirResult, _, err := CheckHostWithResolver(p.IP, domain, p.Sender, p.resolver)
-	if err != nil && err != ErrDNSLimitExceeded {
+	if err != nil && err != ErrDNSLimitExceeded && err != ErrSPFNotFound {
 		return true, None, SyntaxError{t, err}
 	}
 
@@ -334,7 +334,7 @@ func (p *parser) handleExplanation() (string, error) {
 		return "", err
 	}
 
-	// RFC 7208, section 6.2 specifies that result string should be
+	// RFC 7208, section 6.2 specifies that result strings should be
 	// concatenated with no spaces.
 	exp, err := parseMacro(p, strings.Join(txts, ""))
 	if err != nil {

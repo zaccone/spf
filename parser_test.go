@@ -828,18 +828,16 @@ func TestParseIncludeNegative(t *testing.T) {
 	var result Result
 
 	for _, testcase := range testcases {
-
 		for _, ip := range ips {
 			p.IP = ip
 			match, result, _ = p.parseInclude(testcase.Input)
 			if testcase.Match != match {
-				t.Error("Match mismatch, expected ", testcase.Match, " got ", match)
+				t.Error("IP:", ip, ":", testcase.Input.value, ": Match mismatch, expected ", testcase.Match, " got ", match)
 			}
 			if testcase.Result != result {
-				t.Error("Result mismatch, expected ", testcase.Result, " got ", result)
+				t.Error("IP:", ip, ":", testcase.Input.value, ": Result mismatch, expected ", testcase.Result, " got ", result)
 			}
 		}
-
 	}
 
 }
@@ -1234,6 +1232,42 @@ func TestHandleExplanation(t *testing.T) {
 		if exp != testcase.Explanation {
 			t.Errorf("%q explanation mismatch, expected %q, got %q", testcase.Query,
 				testcase.Explanation, exp)
+		}
+	}
+}
+
+func TestSelectingRecord(t *testing.T) {
+	t.SkipNow()
+	dns.HandleFunc(".", rootZone)
+	defer dns.HandleRemove(".")
+
+	dns.HandleFunc("case0.com.", zone(map[uint16][]string{
+		dns.TypeTXT: {
+			`case0.com. 0 IN TXT "Invalid SPF record"`,
+		},
+	}))
+	defer dns.HandleRemove("case0.com.")
+
+	s, err := runLocalUDPServer(localDNSAddr)
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	samples := []struct {
+		d string
+		r Result
+		e error
+	}{
+		//{"case0.com", None, ErrSPFNotFound},
+		{"case1.com", None, nil},
+	}
+
+	ip := net.ParseIP("10.0.0.1")
+	for i, s := range samples {
+		r, _, e := CheckHostWithResolver(ip, s.d, s.d, testResolver)
+		if r != s.r || e != s.e {
+			t.Errorf("#%d `%s` want [`%v` `%v`], got [`%v` `%v`]", i, s.d, s.r, s.e, r, e)
 		}
 	}
 }

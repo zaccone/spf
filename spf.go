@@ -12,8 +12,10 @@ var (
 	ErrDNSTemperror      = errors.New("temporary DNS error")
 	ErrDNSPermerror      = errors.New("permanent DNS error")
 	ErrInvalidDomain     = errors.New("invalid domain name")
-	errInvalidCIDRLength = errors.New("invalid CIDR length")
 	ErrDNSLimitExceeded  = errors.New("limit exceeded")
+	ErrSPFNotFound       = errors.New("SPF record not found")
+	errInvalidCIDRLength = errors.New("invalid CIDR length")
+	errTooManySPFRecords = errors.New("too many SPF records")
 )
 
 // IPMatcherFunc returns true if ip matches to implemented rules
@@ -109,12 +111,18 @@ func (r Result) String() string {
 // All the parameters should be parsed and dereferenced from real email fields.
 // This means domain should already be extracted from MAIL FROM field so this
 // function can focus on the core part.
+//
+// CheckHost returns result of verification, explanations as result of "exp=",
+// and error as the reason for the encountered problem.
 func CheckHost(ip net.IP, domain, sender string) (Result, string, error) {
 	return CheckHostWithResolver(ip, domain, sender, NewLimitedResolver(&DNSResolver{}, 10))
 }
 
 // CheckHostWithResolver allows using custom Resolver.
 // Note, that DNS lookup limits need to be enforced by provided Resolver.
+//
+// The function returns result of verification, explanations as result of "exp=",
+// and error as the reason for the encountered problem.
 func CheckHostWithResolver(ip net.IP, domain, sender string, resolver Resolver) (Result, string, error) {
 	/*
 	* As per RFC 7208 Section 4.3:
@@ -139,7 +147,59 @@ func CheckHostWithResolver(ip net.IP, domain, sender string, resolver Resolver) 
 		return Temperror, "", err
 	}
 
-	return newParser(sender, domain, ip, strings.Join(txts, ""), resolver).parse()
+	// If the resultant record set includes no records, check_host()
+	// produces the "none" result.  If the resultant record set includes
+	// more than one record, check_host() produces the "permerror" result.
+	spf, err := filterSPF(txts)
+	if err != nil {
+		return Permerror, "", err
+	}
+	if spf == "" {
+		return None, "", ErrSPFNotFound
+	}
+
+	return newParser(sender, domain, ip, spf, resolver).parse()
+}
+
+// Starting with the set of records that were returned by the lookup,
+// discard records that do not begin with a version section of exactly
+// "v=spf1".  Note that the version section is terminated by either an
+// SP character or the end of the record.  As an example, a record with
+// a version section of "v=spf10" does not match and is discarded.
+func filterSPF(txt []string) (string, error) {
+	const (
+		v    = "v=spf1"
+		vLen = 6
+	)
+	var (
+		spf string
+		n   int
+	)
+
+	for _, s := range txt {
+		if len(s) < vLen {
+			continue
+		}
+		if len(s) == vLen {
+			if s == v {
+				spf = s
+				n++
+			}
+			continue
+		}
+		if s[vLen] != ' ' && s[vLen] != '\t' {
+			continue
+		}
+		if !strings.HasPrefix(s, v) {
+			continue
+		}
+		spf = s
+		n++
+	}
+	if n > 1 {
+		return "", errTooManySPFRecords
+	}
+	return spf, nil
 }
 
 // isDomainName is a 1:1 copy of implementation from
