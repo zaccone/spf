@@ -1061,7 +1061,7 @@ func TestParse(t *testing.T) {
 		}
 		done := make(chan R)
 		go func() {
-			result, _, err := newParser("matching.com", "matching.com", testcase.IP, testcase.Query, &limitedResolver{4, defaultResolver}).parse()
+			result, _, err := newParser("matching.com", "matching.com", testcase.IP, testcase.Query, &LimitedResolver{4, defaultResolver}).parse()
 			done <- R{result, err}
 		}()
 		select {

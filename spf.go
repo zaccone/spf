@@ -13,7 +13,7 @@ var (
 	ErrDNSPermerror      = errors.New("permanent DNS error")
 	ErrInvalidDomain     = errors.New("invalid domain name")
 	errInvalidCIDRLength = errors.New("invalid CIDR length")
-	errDNSLimitExceeded  = errors.New("limit exceeded")
+	ErrDNSLimitExceeded  = errors.New("limit exceeded")
 )
 
 // IPMatcherFunc returns true if ip matches to implemented rules
@@ -111,7 +111,7 @@ func (r Result) String() string {
 // This means domain should already be extracted from MAIL FROM field so this
 // function can focus on the core part.
 func CheckHost(ip net.IP, domain, sender string) (Result, string, error) {
-	return checkHost(ip, domain, sender, &limitedResolver{
+	return checkHost(ip, domain, sender, &LimitedResolver{
 		limit:    10,
 		resolver: defaultResolver,
 	})
@@ -133,7 +133,7 @@ func checkHost(ip net.IP, domain, sender string, resolver Resolver) (Result, str
 	switch err {
 	case nil:
 		// continue
-	case errDNSLimitExceeded:
+	case ErrDNSLimitExceeded:
 		return Permerror, "", err
 	case ErrDNSPermerror:
 		return None, "", nil
