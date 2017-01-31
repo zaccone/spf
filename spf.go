@@ -129,7 +129,7 @@ func checkHost(ip net.IP, domain, sender string, resolver Resolver) (Result, str
 		return None, "", ErrInvalidDomain
 	}
 
-	txts, err := resolver.LookupTXT(normalizeFQDN(domain))
+	txts, err := resolver.LookupTXT(NormalizeFQDN(domain))
 	switch err {
 	case nil:
 		// continue
@@ -192,12 +192,12 @@ func isDomainName(s string) bool {
 	if last == '-' || partlen > 63 {
 		return false
 	}
-  
+
 	return ok
 }
 
-// normalizeFQDN appends a root domain (a dot) to the FQDN.
-func normalizeFQDN(name string) string {
+// NormalizeFQDN appends a root domain (a dot) to the FQDN.
+func NormalizeFQDN(name string) string {
 	if len(name) == 0 {
 		return ""
 	}

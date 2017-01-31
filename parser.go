@@ -210,7 +210,7 @@ func (p *parser) parseA(t *token) (bool, Result, error) {
 
 	result, _ := matchingResult(t.qualifier)
 
-	found, err := p.resolver.MatchIP(normalizeFQDN(host), func(ip net.IP) bool {
+	found, err := p.resolver.MatchIP(NormalizeFQDN(host), func(ip net.IP) bool {
 		n := net.IPNet{
 			IP: ip,
 		}
@@ -232,7 +232,7 @@ func (p *parser) parseMX(t *token) (bool, Result, error) {
 	}
 
 	result, _ := matchingResult(t.qualifier)
-	found, err := p.resolver.MatchMX(normalizeFQDN(host), func(ip net.IP) bool {
+	found, err := p.resolver.MatchMX(NormalizeFQDN(host), func(ip net.IP) bool {
 		n := net.IPNet{
 			IP: ip,
 		}
@@ -286,7 +286,7 @@ func (p *parser) parseExists(t *token) (bool, Result, error) {
 
 	result, _ := matchingResult(t.qualifier)
 
-	found, err := p.resolver.Exists(normalizeFQDN(resolvedDomain))
+	found, err := p.resolver.Exists(NormalizeFQDN(resolvedDomain))
 	switch err {
 	case nil:
 		return found, result, nil
@@ -329,7 +329,7 @@ func (p *parser) handleExplanation() (string, error) {
 		return "", SyntaxError{p.Explanation, errors.New("empty domain")}
 	}
 
-	txts, err := p.resolver.LookupTXT(normalizeFQDN(domain))
+	txts, err := p.resolver.LookupTXT(NormalizeFQDN(domain))
 	if err != nil {
 		return "", err
 	}
