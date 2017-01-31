@@ -2,8 +2,8 @@ package spf
 
 import "sync/atomic"
 
-// LimitResolver pass limit number of calls to wrapped resolver.
-// All calls over the limit will returns ErrDNSLimitExceeded.
+// LimitedResolver wraps a Resolver and limits number of lookups possible to do
+// with it. All overlimited calls return ErrDNSLimitExceeded.
 type LimitedResolver struct {
 	limit    int32
 	resolver Resolver
@@ -30,6 +30,9 @@ func (r *LimitedResolver) checkAndDecrLimit() error {
 	return nil
 }
 
+// LookupTXT returns the DNS TXT records for the given domain name.
+// Returns nil and ErrDNSLimitExceeded if total number of lookups made
+// by underlying resolver exceed the limit.
 func (r *LimitedResolver) LookupTXT(name string) ([]string, error) {
 	if err := r.checkAndDecrLimit(); err != nil {
 		return nil, err
@@ -37,6 +40,11 @@ func (r *LimitedResolver) LookupTXT(name string) ([]string, error) {
 	return r.resolver.LookupTXT(name)
 }
 
+// Exists is used for a DNS A RR lookup (even when the
+// connection type is IPv6).  If any A record is returned, this
+// mechanism matches.
+// Returns false and ErrDNSLimitExceeded if total number of lookups made
+// by underlying resolver exceed the limit.
 func (r *LimitedResolver) Exists(name string) (bool, error) {
 	if err := r.checkAndDecrLimit(); err != nil {
 		return false, err
@@ -44,6 +52,12 @@ func (r *LimitedResolver) Exists(name string) (bool, error) {
 	return r.resolver.Exists(name)
 }
 
+// MatchIP provides an address lookup, which should be done on the name
+// using the type of lookup (A or AAAA).
+// Then IPMatcherFunc used to compare checked IP to the returned address(es).
+// If any address matches, the mechanism matches
+// Returns false and ErrDNSLimitExceeded if total number of lookups made
+// by underlying resolver exceed the limit.
 func (r *LimitedResolver) MatchIP(name string, match IPMatcherFunc) (bool, error) {
 	if err := r.checkAndDecrLimit(); err != nil {
 		return false, err
@@ -51,6 +65,12 @@ func (r *LimitedResolver) MatchIP(name string, match IPMatcherFunc) (bool, error
 	return r.resolver.MatchIP(name, match)
 }
 
+// MatchMX is similar to MatchIP but first performs an MX lookup on the
+// name.  Then it performs an address lookup on each MX name returned.
+// Then IPMatcherFunc used to compare checked IP to the returned address(es).
+// If any address matches, the mechanism matches
+// Returns false and ErrDNSLimitExceeded if total number of lookups made
+// by underlying resolver exceed the limit.
 func (r *LimitedResolver) MatchMX(name string, match IPMatcherFunc) (bool, error) {
 	if err := r.checkAndDecrLimit(); err != nil {
 		return false, err

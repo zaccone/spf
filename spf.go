@@ -39,8 +39,6 @@ type Resolver interface {
 	MatchMX(string, IPMatcherFunc) (bool, error)
 }
 
-var defaultResolver Resolver = &DNSResolver{}
-
 // Result represents result of SPF evaluation as it defined by RFC7208
 // https://tools.ietf.org/html/rfc7208#section-2.6
 type Result int
@@ -102,7 +100,8 @@ func (r Result) String() string {
 	}
 }
 
-// CheckHost is a main entrypoint function evaluating e-mail with regard to SPF
+// CheckHost is a main entrypoint function evaluating e-mail with regard to
+// SPF and it utilizes DNSResolver as a resolver.
 // As per RFC 7208 it will accept 3 parameters:
 // <ip> - IP{4,6} address of the connected client
 // <domain> - domain portion of the MAIL FROM or HELO identity
@@ -111,13 +110,12 @@ func (r Result) String() string {
 // This means domain should already be extracted from MAIL FROM field so this
 // function can focus on the core part.
 func CheckHost(ip net.IP, domain, sender string) (Result, string, error) {
-	return checkHost(ip, domain, sender, &LimitedResolver{
-		limit:    10,
-		resolver: defaultResolver,
-	})
+	return CheckHostWithResolver(ip, domain, sender, NewLimitedResolver(&DNSResolver{}, 10))
 }
 
-func checkHost(ip net.IP, domain, sender string, resolver Resolver) (Result, string, error) {
+// CheckHostWithResolver allows using custom Resolver.
+// Note, that DNS lookup limits need to be enforced by provided Resolver.
+func CheckHostWithResolver(ip net.IP, domain, sender string, resolver Resolver) (Result, string, error) {
 	/*
 	* As per RFC 7208 Section 4.3:
 	* If the <domain> is malformed (e.g., label longer than 63
@@ -136,7 +134,7 @@ func checkHost(ip net.IP, domain, sender string, resolver Resolver) (Result, str
 	case ErrDNSLimitExceeded:
 		return Permerror, "", err
 	case ErrDNSPermerror:
-		return None, "", nil
+		return None, "", err
 	default:
 		return Temperror, "", err
 	}

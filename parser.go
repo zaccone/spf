@@ -252,7 +252,7 @@ func (p *parser) parseInclude(t *token) (bool, Result, error) {
 	if domain == "" {
 		return true, Permerror, SyntaxError{t, errors.New("empty domain")}
 	}
-	theirResult, _, err := checkHost(p.IP, domain, p.Sender, p.resolver)
+	theirResult, _, err := CheckHostWithResolver(p.IP, domain, p.Sender, p.resolver)
 	if err != nil && err != ErrDNSLimitExceeded {
 		return true, None, SyntaxError{t, err}
 	}
@@ -306,7 +306,7 @@ func (p *parser) handleRedirect(oldResult Result) (Result, error) {
 
 	redirectDomain := p.Redirect.value
 
-	if result, _, err = checkHost(p.IP, redirectDomain, p.Sender, p.resolver); err != nil {
+	if result, _, err = CheckHostWithResolver(p.IP, redirectDomain, p.Sender, p.resolver); err != nil {
 		//TODO(zaccone): confirm result value
 		result = Permerror
 	} else if result == None || result == Permerror {
