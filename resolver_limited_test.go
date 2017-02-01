@@ -8,9 +8,6 @@ import (
 )
 
 func TestLimitedResolver(t *testing.T) {
-	dns.HandleFunc(".", rootZone)
-	defer dns.HandleRemove(".")
-
 	dns.HandleFunc("domain.", zone(map[uint16][]string{
 		dns.TypeMX: {
 			"domain. 0 in MX 5 domain.",
@@ -38,12 +35,6 @@ func TestLimitedResolver(t *testing.T) {
 		},
 	}))
 	defer dns.HandleRemove("mxmustfail.")
-
-	s, err := runLocalUDPServer(localDNSAddr)
-	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
-	defer func() { _ = s.Shutdown() }()
 
 	{
 		r := NewLimitedResolver(testResolver, 2, 2)

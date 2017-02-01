@@ -1,11 +1,8 @@
 package spf
 
 import (
-	"fmt"
 	"net"
 	"reflect"
-	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -13,8 +10,7 @@ import (
 )
 
 const (
-	stub         string = "stub"
-	localDNSAddr string = "127.0.0.1:53053"
+	stub string = "stub"
 )
 
 var (
@@ -23,65 +19,6 @@ var (
 )
 
 /* helper functions */
-
-func runLocalUDPServer(laddr string) (*dns.Server, error) {
-	pc, err := net.ListenPacket("udp", laddr)
-	if err != nil {
-		return nil, err
-	}
-	server := &dns.Server{PacketConn: pc, ReadTimeout: time.Second, WriteTimeout: time.Second}
-
-	waitLock := sync.Mutex{}
-	waitLock.Lock()
-	server.NotifyStartedFunc = waitLock.Unlock
-
-	go func() {
-		_ = server.ActivateAndServe()
-		_ = pc.Close()
-	}()
-
-	waitLock.Lock()
-	return server, nil
-}
-
-func rootZone(w dns.ResponseWriter, req *dns.Msg) {
-	m := new(dns.Msg)
-	switch req.Question[0].Name {
-	case ".":
-		m.SetReply(req)
-		rr, _ := dns.NewRR(". 0 IN SOA a.root-servers.net. nstld.verisign-grs.com. 2016110600 1800 900 604800 86400")
-		m.Ns = []dns.RR{rr}
-	default:
-		m.SetRcode(req, dns.RcodeNameError)
-	}
-	_ = w.WriteMsg(m)
-}
-
-func zone(zone map[uint16][]string) func(dns.ResponseWriter, *dns.Msg) {
-	return func(w dns.ResponseWriter, req *dns.Msg) {
-		m := new(dns.Msg)
-		m.SetReply(req)
-
-		rr, ok := zone[req.Question[0].Qtype]
-		if !ok {
-			_ = w.WriteMsg(m)
-			return
-		}
-		m.Answer = make([]dns.RR, 0, len(rr))
-		for _, r := range rr {
-			if !strings.HasPrefix(r, req.Question[0].Name) {
-				continue
-			}
-			a, err := dns.NewRR(r)
-			if err != nil {
-				fmt.Printf("unable to prepare dns response: %s\n", err)
-				continue
-			}
-			m.Answer = append(m.Answer, a)
-		}
-		_ = w.WriteMsg(m)
-	}
-}
 
 /********************/
 
@@ -325,9 +262,6 @@ func TestParseAll(t *testing.T) {
 }
 
 func TestParseA(t *testing.T) {
-	dns.HandleFunc(".", rootZone)
-	defer dns.HandleRemove(".")
-
 	dns.HandleFunc("matching.com.", zone(map[uint16][]string{
 		dns.TypeA: {
 			"matching.com. 0 IN A 172.20.21.1",
@@ -372,12 +306,6 @@ func TestParseA(t *testing.T) {
 		},
 	}))
 	defer dns.HandleRemove("lb.matching.com.")
-
-	s, err := runLocalUDPServer(localDNSAddr)
-	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
-	defer func() { _ = s.Shutdown() }()
 
 	p := newParser(domain, "matching.com", net.IP{172, 18, 0, 2}, stub, testResolver)
 	testcases := []TokenTestCase{
@@ -454,12 +382,6 @@ func TestParseAIpv6(t *testing.T) {
 	negativeMatchingCom := zone(hosts)
 	dns.HandleFunc("negative.matching.com.", negativeMatchingCom)
 	defer dns.HandleRemove("negative.matching.com.")
-
-	s, err := runLocalUDPServer(localDNSAddr)
-	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
-	defer func() { _ = s.Shutdown() }()
 
 	p := newParser(domain, "matching.com", ipv6, stub, testResolver)
 	testcases := []TokenTestCase{
@@ -584,9 +506,6 @@ func TestParseMX(t *testing.T) {
 
 	/* helper functions */
 
-	dns.HandleFunc(".", rootZone)
-	defer dns.HandleRemove(".")
-
 	dns.HandleFunc("matching.com.", zone(map[uint16][]string{
 		dns.TypeMX: {
 			"matching.com. 0 IN MX 5 mail.matching.com.",
@@ -603,12 +522,6 @@ func TestParseMX(t *testing.T) {
 		},
 	}))
 	defer dns.HandleRemove("matching.com.")
-
-	s, err := runLocalUDPServer(localDNSAddr)
-	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
-	defer func() { _ = s.Shutdown() }()
 
 	/* ***************** */
 
@@ -649,9 +562,6 @@ func TestParseMXNegativeTests(t *testing.T) {
 
 	/* helper functions */
 
-	dns.HandleFunc(".", rootZone)
-	defer dns.HandleRemove(".")
-
 	hosts := make(map[uint16][]string)
 
 	hosts[dns.TypeMX] = []string{
@@ -671,12 +581,6 @@ func TestParseMXNegativeTests(t *testing.T) {
 	mxMatchingCom := zone(hosts)
 	dns.HandleFunc("matching.com.", mxMatchingCom)
 	defer dns.HandleRemove("matching.com.")
-
-	s, err := runLocalUDPServer(localDNSAddr)
-	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
-	defer func() { _ = s.Shutdown() }()
 
 	p := newParser("matching.com", "matching.com", net.IP{127, 0, 0, 1}, stub, testResolver)
 
@@ -708,9 +612,6 @@ func TestParseInclude(t *testing.T) {
 
 	/* helper functions */
 
-	dns.HandleFunc(".", rootZone)
-	defer dns.HandleRemove(".")
-
 	dns.HandleFunc("matching.net.", zone(map[uint16][]string{
 		dns.TypeTXT: {
 			`_spf.matching.net. 0 IN TXT "v=spf1 a:positive.matching.net -a:negative.matching.net ~mx -all"`,
@@ -733,12 +634,6 @@ func TestParseInclude(t *testing.T) {
 		},
 	}))
 	defer dns.HandleRemove("matching.net.")
-
-	s, err := runLocalUDPServer(localDNSAddr)
-	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
-	defer func() { _ = s.Shutdown() }()
 
 	/*******************************/
 	ips := []net.IP{
@@ -774,9 +669,6 @@ func TestParseIncludeNegative(t *testing.T) {
 
 	/* helper functions */
 
-	dns.HandleFunc(".", rootZone)
-	defer dns.HandleRemove(".")
-
 	hosts := make(map[uint16][]string)
 	hosts[dns.TypeTXT] = []string{
 		"_spf.matching.net. 0 IN TXT \"v=spf1 a:positive.matching.net -a:negative.matching.net ~mx -all\"",
@@ -801,11 +693,6 @@ func TestParseIncludeNegative(t *testing.T) {
 	dns.HandleFunc("matching.net.", includeMatchingCom)
 	defer dns.HandleRemove("matching.net.")
 
-	s, err := runLocalUDPServer(localDNSAddr)
-	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
-	defer func() { _ = s.Shutdown() }()
 	/*******************************/
 	ips := []net.IP{
 		// completely random IP address out of the net segment
@@ -850,9 +737,6 @@ func TestParseIncludeNegative(t *testing.T) {
 // TestParseExists executes tests for exists term.
 func TestParseExists(t *testing.T) {
 
-	dns.HandleFunc(".", rootZone)
-	defer dns.HandleRemove(".")
-
 	hosts := make(map[uint16][]string)
 	hosts[dns.TypeA] = []string{
 		"positive.matching.net. 0 IN A 172.20.20.20",
@@ -870,11 +754,6 @@ func TestParseExists(t *testing.T) {
 	}
 	dns.HandleFunc("positive.matching.com.", zone(hosts))
 	defer dns.HandleRemove("positive.matching.com.")
-	s, err := runLocalUDPServer(localDNSAddr)
-	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
-	defer func() { _ = s.Shutdown() }()
 
 	p := newParser("matching.com", "matching.com", ip, stub, testResolver)
 	testcases := []TokenTestCase{
@@ -907,9 +786,6 @@ type parseTestCase struct {
 
 // TestParse tests whole Parser.Parse() method
 func TestParse(t *testing.T) {
-
-	dns.HandleFunc(".", rootZone)
-	defer dns.HandleRemove(".")
 
 	dns.HandleFunc("matching.com.", zone(map[uint16][]string{
 		dns.TypeMX: {
@@ -996,12 +872,6 @@ func TestParse(t *testing.T) {
 	}))
 	defer dns.HandleRemove("loop2.matching.com.")
 
-	s, err := runLocalUDPServer(localDNSAddr)
-	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
-	defer func() { _ = s.Shutdown() }()
-
 	parseTestCases := []parseTestCase{
 		/*
 			{"v=spf1 -all", net.IP{127, 0, 0, 1}, Fail},
@@ -1083,9 +953,6 @@ func TestParse(t *testing.T) {
 // redirect modifier
 func TestHandleRedirect(t *testing.T) {
 
-	dns.HandleFunc(".", rootZone)
-	defer dns.HandleRemove(".")
-
 	dns.HandleFunc("matching.net.", zone(map[uint16][]string{
 		dns.TypeMX: {
 			"matching.net. 0 IN MX 5 matching.net.",
@@ -1158,12 +1025,6 @@ func TestHandleRedirect(t *testing.T) {
 	}))
 	defer dns.HandleRemove("matching.com.")
 
-	s, err := runLocalUDPServer(localDNSAddr)
-	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
-	defer func() { _ = s.Shutdown() }()
-
 	ParseTestCases := []parseTestCase{
 		{"v=spf1 -all redirect=_spf.matching.net", net.IP{172, 100, 100, 1}, Fail},
 		{"v=spf1 redirect=_spf.matching.net -all", net.IP{172, 100, 100, 1}, Fail},
@@ -1199,9 +1060,6 @@ func TestHandleExplanation(t *testing.T) {
 	// ip.exp.matching.com.            IN      TXT "%{i} is not one of %{d}'s designated mail servers."
 	// redirect.exp.matching.com.      IN      TXT "See http://%{d}/why.html?s=%{s}&i=%{i}"
 
-	dns.HandleFunc(".", rootZone)
-	defer dns.HandleRemove(".")
-
 	dns.HandleFunc("static.exp.matching.com.", zone(map[uint16][]string{
 		dns.TypeTXT: {
 			"static.exp.matching.com. 0 IN TXT \"Invalid SPF record\"",
@@ -1216,13 +1074,7 @@ func TestHandleExplanation(t *testing.T) {
 	}))
 	defer dns.HandleRemove("ip.exp.matching.com.")
 
-	s, err := runLocalUDPServer(localDNSAddr)
-	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
-	defer func() { _ = s.Shutdown() }()
-
-	ExpTestCases := []ExpTestCase{
+	expTestCases := []ExpTestCase{
 		{"v=spf1 -all exp=static.exp.matching.com",
 			"Invalid SPF record"},
 		{"v=spf1 -all exp=ip.exp.matching.com",
@@ -1232,7 +1084,7 @@ func TestHandleExplanation(t *testing.T) {
 		//ExpT"See http://matching.com/why.html?s=&i="},
 	}
 
-	for _, testcase := range ExpTestCases {
+	for _, testcase := range expTestCases {
 		p := newParser("matching.com", "matching.com", ip, testcase.Query, testResolver)
 		_, exp, err := p.parse()
 		if err != nil {
@@ -1246,9 +1098,6 @@ func TestHandleExplanation(t *testing.T) {
 }
 
 func TestSelectingRecord(t *testing.T) {
-	dns.HandleFunc(".", rootZone)
-	defer dns.HandleRemove(".")
-
 	dns.HandleFunc("v-spf2.", zone(map[uint16][]string{
 		dns.TypeTXT: {
 			`v-spf2. 0 IN TXT "v=spf2"`,
@@ -1287,12 +1136,6 @@ func TestSelectingRecord(t *testing.T) {
 		},
 	}))
 	defer dns.HandleRemove("many-records.")
-
-	s, err := runLocalUDPServer(localDNSAddr)
-	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
-	defer func() { _ = s.Shutdown() }()
 
 	samples := []struct {
 		d string
