@@ -8,11 +8,25 @@ import (
 // DNSResolver implements Resolver using local DNS
 type DNSResolver struct{}
 
+func errDNS(e error) error {
+	if e == nil {
+		return nil
+	}
+	if dnsErr, ok := e.(*net.DNSError); ok {
+		// That is the most reliable way I found to detect Permerror
+		// https://github.com/golang/go/blob/master/src/net/dnsclient.go#L43
+		if dnsErr.Err == "no such host" {
+			return ErrDNSPermerror
+		}
+	}
+	return ErrDNSTemperror
+}
+
 // LookupTXT returns the DNS TXT records for the given domain name.
 func (r *DNSResolver) LookupTXT(name string) ([]string, error) {
 	txts, err := net.LookupTXT(name)
 	if err != nil {
-		return nil, ErrDNSTemperror
+		return nil, errDNS(err)
 	}
 	return txts, nil
 }
@@ -23,7 +37,7 @@ func (r *DNSResolver) LookupTXT(name string) ([]string, error) {
 func (r *DNSResolver) Exists(name string) (bool, error) {
 	ips, err := net.LookupIP(name)
 	if err != nil {
-		return false, ErrDNSTemperror
+		return false, errDNS(err)
 	}
 	return len(ips) > 0, nil
 }
@@ -40,7 +54,7 @@ type hit struct {
 func (r *DNSResolver) MatchIP(name string, match IPMatcherFunc) (bool, error) {
 	ips, err := net.LookupIP(name)
 	if err != nil {
-		return false, ErrDNSTemperror
+		return false, errDNS(err)
 	}
 	for _, ip := range ips {
 		if match(ip) {
@@ -57,7 +71,7 @@ func (r *DNSResolver) MatchIP(name string, match IPMatcherFunc) (bool, error) {
 func (r *DNSResolver) MatchMX(name string, match IPMatcherFunc) (bool, error) {
 	mxs, err := net.LookupMX(name)
 	if err != nil {
-		return false, ErrDNSTemperror
+		return false, errDNS(err)
 	}
 
 	var wg sync.WaitGroup

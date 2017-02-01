@@ -253,7 +253,13 @@ func (p *parser) parseInclude(t *token) (bool, Result, error) {
 		return true, Permerror, SyntaxError{t, errors.New("empty domain")}
 	}
 	theirResult, _, err := CheckHostWithResolver(p.IP, domain, p.Sender, p.resolver)
-	if err != nil && err != ErrDNSLimitExceeded && err != ErrSPFNotFound {
+	switch err {
+	case nil:
+	case ErrDNSLimitExceeded:
+	case ErrSPFNotFound:
+	case ErrDNSPermerror:
+	case ErrDNSTemperror:
+	default:
 		return true, None, SyntaxError{t, err}
 	}
 
