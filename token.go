@@ -115,10 +115,6 @@ func (tok tokenType) isModifier() bool {
 	return tok > modifierBeg && tok < modifierEnd
 }
 
-func (tok tokenType) isQualifier() bool {
-	return tok > qualifierBeg && tok < qualifierEnd
-}
-
 func checkTokenSyntax(tkn *token, delimiter rune) bool {
 	if tkn == nil {
 		return false

@@ -11,19 +11,15 @@ type LimitedResolver struct {
 
 // NewLimitedResolver returns a resolver which will pass up to l calls to r.
 // All calls over the limit will return ErrDNSLimitExceeded.
-func NewLimitedResolver(r Resolver, l int32) Resolver {
+func NewLimitedResolver(r Resolver, l uint16) Resolver {
 	return &LimitedResolver{
-		limit:    l,
+		limit:    int32(l), // sure that l is positive or zero
 		resolver: r,
 	}
 }
 
 func (r *LimitedResolver) checkAndDecrLimit() error {
-	v := atomic.LoadInt32(&r.limit)
-	if v < 1 {
-		return ErrDNSLimitExceeded
-	}
-	v = atomic.AddInt32(&r.limit, -1)
+	v := atomic.AddInt32(&r.limit, -1)
 	if v < 1 {
 		return ErrDNSLimitExceeded
 	}
