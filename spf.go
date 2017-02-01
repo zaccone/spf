@@ -18,8 +18,10 @@ var (
 	errTooManySPFRecords = errors.New("too many SPF records")
 )
 
-// IPMatcherFunc returns true if ip matches to implemented rules
-type IPMatcherFunc func(ip net.IP) bool
+// IPMatcherFunc returns true if ip matches to implemented rules.
+// If IPMatcherFunc returns any non nil error, the Resolver must stop
+// any further processing and use the error as resulting error.
+type IPMatcherFunc func(ip net.IP) (bool, error)
 
 // Resolver provides abstraction for DNS layer
 type Resolver interface {
@@ -115,7 +117,7 @@ func (r Result) String() string {
 // CheckHost returns result of verification, explanations as result of "exp=",
 // and error as the reason for the encountered problem.
 func CheckHost(ip net.IP, domain, sender string) (Result, string, error) {
-	return CheckHostWithResolver(ip, domain, sender, NewLimitedResolver(&DNSResolver{}, 10))
+	return CheckHostWithResolver(ip, domain, sender, NewLimitedResolver(&DNSResolver{}, 10, 10))
 }
 
 // CheckHostWithResolver allows using custom Resolver.

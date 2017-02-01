@@ -377,7 +377,7 @@ func TestParseA(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
-	defer s.Shutdown()
+	defer func() { _ = s.Shutdown() }()
 
 	p := newParser(domain, "matching.com", net.IP{172, 18, 0, 2}, stub, testResolver)
 	testcases := []TokenTestCase{
@@ -459,7 +459,7 @@ func TestParseAIpv6(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
-	defer s.Shutdown()
+	defer func() { _ = s.Shutdown() }()
 
 	p := newParser(domain, "matching.com", ipv6, stub, testResolver)
 	testcases := []TokenTestCase{
@@ -608,7 +608,7 @@ func TestParseMX(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
-	defer s.Shutdown()
+	defer func() { _ = s.Shutdown() }()
 
 	/* ***************** */
 
@@ -676,7 +676,7 @@ func TestParseMXNegativeTests(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
-	defer s.Shutdown()
+	defer func() { _ = s.Shutdown() }()
 
 	p := newParser("matching.com", "matching.com", net.IP{127, 0, 0, 1}, stub, testResolver)
 
@@ -738,7 +738,7 @@ func TestParseInclude(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
-	defer s.Shutdown()
+	defer func() { _ = s.Shutdown() }()
 
 	/*******************************/
 	ips := []net.IP{
@@ -805,7 +805,7 @@ func TestParseIncludeNegative(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
-	defer s.Shutdown()
+	defer func() { _ = s.Shutdown() }()
 	/*******************************/
 	ips := []net.IP{
 		// completely random IP address out of the net segment
@@ -874,7 +874,7 @@ func TestParseExists(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
-	defer s.Shutdown()
+	defer func() { _ = s.Shutdown() }()
 
 	p := newParser("matching.com", "matching.com", ip, stub, testResolver)
 	testcases := []TokenTestCase{
@@ -1000,7 +1000,7 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
-	defer s.Shutdown()
+	defer func() { _ = s.Shutdown() }()
 
 	parseTestCases := []parseTestCase{
 		/*
@@ -1061,7 +1061,7 @@ func TestParse(t *testing.T) {
 		}
 		done := make(chan R)
 		go func() {
-			result, _, err := newParser("matching.com", "matching.com", testcase.IP, testcase.Query, &LimitedResolver{4, testResolver}).parse()
+			result, _, err := newParser("matching.com", "matching.com", testcase.IP, testcase.Query, NewLimitedResolver(testResolver, 4, 4)).parse()
 			done <- R{result, err}
 		}()
 		select {
@@ -1162,7 +1162,7 @@ func TestHandleRedirect(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
-	defer s.Shutdown()
+	defer func() { _ = s.Shutdown() }()
 
 	ParseTestCases := []parseTestCase{
 		{"v=spf1 -all redirect=_spf.matching.net", net.IP{172, 100, 100, 1}, Fail},
@@ -1220,7 +1220,7 @@ func TestHandleExplanation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
-	defer s.Shutdown()
+	defer func() { _ = s.Shutdown() }()
 
 	ExpTestCases := []ExpTestCase{
 		{"v=spf1 -all exp=static.exp.matching.com",
@@ -1292,7 +1292,7 @@ func TestSelectingRecord(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
-	defer s.Shutdown()
+	defer func() { _ = s.Shutdown() }()
 
 	samples := []struct {
 		d string

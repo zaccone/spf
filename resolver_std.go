@@ -51,14 +51,14 @@ type hit struct {
 // using the type of lookup (A or AAAA).
 // Then IPMatcherFunc used to compare checked IP to the returned address(es).
 // If any address matches, the mechanism matches
-func (r *DNSResolver) MatchIP(name string, match IPMatcherFunc) (bool, error) {
+func (r *DNSResolver) MatchIP(name string, matcher IPMatcherFunc) (bool, error) {
 	ips, err := net.LookupIP(name)
 	if err != nil {
 		return false, errDNS(err)
 	}
 	for _, ip := range ips {
-		if match(ip) {
-			return true, nil
+		if m, e := matcher(ip); m || e != nil {
+			return m, e
 		}
 	}
 	return false, nil
@@ -68,7 +68,7 @@ func (r *DNSResolver) MatchIP(name string, match IPMatcherFunc) (bool, error) {
 // name.  Then it performs an address lookup on each MX name returned.
 // Then IPMatcherFunc used to compare checked IP to the returned address(es).
 // If any address matches, the mechanism matches
-func (r *DNSResolver) MatchMX(name string, match IPMatcherFunc) (bool, error) {
+func (r *DNSResolver) MatchMX(name string, matcher IPMatcherFunc) (bool, error) {
 	mxs, err := net.LookupMX(name)
 	if err != nil {
 		return false, errDNS(err)
@@ -80,7 +80,7 @@ func (r *DNSResolver) MatchMX(name string, match IPMatcherFunc) (bool, error) {
 	for _, mx := range mxs {
 		wg.Add(1)
 		go func(name string) {
-			found, err := r.MatchIP(name, match)
+			found, err := r.MatchIP(name, matcher)
 			hits <- hit{found, err}
 			wg.Done()
 		}(mx.Host)

@@ -1,37 +1,40 @@
 package spf
 
-import "sync/atomic"
+import (
+	"net"
+	"sync/atomic"
+)
 
 // LimitedResolver wraps a Resolver and limits number of lookups possible to do
 // with it. All overlimited calls return ErrDNSLimitExceeded.
 type LimitedResolver struct {
-	limit    int32
-	resolver Resolver
+	lookupLimit    int32
+	mxQueriesLimit uint16
+	resolver       Resolver
 }
 
-// NewLimitedResolver returns a resolver which will pass up to l calls to r.
+// NewLimitedResolver returns a resolver which will pass up to lookupLimit calls to r.
+// In addition to that limit, the evaluation of each "MX" record will be limited
+// to mxQueryLimit.
 // All calls over the limit will return ErrDNSLimitExceeded.
-func NewLimitedResolver(r Resolver, l uint16) Resolver {
+func NewLimitedResolver(r Resolver, lookupLimit, mxQueriesLimit uint16) Resolver {
 	return &LimitedResolver{
-		limit:    int32(l), // sure that l is positive or zero
-		resolver: r,
+		lookupLimit:    int32(lookupLimit), // sure that l is positive or zero
+		mxQueriesLimit: mxQueriesLimit,
+		resolver:       r,
 	}
 }
 
-func (r *LimitedResolver) checkAndDecrLimit() error {
-	v := atomic.AddInt32(&r.limit, -1)
-	if v < 1 {
-		return ErrDNSLimitExceeded
-	}
-	return nil
+func (r *LimitedResolver) canLookup() bool {
+	return atomic.AddInt32(&r.lookupLimit, -1) > 0
 }
 
 // LookupTXT returns the DNS TXT records for the given domain name.
 // Returns nil and ErrDNSLimitExceeded if total number of lookups made
 // by underlying resolver exceed the limit.
 func (r *LimitedResolver) LookupTXT(name string) ([]string, error) {
-	if err := r.checkAndDecrLimit(); err != nil {
-		return nil, err
+	if !r.canLookup() {
+		return nil, ErrDNSLimitExceeded
 	}
 	return r.resolver.LookupTXT(name)
 }
@@ -42,8 +45,8 @@ func (r *LimitedResolver) LookupTXT(name string) ([]string, error) {
 // Returns false and ErrDNSLimitExceeded if total number of lookups made
 // by underlying resolver exceed the limit.
 func (r *LimitedResolver) Exists(name string) (bool, error) {
-	if err := r.checkAndDecrLimit(); err != nil {
-		return false, err
+	if !r.canLookup() {
+		return false, ErrDNSLimitExceeded
 	}
 	return r.resolver.Exists(name)
 }
@@ -54,22 +57,35 @@ func (r *LimitedResolver) Exists(name string) (bool, error) {
 // If any address matches, the mechanism matches
 // Returns false and ErrDNSLimitExceeded if total number of lookups made
 // by underlying resolver exceed the limit.
-func (r *LimitedResolver) MatchIP(name string, match IPMatcherFunc) (bool, error) {
-	if err := r.checkAndDecrLimit(); err != nil {
-		return false, err
+func (r *LimitedResolver) MatchIP(name string, matcher IPMatcherFunc) (bool, error) {
+	if !r.canLookup() {
+		return false, ErrDNSLimitExceeded
 	}
-	return r.resolver.MatchIP(name, match)
+	return r.resolver.MatchIP(name, matcher)
 }
 
 // MatchMX is similar to MatchIP but first performs an MX lookup on the
 // name.  Then it performs an address lookup on each MX name returned.
 // Then IPMatcherFunc used to compare checked IP to the returned address(es).
-// If any address matches, the mechanism matches
+// If any address matches, the mechanism matches.
+//
+// In addition to that limit, the evaluation of each "MX" record MUST NOT
+// result in querying more than 10 address records -- either "A" or "AAAA"
+// resource records.  If this limit is exceeded, the "mx" mechanism MUST
+// produce a "permerror" result.
+//
 // Returns false and ErrDNSLimitExceeded if total number of lookups made
 // by underlying resolver exceed the limit.
-func (r *LimitedResolver) MatchMX(name string, match IPMatcherFunc) (bool, error) {
-	if err := r.checkAndDecrLimit(); err != nil {
-		return false, err
+func (r *LimitedResolver) MatchMX(name string, matcher IPMatcherFunc) (bool, error) {
+	if !r.canLookup() {
+		return false, ErrDNSLimitExceeded
 	}
-	return r.resolver.MatchMX(name, match)
+
+	limit := int32(r.mxQueriesLimit)
+	return r.resolver.MatchMX(name, func(ip net.IP) (bool, error) {
+		if atomic.AddInt32(&limit, -1) < 1 {
+			return false, ErrDNSLimitExceeded
+		}
+		return matcher(ip)
+	})
 }

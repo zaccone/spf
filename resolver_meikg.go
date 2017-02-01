@@ -72,7 +72,7 @@ func (r *MiekgDNSResolver) Exists(name string) (bool, error) {
 	return len(res.Answer) > 0, nil
 }
 
-func matchIP(rrs []dns.RR, match IPMatcherFunc) bool {
+func matchIP(rrs []dns.RR, matcher IPMatcherFunc) (bool, error) {
 	for _, rr := range rrs {
 		var ip net.IP
 		switch a := rr.(type) {
@@ -81,18 +81,18 @@ func matchIP(rrs []dns.RR, match IPMatcherFunc) bool {
 		case *dns.AAAA:
 			ip = a.AAAA
 		}
-		if match(ip) {
-			return true
+		if m, e := matcher(ip); m || e != nil {
+			return m, e
 		}
 	}
-	return false
+	return false, nil
 }
 
 // MatchIP provides an address lookup, which should be done on the name
 // using the type of lookup (A or AAAA).
 // Then IPMatcherFunc used to compare checked IP to the returned address(es).
 // If any address matches, the mechanism matches
-func (r *MiekgDNSResolver) MatchIP(name string, match IPMatcherFunc) (bool, error) {
+func (r *MiekgDNSResolver) MatchIP(name string, matcher IPMatcherFunc) (bool, error) {
 	var wg sync.WaitGroup
 	hits := make(chan hit)
 
@@ -109,8 +109,8 @@ func (r *MiekgDNSResolver) MatchIP(name string, match IPMatcherFunc) (bool, erro
 				return
 			}
 
-			if matchIP(res.Answer, match) {
-				hits <- hit{true, nil}
+			if m, e := matchIP(res.Answer, matcher); m || e != nil {
+				hits <- hit{m, e}
 				return
 			}
 		}(qType)
@@ -134,7 +134,7 @@ func (r *MiekgDNSResolver) MatchIP(name string, match IPMatcherFunc) (bool, erro
 // name.  Then it performs an address lookup on each MX name returned.
 // Then IPMatcherFunc used to compare checked IP to the returned address(es).
 // If any address matches, the mechanism matches
-func (r *MiekgDNSResolver) MatchMX(name string, match IPMatcherFunc) (bool, error) {
+func (r *MiekgDNSResolver) MatchMX(name string, matcher IPMatcherFunc) (bool, error) {
 	req := new(dns.Msg)
 	req.SetQuestion(name, dns.TypeMX)
 
@@ -153,7 +153,7 @@ func (r *MiekgDNSResolver) MatchMX(name string, match IPMatcherFunc) (bool, erro
 		}
 		wg.Add(1)
 		go func(name string) {
-			found, err := r.MatchIP(name, match)
+			found, err := r.MatchIP(name, matcher)
 			hits <- hit{found, err}
 			wg.Done()
 		}(mx.Mx)

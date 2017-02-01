@@ -29,15 +29,11 @@ const (
 
 	modifierEnd
 
-	qualifierBeg
-
 	_ // qEmpty - deadcode, not used
 	qPlus
 	qMinus
 	qTilde
 	qQuestionMark
-
-	qualifierEnd
 
 	qErr
 )
