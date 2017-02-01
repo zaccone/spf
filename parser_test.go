@@ -873,55 +873,51 @@ func TestParse(t *testing.T) {
 	defer dns.HandleRemove("loop2.matching.com.")
 
 	parseTestCases := []parseTestCase{
-		/*
-			{"v=spf1 -all", net.IP{127, 0, 0, 1}, Fail},
-			{"v=spf1 mx -all", net.IP{172, 20, 20, 20}, Pass},
-			{"v=spf1 ?mx -all", net.IP{172, 20, 20, 20}, Neutral},
-			{"v=spf1 ~mx -all", net.IP{172, 20, 20, 20}, Softfail},
-			{"v=spf1 a -mx -all", net.IP{172, 18, 0, 2}, Pass},
-			{"v=spf1 -mx a -all", net.IP{172, 18, 0, 2}, Fail},
-			{"v=spf1 +mx:matching.net -a -all", net.IP{173, 18, 0, 2}, Pass},
-			{"v=spf1 +mx:matching.net -a -all", net.IP{172, 17, 0, 2}, Fail},
-			{"v=spf1 a:matching.net -all", net.IP{173, 18, 0, 2}, Pass},
-			{"v=spf1 +ip4:128.14.15.16 -all", net.IP{128, 14, 15, 16}, Pass},
-			{"v=spf1 ~ip6:2001:56::2 -all", net.ParseIP("2001:56::2"), Softfail},
-			// Test will return SPFResult Fail as 172.20.20.1 does not result
-			// positively for domain _spf.matching.net
-			{"v=spf1 ip4:127.0.0.1 +include:_spf.matching.net -all", net.IP{172, 20, 20, 1}, Fail},
-			// Test will return SPFResult Pass as 172.100.100.1 is within
-			// positive.matching.net A records, that are marked as +a:
-			{"v=spf1 ip4:127.0.0.1 +include:_spf.matching.net -all", net.IP{172, 100, 100, 1}, Pass},
-			// Test for syntax errors (include must have nonempty domain parameter)
-			{"v=spf1 ip4:127.0.0.1 +include -all", net.IP{172, 100, 100, 1}, Permerror},
-			{"v=spf1 ip4:127.0.0.1 ?include -all", net.IP{172, 100, 100, 1}, Permerror},
-		*/
+		{"v=spf1 -all", net.IP{127, 0, 0, 1}, Fail},
+		{"v=spf1 mx -all", net.IP{172, 20, 20, 20}, Pass},
+		{"v=spf1 ?mx -all", net.IP{172, 20, 20, 20}, Neutral},
+		{"v=spf1 ~mx -all", net.IP{172, 20, 20, 20}, Softfail},
+		{"v=spf1 a -mx -all", net.IP{172, 18, 0, 2}, Pass},
+		{"v=spf1 -mx a -all", net.IP{172, 18, 0, 2}, Fail},
+		{"v=spf1 +mx:matching.net -a -all", net.IP{173, 18, 0, 2}, Pass},
+		{"v=spf1 +mx:matching.net -a -all", net.IP{172, 17, 0, 2}, Fail},
+		{"v=spf1 a:matching.net -all", net.IP{173, 18, 0, 2}, Pass},
+		{"v=spf1 +ip4:128.14.15.16 -all", net.IP{128, 14, 15, 16}, Pass},
+		{"v=spf1 ~ip6:2001:56::2 -all", net.ParseIP("2001:56::2"), Softfail},
+		// Test will return SPFResult Fail as 172.20.20.1 does not result
+		// positively for domain _spf.matching.net
+		{"v=spf1 ip4:127.0.0.1 +include:_spf.matching.net -all", net.IP{172, 20, 20, 1}, Fail},
+		// Test will return SPFResult Pass as 172.100.100.1 is within
+		// positive.matching.net A records, that are marked as +a:
+		{"v=spf1 ip4:127.0.0.1 +include:_spf.matching.net -all", net.IP{172, 100, 100, 1}, Pass},
+		// Test for syntax errors (include must have nonempty domain parameter)
+		{"v=spf1 ip4:127.0.0.1 +include -all", net.IP{172, 100, 100, 1}, Permerror},
+		{"v=spf1 ip4:127.0.0.1 ?include -all", net.IP{172, 100, 100, 1}, Permerror},
 		// Include didn't match domain:yyz and underneath returned Temperror,
 		// however parent Parse() execution path marked the result as not
 		// matching and proceeded to next term
 		{"v=spf1 +include:unexistent.com -all", net.IP{172, 100, 100, 1}, Fail},
-		/*
-			{"v=spf1 ?exists:lb.%{d} -all", ip, Neutral},
-			// domain is set to matching.com, macro >>d1r<< will reverse domain to
-			// >>com.matching<< and trim to first part counting from right,
-			// effectively returning >>matching<<, which we later concatenate with
-			// the >>.com<< suffix. This test should give same matching result as
-			// the test above, as effectively the host to be queried is identical.
-			{"v=spf1 ?exists:lb.%{d1r}.com -all", ip, Neutral},
-			// 4.6.4 DNS Lookup Limits
-			// Some mechanisms and modifiers (collectively, "terms") cause DNS
-			// queries at the time of evaluation, and some do not.  The following
-			// terms cause DNS queries: the "include", "a", "mx", "ptr", and
-			// "exists" mechanisms, and the "redirect" modifier.  SPF
-			// implementations MUST limit the total number of those terms to 10
-			// during SPF evaluation, to avoid unreasonable load on the DNS.  If
-			// this limit is exceeded, the implementation MUST return "permerror".
-			// The other terms -- the "all", "ip4", and "ip6" mechanisms, and the
-			// "exp" modifier -- do not cause DNS queries at the time of SPF
-			// evaluation (the "exp" modifier only causes a lookup
-			// https://tools.ietf.org/html/rfc7208#section-2.6
-			{"v=spf1 include:loop.matching.com -all", net.IP{10, 0, 0, 1}, Permerror},
-			{"v=spf1 redirect:loop2.matching.com -all", net.IP{10, 0, 0, 1}, Permerror},
-		*/
+		{"v=spf1 ?exists:lb.%{d} -all", ip, Neutral},
+		// domain is set to matching.com, macro >>d1r<< will reverse domain to
+		// >>com.matching<< and trim to first part counting from right,
+		// effectively returning >>matching<<, which we later concatenate with
+		// the >>.com<< suffix. This test should give same matching result as
+		// the test above, as effectively the host to be queried is identical.
+		{"v=spf1 ?exists:lb.%{d1r}.com -all", ip, Neutral},
+		// 4.6.4 DNS Lookup Limits
+		// Some mechanisms and modifiers (collectively, "terms") cause DNS
+		// queries at the time of evaluation, and some do not.  The following
+		// terms cause DNS queries: the "include", "a", "mx", "ptr", and
+		// "exists" mechanisms, and the "redirect" modifier.  SPF
+		// implementations MUST limit the total number of those terms to 10
+		// during SPF evaluation, to avoid unreasonable load on the DNS.  If
+		// this limit is exceeded, the implementation MUST return "permerror".
+		// The other terms -- the "all", "ip4", and "ip6" mechanisms, and the
+		// "exp" modifier -- do not cause DNS queries at the time of SPF
+		// evaluation (the "exp" modifier only causes a lookup
+		// https://tools.ietf.org/html/rfc7208#section-2.6
+		{"v=spf1 include:loop.matching.com -all", net.IP{10, 0, 0, 1}, Permerror},
+		{"v=spf1 redirect:loop2.matching.com -all", net.IP{10, 0, 0, 1}, Permerror},
 	}
 
 	for _, testcase := range parseTestCases {
