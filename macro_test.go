@@ -11,9 +11,8 @@ const (
 )
 
 var (
-	ip4   = net.IP{10, 11, 12, 13}
-	ip6   = net.ParseIP("2001:68::1")
-	token = &Token{Mechanism: tExp, Qualifier: qMinus, Value: ""}
+	ip4 = net.IP{10, 11, 12, 13}
+	tkn = &token{mechanism: tExp, qualifier: qMinus, value: ""}
 )
 
 type MacroTest struct {
@@ -50,11 +49,11 @@ func TestMacroIteration(t *testing.T) {
 			"Address IP 13.12.11.10 end"},
 	}
 
-	parser := NewParser(sender, domain, ip4, stub, config)
+	parser := newParser(sender, domain, ip4, stub, testResolver)
 
 	for _, test := range testCases {
-		token.Value = test.Input
-		result, err := ParseMacroToken(parser, token)
+		tkn.value = test.Input
+		result, err := parseMacroToken(parser, tkn)
 		if err != nil {
 			t.Errorf("Macro %s evaluation failed due to returned error: %v\n",
 				test.Input, err)
@@ -96,13 +95,13 @@ func TestMacroExpansionRFCExamples(t *testing.T) {
 			"example.com.trusted-domains.example.net"},
 	}
 
-	parser := NewParser("strong-bad@email.example.com",
-		"email.example.com", net.IP{192, 0, 2, 3}, stub, config)
+	parser := newParser("strong-bad@email.example.com",
+		"email.example.com", net.IP{192, 0, 2, 3}, stub, testResolver)
 
 	for _, test := range testCases {
 
-		token.Value = test.Input
-		result, err := ParseMacroToken(parser, token)
+		tkn.value = test.Input
+		result, err := parseMacroToken(parser, tkn)
 		if err != nil {
 			t.Errorf("Macro %s evaluation failed due to returned error: %v\n",
 				test.Input, err)
@@ -137,12 +136,12 @@ func TestParsingErrors(t *testing.T) {
 		{"%{i-2}", ""},
 	}
 
-	parser := NewParser(sender, domain, ip4, stub, config)
+	parser := newParser(sender, domain, ip4, stub, testResolver)
 
 	for _, test := range testcases {
 
-		token.Value = test.Input
-		result, err := ParseMacroToken(parser, token)
+		tkn.value = test.Input
+		result, err := parseMacroToken(parser, tkn)
 
 		if result != "" {
 			t.Errorf("For input '%s' expected empty result, got '%s' instead\n",

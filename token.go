@@ -1,5 +1,7 @@
 package spf
 
+import "strconv"
+
 type tokenType int
 
 const (
@@ -27,15 +29,11 @@ const (
 
 	modifierEnd
 
-	qualifierBeg
-
-	qEmpty
+	_ // qEmpty - deadcode, not used
 	qPlus
 	qMinus
 	qTilde
 	qQuestionMark
-
-	qualifierEnd
 
 	qErr
 )
@@ -45,6 +43,33 @@ var qualifiers = map[rune]tokenType{
 	'-': qMinus,
 	'?': qQuestionMark,
 	'~': qTilde,
+}
+
+func (tok tokenType) String() string {
+	switch tok {
+	case tVersion:
+		return "v"
+	case tAll:
+		return "all"
+	case tIP4:
+		return "ip4"
+	case tIP6:
+		return "ip6"
+	case tMX:
+		return "mx"
+	case tPTR:
+		return "ptr"
+	case tInclude:
+		return "include"
+	case tRedirect:
+		return "redirect"
+	case tExists:
+		return "exists"
+	case tExp:
+		return "exp"
+	default:
+		return strconv.Itoa(int(tok))
+	}
 }
 
 func tokenTypeFromString(s string) tokenType {
@@ -86,44 +111,40 @@ func (tok tokenType) isModifier() bool {
 	return tok > modifierBeg && tok < modifierEnd
 }
 
-func (tok tokenType) isQualifier() bool {
-	return tok > qualifierBeg && tok < qualifierEnd
-}
-
-func checkTokenSyntax(token *Token, delimiter rune) bool {
-	if token == nil {
+func checkTokenSyntax(tkn *token, delimiter rune) bool {
+	if tkn == nil {
 		return false
 	}
 
-	if token.Mechanism == tErr && token.Qualifier == qErr {
+	if tkn.mechanism == tErr && tkn.qualifier == qErr {
 		return true // syntax is ok
 	}
 
 	// special case for v=spf1 token
 
-	if token.Mechanism == tVersion {
+	if tkn.mechanism == tVersion {
 		return true
 	}
 
 	//mechanism include must not have empty content
-	if token.Mechanism == tInclude && isEmpty(&token.Value) {
+	if tkn.mechanism == tInclude && tkn.value == "" {
 		return false
 	}
-	if token.Mechanism.isModifier() && delimiter != '=' {
+	if tkn.mechanism.isModifier() && delimiter != '=' {
 		return false
 	}
-	if token.Mechanism.isMechanism() && delimiter != ':' {
+	if tkn.mechanism.isMechanism() && delimiter != ':' {
 		return false
 	}
 
 	return true
 }
 
-// Token represents SPF term (modifier or mechanism) like all, include, a, mx,
+// token represents SPF term (modifier or mechanism) like all, include, a, mx,
 // ptr, ip4, ip6, exists, redirect etc.
 // It's a base structure later parsed by Parser.
-type Token struct {
-	Mechanism tokenType // all, include, a, mx, ptr, ip4, ip6, exists etc.
-	Qualifier tokenType // +, -, ~, ?, defaults to +
-	Value     string    // value for a mechanism
+type token struct {
+	mechanism tokenType // all, include, a, mx, ptr, ip4, ip6, exists etc.
+	qualifier tokenType // +, -, ~, ?, defaults to +
+	value     string    // value for a mechanism
 }

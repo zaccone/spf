@@ -31,11 +31,11 @@ func newMacro(input string) *macro {
 	return &macro{0, 0, 0, len(input), input, make([]string, 0, 0), nil}
 }
 
-type stateFn func(*macro, *Parser) (stateFn, error)
+type stateFn func(*macro, *parser) (stateFn, error)
 
-// ParseMacro evaluates whole input string and replaces keywords with appropriate
+// parseMacro evaluates whole input string and replaces keywords with appropriate
 // values from
-func ParseMacro(p *Parser, input string) (string, error) {
+func parseMacro(p *parser, input string) (string, error) {
 	m := newMacro(input)
 	var err error
 	for m.state = scanText; m.state != nil; {
@@ -49,10 +49,10 @@ func ParseMacro(p *Parser, input string) (string, error) {
 	return strings.Join(m.output, ""), nil
 }
 
-// ParseMacroToken evaluates whole input string and replaces keywords with appropriate
+// parseMacroToken evaluates whole input string and replaces keywords with appropriate
 // values from
-func ParseMacroToken(p *Parser, t *Token) (string, error) {
-	return ParseMacro(p, t.Value)
+func parseMacroToken(p *parser, t *token) (string, error) {
+	return parseMacro(p, t.value)
 }
 
 // macro.eof() return true when scanned record has ended, false otherwise
@@ -81,7 +81,7 @@ func (m *macro) back() { m.pos = m.prev }
 
 // State functions
 
-func scanText(m *macro, p *Parser) (stateFn, error) {
+func scanText(m *macro, p *parser) (stateFn, error) {
 	for {
 
 		r, err := m.next()
@@ -103,7 +103,7 @@ func scanText(m *macro, p *Parser) (stateFn, error) {
 	return nil, nil
 }
 
-func scanPercent(m *macro, p *Parser) (stateFn, error) {
+func scanPercent(m *macro, p *parser) (stateFn, error) {
 	r, err := m.next()
 	if err != nil {
 		return nil, err
@@ -133,7 +133,7 @@ type item struct {
 	reversed    bool
 }
 
-func scanMacro(m *macro, p *Parser) (stateFn, error) {
+func scanMacro(m *macro, p *parser) (stateFn, error) {
 
 	r, err := m.next()
 	if err != nil {
@@ -143,7 +143,7 @@ func scanMacro(m *macro, p *Parser) (stateFn, error) {
 
 	//var err error
 	var result string
-	var email *Email
+	var email *addrSpec
 
 	switch r {
 	case 's':
@@ -157,11 +157,8 @@ func scanMacro(m *macro, p *Parser) (stateFn, error) {
 		m.moveon()
 
 	case 'l':
-		email, err = SplitEmails(p.Sender, p.Sender)
-		if err != nil {
-			break
-		}
-		curItem = item{email.User, negative, delimiter, false}
+		email = parseAddrSpec(p.Sender, p.Sender)
+		curItem = item{email.local, negative, delimiter, false}
 		m.moveon()
 		result, err = parseDelimiter(m, &curItem)
 		if err != nil {
@@ -171,11 +168,8 @@ func scanMacro(m *macro, p *Parser) (stateFn, error) {
 		m.moveon()
 
 	case 'o':
-		email, err = SplitEmails(p.Sender, p.Sender)
-		if err != nil {
-			break
-		}
-		curItem = item{email.Domain, negative, delimiter, false}
+		email = parseAddrSpec(p.Sender, p.Sender)
+		curItem = item{email.domain, negative, delimiter, false}
 		m.moveon()
 		result, err = parseDelimiter(m, &curItem)
 		if err != nil {
@@ -244,7 +238,11 @@ func parseDelimiter(m *macro, curItem *item) (string, error) {
 		return strings.ContainsRune(".-+,/_=", ch)
 	}
 
-	r, err := m.next()
+	var (
+		r   rune
+		err error
+	)
+	r, err = m.next()
 	if err != nil {
 		return "", err
 	}
@@ -252,14 +250,13 @@ func parseDelimiter(m *macro, curItem *item) (string, error) {
 	if isDigit(r) {
 		m.back()
 		for {
-			r, err := m.next()
+			r, err = m.next()
 			if err != nil {
 				return "", err
 			}
 
 			if !isDigit(r) {
 				m.back()
-				var err error
 				curItem.cardinality, err = strconv.Atoi(
 					m.input[m.start:m.pos])
 				if err != nil {

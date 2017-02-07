@@ -7,27 +7,6 @@ type spfTestpair struct {
 	expected bool
 }
 
-func TestSPFValidator(t *testing.T) {
-	queries := []spfTestpair{
-		{[]string{"v=spf1"}, true},
-		{[]string{"v=spf1 "}, true},
-		{[]string{"v=spf10"}, false},
-		{[]string{"v=spf11 "}, false},
-		{[]string{"v=spf1 mx -all"}, true},
-		{[]string{"v=spf1", "mx", "-all"}, true},
-		{[]string{"random string"}, false},
-	}
-
-	for _, testcase := range queries {
-		result := checkSPFVersion(testcase.query)
-		if result != testcase.expected {
-			t.Error(
-				"Query: ", testcase.query, "got",
-				result, "instead of", testcase.expected)
-		}
-	}
-}
-
 type SPFTestCase struct {
 	Host string
 	Txt  []string
@@ -78,6 +57,7 @@ func TestHandleNoSuchHostDNSError(t *testing.T) {
 	}
 }
 */
+
 // DNS domain name validation.
 // This source code is copied from:
 //https://github.com/golang/go/blob/master/src/net/dnsclient_test.go
@@ -105,9 +85,7 @@ var dnsNameTests = []dnsNameTest{
 
 func emitDNSNameTest(ch chan<- dnsNameTest) {
 	defer close(ch)
-	var char59 = ""
-	var char63 = ""
-	var char64 = ""
+	var char59, char63, char64 string
 	for i := 0; i < 59; i++ {
 		char59 += "a"
 	}
@@ -134,7 +112,7 @@ func TestDNSName(t *testing.T) {
 	ch := make(chan dnsNameTest)
 	go emitDNSNameTest(ch)
 	for tc := range ch {
-		if IsDomainName(tc.name) != tc.result {
+		if isDomainName(tc.name) != tc.result {
 			t.Errorf("IsDomainName(%q) = %v; want %v", tc.name, !tc.result, tc.result)
 		}
 	}

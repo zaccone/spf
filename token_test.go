@@ -4,7 +4,7 @@ import "testing"
 
 func TestTokenSyntaxValidation(t *testing.T) {
 	type TokenTestCase struct {
-		token     *Token
+		token     *token
 		delimiter rune
 		expected  bool
 	}
@@ -12,39 +12,29 @@ func TestTokenSyntaxValidation(t *testing.T) {
 	tests := []TokenTestCase{
 		{nil, rune('='), false},
 		{
-			&Token{
+			&token{
 				tInclude, qPlus, "matching.com",
 			}, rune(':'), true,
 		},
 		{
-			&Token{
+			&token{
 				tInclude, qPlus, "",
 			}, rune(':'), false,
 		},
 		{
-			&Token{
+			&token{
 				tErr, qErr, "",
 			}, rune('='), true,
 		},
 		{
-			&Token{
+			&token{
 				tAll, qMinus, "matching.com",
 			}, rune(':'), true,
 		},
 		{
-			&Token{
+			&token{
 				tAll, qMinus, "matching.com",
 			}, rune('='), false,
-		},
-		{
-			&Token{
-				tRedirect, qEmpty, "matching.com",
-			}, rune('='), true,
-		},
-		{
-			&Token{
-				tRedirect, qEmpty, "matching.com",
-			}, rune(':'), false,
 		},
 	}
 
