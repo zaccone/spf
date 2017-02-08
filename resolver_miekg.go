@@ -17,6 +17,7 @@ func NewMiekgDNSResolver(addr string) Resolver {
 
 // MiekgDNSResolver implements Resolver using github.com/miekg/dns
 type MiekgDNSResolver struct {
+	mu         sync.Mutex
 	client     *dns.Client
 	serverAddr string
 }
@@ -25,6 +26,8 @@ type MiekgDNSResolver struct {
 // error (RCODE other than 0 or 3), or if the lookup times out, then
 // check_host() terminates immediately with the result "temperror".
 func (r *MiekgDNSResolver) exchange(req *dns.Msg) (*dns.Msg, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	res, _, err := r.client.Exchange(req, r.serverAddr)
 	if err != nil {
 		return nil, ErrDNSTemperror
