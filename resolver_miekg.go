@@ -25,6 +25,14 @@ type MiekgDNSResolver struct {
 // If the DNS lookup returns a server failure (RCODE 2) or some other
 // error (RCODE other than 0 or 3), or if the lookup times out, then
 // check_host() terminates immediately with the result "temperror".
+// From RFC 7208:
+// Several mechanisms rely on information fetched from the DNS.  For
+// these DNS queries, except where noted, if the DNS server returns an
+// error (RCODE other than 0 or 3) or the query times out, the mechanism
+// stops and the topmost check_host() returns "temperror".  If the
+// server returns "Name Error" (RCODE 3), then evaluation of the
+// mechanism continues as if the server returned no error (RCODE 0) and
+// zero answer records.
 func (r *MiekgDNSResolver) exchange(req *dns.Msg) (*dns.Msg, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -32,8 +40,9 @@ func (r *MiekgDNSResolver) exchange(req *dns.Msg) (*dns.Msg, error) {
 	if err != nil {
 		return nil, ErrDNSTemperror
 	}
+	// RCODE 3
 	if res.Rcode == dns.RcodeNameError {
-		return nil, ErrDNSPermerror
+		return res, nil
 	}
 	if res.Rcode != dns.RcodeSuccess {
 		return nil, ErrDNSTemperror
@@ -49,6 +58,31 @@ func (r *MiekgDNSResolver) LookupTXT(name string) ([]string, error) {
 	res, err := r.exchange(req)
 	if err != nil {
 		return nil, err
+	}
+
+	txts := make([]string, 0, len(res.Answer))
+	for _, a := range res.Answer {
+		if r, ok := a.(*dns.TXT); ok {
+			txts = append(txts, r.Txt...)
+		}
+	}
+	return txts, nil
+}
+
+// LookupTXTStrict returns DNS TXT records for the given name, however it
+// will return ErrDNSPermerror upon NXDOMAIN (RCODE 3)
+func (r *MiekgDNSResolver) LookupTXTStrict(name string) ([]string, error) {
+
+	req := new(dns.Msg)
+	req.SetQuestion(name, dns.TypeTXT)
+
+	res, err := r.exchange(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if res.Rcode == dns.RcodeNameError {
+		return nil, ErrDNSPermerror
 	}
 
 	txts := make([]string, 0, len(res.Answer))

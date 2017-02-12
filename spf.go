@@ -27,6 +27,9 @@ type IPMatcherFunc func(ip net.IP) (bool, error)
 type Resolver interface {
 	// LookupTXT returns the DNS TXT records for the given domain name.
 	LookupTXT(string) ([]string, error)
+	// LookupTXTStrict returns DNS TXT records for the given name, however it
+	// will return ErrDNSPermerror upon returned NXDOMAIN (RCODE 3)
+	LookupTXTStrict(string) ([]string, error)
 	// Exists is used for a DNS A RR lookup (even when the
 	// connection type is IPv6).  If any A record is returned, this
 	// mechanism matches.
@@ -137,7 +140,7 @@ func CheckHostWithResolver(ip net.IP, domain, sender string, resolver Resolver) 
 		return None, "", ErrInvalidDomain
 	}
 
-	txts, err := resolver.LookupTXT(NormalizeFQDN(domain))
+	txts, err := resolver.LookupTXTStrict(NormalizeFQDN(domain))
 	switch err {
 	case nil:
 		// continue
