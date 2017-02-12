@@ -665,6 +665,13 @@ func TestParseInclude(t *testing.T) {
 }
 
 // TestParseIncludeNegative shows correct behavior of include qualifier.
+// We expect all the IP addressess to fail (for tests that domain/record
+// exists).  Please note that all tested IP address will match
+// negative.matching.net domain, or last term (-all), hence the recursive call
+// will always return (match, Fail). As per recursive calls for include term we
+// are supposed to not mach top-level include term.  On the other hands, for
+// include term, that refer to non existing domains we are supposed to return
+// (match, Permerror)
 func TestParseIncludeNegative(t *testing.T) {
 
 	/* helper functions */
@@ -708,9 +715,10 @@ func TestParseIncludeNegative(t *testing.T) {
 	testcases := []TokenTestCase{
 		{&token{tInclude, qMinus, "_spf.matching.net"}, None, false},
 		{&token{tInclude, qPlus, "_spf.matching.net"}, None, false},
-		{&token{tInclude, qPlus, "_errspf.matching.net"}, None, false},
-		{&token{tInclude, qPlus, "nospf.matching.net"}, None, false},
-		{&token{tInclude, qPlus, "idontexist.matching.net"}, None, false},
+		// TODO(zaccone): Following 3 tests are practically identitcal
+		{&token{tInclude, qPlus, "_errspf.matching.net"}, Permerror, true},
+		{&token{tInclude, qPlus, "nospf.matching.net"}, Permerror, true},
+		{&token{tInclude, qPlus, "idontexist.matching.net"}, Permerror, true},
 
 		// empty input qualifier results in Permerror withour recursive calls
 		{&token{tInclude, qMinus, ""}, Permerror, true},
@@ -893,10 +901,10 @@ func TestParse(t *testing.T) {
 		// Test for syntax errors (include must have nonempty domain parameter)
 		{"v=spf1 ip4:127.0.0.1 +include -all", net.IP{172, 100, 100, 1}, Permerror},
 		{"v=spf1 ip4:127.0.0.1 ?include -all", net.IP{172, 100, 100, 1}, Permerror},
-		// Include didn't match domain:yyz and underneath returned Temperror,
-		// however parent Parse() execution path marked the result as not
-		// matching and proceeded to next term
-		{"v=spf1 +include:unexistent.com -all", net.IP{172, 100, 100, 1}, Fail},
+		// Include didn't match domain unexistent.com and underneath returned
+		// Permerror, hence top level result is (match, Permerror) as per
+		// recursive table in section 5.2 of RFC7208
+		{"v=spf1 +include:unexistent.com -all", net.IP{172, 100, 100, 1}, Permerror},
 		{"v=spf1 ?exists:lb.%{d} -all", ip, Neutral},
 		// domain is set to matching.com, macro >>d1r<< will reverse domain to
 		// >>com.matching<< and trim to first part counting from right,

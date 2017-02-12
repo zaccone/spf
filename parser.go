@@ -253,32 +253,46 @@ func (p *parser) parseInclude(t *token) (bool, Result, error) {
 		return true, Permerror, SyntaxError{t, errors.New("empty domain")}
 	}
 	theirResult, _, err := CheckHostWithResolver(p.IP, domain, p.Sender, p.resolver)
-	switch err {
-	case nil:
-	case ErrDNSLimitExceeded:
-	case ErrSPFNotFound:
-	case ErrDNSPermerror:
-	case ErrDNSTemperror:
-	default:
-		return true, None, SyntaxError{t, err}
+
+	/* Adhere to following result table:
+	* +---------------------------------+---------------------------------+
+	  | A recursive check_host() result | Causes the "include" mechanism  |
+	  | of:                             | to:                             |
+	  +---------------------------------+---------------------------------+
+	  | pass                            | match                           |
+	  |                                 |                                 |
+	  | fail                            | not match                       |
+	  |                                 |                                 |
+	  | softfail                        | not match                       |
+	  |                                 |                                 |
+	  | neutral                         | not match                       |
+	  |                                 |                                 |
+	  | temperror                       | return temperror                |
+	  |                                 |                                 |
+	  | permerror                       | return permerror                |
+	  |                                 |                                 |
+	  | none                            | return permerror                |
+	  +---------------------------------+---------------------------------+
+	*/
+
+	if err != nil {
+		err = SyntaxError{t, err}
 	}
 
-	// it's all fine
 	switch theirResult {
 	case Pass:
 		ourResult, _ := matchingResult(t.qualifier)
-		return true, ourResult, nil
+		return true, ourResult, err
 	case Fail, Softfail, Neutral:
-		return false, None, nil
+		return false, None, err
 	case Temperror:
-		return true, Temperror, nil
-	case Permerror:
-		return true, Permerror, nil
-	case None:
-		fallthrough
-	default:
-		return false, None, nil
+		return true, Temperror, err
+	case None, Permerror:
+		return true, Permerror, err
+	default: // this should actually never happen
+		return true, Permerror, SyntaxError{t, errors.New("unknown result")}
 	}
+
 }
 
 func (p *parser) parseExists(t *token) (bool, Result, error) {
