@@ -67,7 +67,7 @@ func (p *parser) parse() (Result, string, error) {
 		return Permerror, "", err
 	}
 
-	var result = None
+	var result = Neutral
 	var matches bool
 	var err error
 
@@ -101,7 +101,7 @@ func (p *parser) parse() (Result, string, error) {
 
 	}
 
-	result, err = p.handleRedirect(result)
+	result, err = p.handleRedirect(Neutral)
 
 	return result, "", err
 }
@@ -318,11 +318,14 @@ func (p *parser) parseExists(t *token) (bool, Result, error) {
 }
 
 func (p *parser) handleRedirect(oldResult Result) (Result, error) {
-	var err error
-	result := oldResult
-	if result != None || p.Redirect == nil {
-		return result, nil
+	if p.Redirect == nil {
+		return oldResult, nil
 	}
+
+	var (
+		err    error
+		result Result
+	)
 
 	redirectDomain := p.Redirect.value
 

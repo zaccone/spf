@@ -892,13 +892,16 @@ func TestParse(t *testing.T) {
 		{"v=spf1 a:matching.net -all", net.IP{173, 18, 0, 2}, Pass},
 		{"v=spf1 +ip4:128.14.15.16 -all", net.IP{128, 14, 15, 16}, Pass},
 		{"v=spf1 ~ip6:2001:56::2 -all", net.ParseIP("2001:56::2"), Softfail},
+		// Test ensures that once no term was matched and there is no
+		// redirect: mechanism, we should return Neutral result.
+		{"v=spf1 -ip4:8.8.8.8", net.IP{9, 9, 9, 9}, Neutral},
 		// Test will return SPFResult Fail as 172.20.20.1 does not result
 		// positively for domain _spf.matching.net
 		{"v=spf1 ip4:127.0.0.1 +include:_spf.matching.net -all", net.IP{172, 20, 20, 1}, Fail},
-		// Test will return SPFResult Pass as 172.100.100.1 is within
-		// positive.matching.net A records, that are marked as +a:
+		// // Test will return SPFResult Pass as 172.100.100.1 is within
+		// // positive.matching.net A records, that are marked as +a:
 		{"v=spf1 ip4:127.0.0.1 +include:_spf.matching.net -all", net.IP{172, 100, 100, 1}, Pass},
-		// Test for syntax errors (include must have nonempty domain parameter)
+		// // Test for syntax errors (include must have nonempty domain parameter)
 		{"v=spf1 ip4:127.0.0.1 +include -all", net.IP{172, 100, 100, 1}, Permerror},
 		{"v=spf1 ip4:127.0.0.1 ?include -all", net.IP{172, 100, 100, 1}, Permerror},
 		// Include didn't match domain unexistent.com and underneath returned
