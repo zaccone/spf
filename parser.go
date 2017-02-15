@@ -67,7 +67,7 @@ func (p *parser) parse() (Result, string, error) {
 		return Permerror, "", err
 	}
 
-	var result = None
+	var result = Neutral
 	var matches bool
 	var err error
 
