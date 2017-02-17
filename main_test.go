@@ -27,7 +27,7 @@ func TestMain(m *testing.M) {
 		_ = s.Shutdown()
 	}()
 
-	testResolver = NewMiekgDNSResolver(s.PacketConn.LocalAddr().String())
+	testResolver, _ = NewMiekgDNSResolver(s.PacketConn.LocalAddr().String())
 	os.Exit(m.Run())
 }
 

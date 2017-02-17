@@ -8,11 +8,14 @@ import (
 )
 
 // NewMiekgDNSResolver returns new instance of Resolver
-func NewMiekgDNSResolver(addr string) Resolver {
+func NewMiekgDNSResolver(addr string) (Resolver, error) {
+	if _, _, e := net.SplitHostPort(addr); e != nil {
+		return nil, e
+	}
 	return &MiekgDNSResolver{
 		client:     new(dns.Client),
 		serverAddr: addr,
-	}
+	}, nil
 }
 
 // MiekgDNSResolver implements Resolver using github.com/miekg/dns
