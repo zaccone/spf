@@ -1086,7 +1086,7 @@ func TestHandleExplanation(t *testing.T) {
 			"redirect.exp.matching.com. 0 in TXT \"See http://%{d}/why.html?s=%{s}&i=%{i}\"",
 		},
 	}))
-	defer dns.HandleRemove("ip.exp.matching.com.")
+	defer dns.HandleRemove("redirect.exp.matching.com.")
 
 	expTestCases := []ExpTestCase{
 		{"v=spf1 -all exp=static.exp.matching.com",
