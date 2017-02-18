@@ -1095,6 +1095,7 @@ func TestHandleExplanation(t *testing.T) {
 			"127.0.0.1 is not one of matching.com's designated mail servers."},
 		{"v=spf1 -all exp=redirect.exp.matching.com",
 			"See http://matching.com/why.html?s=matching.com&i=127.0.0.1"},
+		{"v=spf1 -all exp=idontexist", ""},
 	}
 
 	for _, testcase := range expTestCases {
@@ -1106,6 +1107,56 @@ func TestHandleExplanation(t *testing.T) {
 		if exp != testcase.Explanation {
 			t.Errorf("%q explanation mismatch, expected %q, got %q", testcase.Query,
 				testcase.Explanation, exp)
+		}
+	}
+}
+
+func TestHandleExplanationNegative(t *testing.T) {
+
+	dns.HandleFunc("1.exp.matching.com.", zone(map[uint16][]string{
+		dns.TypeTXT: {
+			"1.exp.matching.com. 0 IN TXT \"%{\"",
+		},
+	}))
+	defer dns.HandleRemove("1.exp.matching.com.")
+
+	expTestCases := []ExpTestCase{
+		// While evaluating exp domain we never encounter closing '}', hence we
+		// should raise appropriate error and return ""
+		{"v=spf1 -all exp=%{randomstuff", "unexpected char (97), expected '}'"},
+		// We cut the domain name, and eventually what we get is empty string.
+		// We cannot find any explanation's domain, so we return "" AND
+		// a SyntaxError{} error as an indication for operators.
+		{"v=spf1 -all exp=%{d0}", "empty domain"},
+		// TXT record for 1.exp.matching.com. is invalid, hence we also return
+		// an error indicating what's wrong.
+		{"v=spf1 -all exp=1.exp.matching.com", "unexpected eof for macro (%{)"},
+	}
+	for _, testcase := range expTestCases {
+		p := newParser("matching.com", "matching.com", ip, testcase.Query, testResolver)
+		r, e, err := p.parse()
+		if err == nil {
+			t.Errorf("Expected error for query: %q", testcase.Query)
+		}
+
+		if r != Fail {
+			t.Errorf("Expected Result set to Fail for query: %q", testcase.Query)
+		}
+
+		if e != "" {
+			t.Errorf("Expected explanation returned to be empty string for query: %q",
+				testcase.Query)
+		}
+
+		// if the err is of type SyntaxErr substract underlying err variable,
+		// we don't care about associated *token attribute.
+		var serr SyntaxError
+		var ok bool
+		if serr, ok = err.(SyntaxError); ok {
+			if serr.err.Error() != testcase.Explanation {
+				t.Errorf("%q expected error %s, got %s\n", testcase.Query,
+					testcase.Explanation, serr.err.Error())
+			}
 		}
 	}
 }
