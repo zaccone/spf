@@ -1081,14 +1081,20 @@ func TestHandleExplanation(t *testing.T) {
 	}))
 	defer dns.HandleRemove("ip.exp.matching.com.")
 
+	dns.HandleFunc("redirect.exp.matching.com.", zone(map[uint16][]string{
+		dns.TypeTXT: {
+			"redirect.exp.matching.com. 0 in TXT \"See http://%{d}/why.html?s=%{s}&i=%{i}\"",
+		},
+	}))
+	defer dns.HandleRemove("ip.exp.matching.com.")
+
 	expTestCases := []ExpTestCase{
 		{"v=spf1 -all exp=static.exp.matching.com",
 			"Invalid SPF record"},
 		{"v=spf1 -all exp=ip.exp.matching.com",
 			"127.0.0.1 is not one of matching.com's designated mail servers."},
-		// TODO(zaccone): Cover this testcase
-		//ExpTestCase{"v=spf1 -all exp=redirect.exp.matching.com",
-		//ExpT"See http://matching.com/why.html?s=&i="},
+		{"v=spf1 -all exp=redirect.exp.matching.com",
+			"See http://matching.com/why.html?s=matching.com&i=127.0.0.1"},
 	}
 
 	for _, testcase := range expTestCases {
