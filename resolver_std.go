@@ -24,7 +24,7 @@ func isNoHost(e error) bool {
 		if dnsErr.Err == "no such host" {
 			return true
 		}
-		if dnsErr.Err == "dnsquery: DNS name does not exist" {
+		if dnsErr.Err == "dnsquery: DNS name does not exist." {
 			return true
 		}
 	}
