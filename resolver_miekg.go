@@ -134,9 +134,10 @@ func matchIP(rrs []dns.RR, matcher IPMatcherFunc) (bool, error) {
 // If any address matches, the mechanism matches
 func (r *MiekgDNSResolver) MatchIP(name string, matcher IPMatcherFunc) (bool, error) {
 	var wg sync.WaitGroup
-	hits := make(chan hit)
+	qTypes := []uint16{dns.TypeA, dns.TypeAAAA}
+	hits := make(chan hit, len(qTypes))
 
-	for _, qType := range []uint16{dns.TypeA, dns.TypeAAAA} {
+	for _, qType := range qTypes {
 		wg.Add(1)
 		go func(qType uint16) {
 			defer wg.Done()
@@ -184,7 +185,7 @@ func (r *MiekgDNSResolver) MatchMX(name string, matcher IPMatcherFunc) (bool, er
 	}
 
 	var wg sync.WaitGroup
-	hits := make(chan hit)
+	hits := make(chan hit, len(res.Answer))
 
 	for _, rr := range res.Answer {
 		mx, ok := rr.(*dns.MX)

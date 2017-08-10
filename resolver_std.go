@@ -117,7 +117,7 @@ func (r *DNSResolver) MatchMX(name string, matcher IPMatcherFunc) (bool, error) 
 	}
 
 	var wg sync.WaitGroup
-	hits := make(chan hit)
+	hits := make(chan hit, len(mxs))
 
 	for _, mx := range mxs {
 		wg.Add(1)
