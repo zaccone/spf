@@ -8,10 +8,7 @@ import (
 // DNSResolver implements Resolver using local DNS
 type DNSResolver struct{}
 
-func errDNS(e error) error {
-	if e == nil {
-		return nil
-	}
+func isNoHost(e error) bool {
 	if dnsErr, ok := e.(*net.DNSError); ok {
 		// That is the most reliable way I found to detect Permerror
 		// https://github.com/golang/go/blob/master/src/net/dnsclient.go#L43
@@ -25,8 +22,27 @@ func errDNS(e error) error {
 		//  the mechanism continues as if the server returned no error (RCODE
 		//  0) and zero answer records.
 		if dnsErr.Err == "no such host" {
-			return nil
+			return true
 		}
+		if dnsErr.Err == "dnsquery: DNS name does not exist." {
+			return true
+		}
+		if dnsErr.Err == "dnsquery: DNS record does not exist." {
+			return true
+		}
+		if dnsErr.Err == "dnsquery: No records found for given DNS query." {
+			return true
+		}
+	}
+	return false
+}
+
+func errDNS(e error) error {
+	if e == nil {
+		return nil
+	}
+	if isNoHost(e) {
+		return nil
 	}
 	return ErrDNSTemperror
 }
@@ -36,23 +52,9 @@ func errDNS(e error) error {
 func (r *DNSResolver) LookupTXTStrict(name string) ([]string, error) {
 	txts, err := net.LookupTXT(name)
 
-	if dnsErr, ok := err.(*net.DNSError); ok {
-		// That is the most reliable way I found to detect Permerror
-		// https://github.com/golang/go/blob/master/src/net/dnsclient.go#L43
-		// Upon RCODE 3 return code we should return None result and pretend no
-		//  From RFC7208:
-		//  Several mechanisms rely on information fetched from the DNS.  For
-		//  these DNS queries, except where noted, if the DNS server returns an
-		//  error (RCODE other than 0 or 3) or the query times out, the
-		//  mechanism stops and the topmost check_host() returns "temperror".
-		//  If the server returns "Name Error" (RCODE 3), then evaluation of
-		//  the mechanism continues as if the server returned no error (RCODE
-		//  0) and zero answer records.
-		if dnsErr.Err == "no such host" {
-			return nil, ErrDNSPermerror
-		}
+	if isNoHost(err) {
+		return nil, ErrDNSPermerror
 	}
-
 	err = errDNS(err)
 	if err != nil {
 		return nil, err
