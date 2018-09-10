@@ -1210,7 +1210,7 @@ func TestSelectingRecord(t *testing.T) {
 		{"v-spf2", None, ErrSPFNotFound},
 		{"v-spf10", None, ErrSPFNotFound},
 		{"no-record", None, ErrSPFNotFound},
-		{"many-records", Permerror, errTooManySPFRecords},
+		{"many-records", Permerror, ErrTooManySPFRecords},
 		{"mixed-records", Pass, nil},
 	}
 
