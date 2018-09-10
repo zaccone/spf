@@ -15,7 +15,7 @@ var (
 	ErrDNSLimitExceeded  = errors.New("limit exceeded")
 	ErrSPFNotFound       = errors.New("SPF record not found")
 	errInvalidCIDRLength = errors.New("invalid CIDR length")
-	errTooManySPFRecords = errors.New("too many SPF records")
+	ErrTooManySPFRecords = errors.New("too many SPF records")
 )
 
 // IPMatcherFunc returns true if ip matches to implemented rules.
@@ -202,7 +202,7 @@ func filterSPF(txt []string) (string, error) {
 		n++
 	}
 	if n > 1 {
-		return "", errTooManySPFRecords
+		return "", ErrTooManySPFRecords
 	}
 	return spf, nil
 }
