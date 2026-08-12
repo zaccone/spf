@@ -2,6 +2,7 @@ package spf
 
 import (
 	"net"
+	"strings"
 	"sync"
 )
 
@@ -67,7 +68,7 @@ func (r *DNSResolver) LookupTXT(name string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return txts, nil
+	return []string{strings.Join(txts, "")}, nil
 }
 
 // Exists is used for a DNS A RR lookup (even when the
