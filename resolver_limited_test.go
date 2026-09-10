@@ -8,7 +8,8 @@ import (
 )
 
 func TestLimitedResolver(t *testing.T) {
-	dns.HandleFunc("domain.", zone(map[uint16][]string{
+	mux, testResolver := newTestDNS(t)
+	mux.HandleFunc("domain.", zone(t, map[uint16][]string{
 		dns.TypeMX: {
 			"domain. 0 in MX 5 domain.",
 		},
@@ -19,9 +20,8 @@ func TestLimitedResolver(t *testing.T) {
 			`domain. 0 IN TXT "ok"`,
 		},
 	}))
-	defer dns.HandleRemove("domain.")
 
-	dns.HandleFunc("mxmustfail.", zone(map[uint16][]string{
+	mux.HandleFunc("mxmustfail.", zone(t, map[uint16][]string{
 		dns.TypeMX: {
 			"mxmustfail. 0 in MX 5 mxmustfail.",
 		},
@@ -34,7 +34,6 @@ func TestLimitedResolver(t *testing.T) {
 			`mxmustfail. 0 IN TXT "ok"`,
 		},
 	}))
-	defer dns.HandleRemove("mxmustfail.")
 
 	{
 		r := NewLimitedResolver(testResolver, 2, 2)

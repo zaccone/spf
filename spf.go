@@ -19,6 +19,8 @@ var (
 )
 
 // IPMatcherFunc returns true if ip matches to implemented rules.
+// Built-in resolvers call the matcher sequentially and finish all matcher
+// calls before returning from the lookup.
 // If IPMatcherFunc returns any non nil error, the Resolver must stop
 // any further processing and use the error as resulting error.
 type IPMatcherFunc func(ip net.IP) (bool, error)

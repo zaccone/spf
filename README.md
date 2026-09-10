@@ -2,7 +2,7 @@
 
 A comprehensive RFC7208 implementation
 
-[![Build Status](https://travis-ci.org/zaccone/spf.svg?branch=master)](https://travis-ci.org/zaccone/spf)
+[![Build Status](https://github.com/zaccone/spf/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/zaccone/spf/actions/workflows/go.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/zaccone/spf)](https://goreportcard.com/report/github.com/zaccone/spf)
 [![GoDoc](https://godoc.org/github.com/zaccone/spf?status.svg)](https://godoc.org/github.com/zaccone/spf)
 
@@ -30,7 +30,7 @@ go test -count=1 -timeout=60s ./...
 go vet ./...
 ```
 
-The tests start a DNS server on an ephemeral UDP port on loopback. They require
+DNS tests each own a server on an ephemeral UDP port on loopback. They require
 local socket access, but no public DNS or installed BIND server. The `_etc/bind`
 files are historical fixtures.
 
@@ -40,9 +40,11 @@ To check for races:
 go test -race -count=1 -timeout=60s ./...
 ```
 
-The current baseline has a known MX lookup callback race. Race testing is not
-yet a passing gate; fixing the callback lifecycle is the next modernization
-step. Passing ordinary tests does not establish complete RFC 7208 conformance.
+GitHub Actions runs ordinary tests on Linux, macOS, and Windows, plus race
+tests, vet, formatting, and module consistency checks on Linux. Resolver
+callbacks finish before a lookup returns. Passing these checks does not
+establish complete RFC 7208 conformance; see the modernization plan for the
+remaining correctness work.
 
 ## Dependencies
 The library uses [miekg/dns](https://github.com/miekg/dns) for its configurable
