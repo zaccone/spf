@@ -15,16 +15,40 @@ implemented logic.
 ## Current status
 The library is still under development. API may change, including function/methods names and signatures. I will consider it correct and stable once it passess all tests described in the most popular SPF implementation - pyspf.
 
-## Testing
-Testing is an important part of this implementation. There are unit tests that will run locally in your environment, however there are 
-also configuration files for `named` DNS server that would be able to respond  implemented testcases. (In fact, for the long time I used a 
-real DNS server with such configuration as a testing infrastructure for my code).
-There is a plan to implement simple DNS server that would be able to read .yaml files with comprehensive testsuite defined in pyspf package. Code coverage is also important part of the development and the aim is to keep it as high as 9x %
+## Building and testing
+
+Go 1.27 or later is required. Use the latest patch release of Go 1.27;
+this build setup was verified with Go 1.27.1.
+
+From the repository root:
+
+```sh
+go mod download
+go mod verify
+go build ./...
+go test -count=1 -timeout=60s ./...
+go vet ./...
+```
+
+The tests start a DNS server on an ephemeral UDP port on loopback. They require
+local socket access, but no public DNS or installed BIND server. The `_etc/bind`
+files are historical fixtures.
+
+To check for races:
+
+```sh
+go test -race -count=1 -timeout=60s ./...
+```
+
+The current baseline has a known MX lookup callback race. Race testing is not
+yet a passing gate; fixing the callback lifecycle is the next modernization
+step. Passing ordinary tests does not establish complete RFC 7208 conformance.
 
 ## Dependencies
-SPF library depends on another [DNS](https://github.com/miekg/dns) library. Sadly, Go's builtin DNS library is not elastic enough and does not allow for controlling 
-underlying DNS queries/responses.
+The library uses [miekg/dns](https://github.com/miekg/dns) for its configurable
+DNS resolver. The SPF lexer, parser, and macro implementation remain part of
+this project. Dependency versions and checksums are recorded in `go.mod` and
+`go.sum`; normal builds do not need `go get` or a GOPATH checkout.
 
 ## Pull requests & code review
 If you have any comments about code structure feel free to reach out or simply make a Pull Request
-

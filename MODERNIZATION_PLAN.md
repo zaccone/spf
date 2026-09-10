@@ -1,6 +1,6 @@
 # SPF modernization plan
 
-Status: review complete; implementation awaiting owner approval.
+Status: step 1 implemented and verified; stop here pending owner review. Steps 2–7 are not authorized to proceed.
 Updated: 2026-09-10 (Europe/Warsaw).
 Repository: https://github.com/zaccone/spf
 Reviewed baseline: `76747b8658d9b8686ce812a0e3a2d3be904c980e`, local and remote `master`.
@@ -9,7 +9,7 @@ Reviewed baseline: `76747b8658d9b8686ce812a0e3a2d3be904c980e`, local and remote 
 
 Modernize conservatively, prioritizing correctness, readable Go, bounded resource use, and reproducible tests. Keep the project's own lexer, parser, and macro implementation. Retain `github.com/miekg/dns` for DNS transport; do not replace the SPF engine with a library. Avoid unrelated rewrites, new frameworks, caching systems, or performance work without evidence.
 
-The owner explicitly requested a plan before implementation. This file and the audit are planning artifacts, not approval to start coding. After approval, deliver focused PRs in the order below and let the owner review/merge them. Do not automatically merge. Preserve existing exported functions and numeric Result values where practical. Any incompatible API change needs an explicit proposal.
+The owner approved starting step 1 and explicitly instructed stopping after it. Deliver this diff for review; do not begin step 2 without a new instruction. Do not automatically merge. Preserve existing exported functions and numeric Result values where practical. Any incompatible API change needs an explicit proposal.
 
 ## Recommended Go target
 
@@ -25,10 +25,14 @@ Each numbered step is a review boundary. Split further when a diff becomes diffi
 
 ### 1. Reproducible build
 
-Proposed branch: `codex/go127-modules`.
+Implemented branch: `codex/go127-modules`.
+
+Completed: Go 1.27.0 module minimum; DNS v1.1.73 with x/net v0.57.0 and x/sys v0.47.0; generated checksums; resolver import grouping/gofmt; README build and test instructions. No SPF evaluation or API changes. Keyed-literal conversion was unnecessary for this focused build diff.
+
+Validation on Go 1.27.1, macOS arm64: `go mod download`, `go mod verify`, `go build ./...`, `go test -count=1 -timeout=60s ./...`, `go vet ./...`, `go mod tidy -diff`, gofmt, and `git diff --check` passed. `govulncheck` v1.8.0 reported no vulnerabilities. The known race from the baseline audit remains; race testing was not repeated for formatting/module-only edits. CI migration has not started.
 
 - Add `go.mod` with module path `github.com/zaccone/spf`, plus `go.sum`.
-- Pin the existing DNS dependency and transitive versions after compatibility/vulnerability review. Audit used DNS v1.1.73; that is a candidate, not yet an approved dependency selection.
+- Pin the existing DNS dependency and transitive versions after compatibility/vulnerability review. DNS v1.1.73 was selected after the checks recorded above.
 - Apply gofmt and fix import grouping; use keyed struct literals where they improve maintainability.
 - Document build/test commands and the supported Go floor. Avoid changing evaluation semantics.
 
@@ -135,8 +139,8 @@ Modern structured DNS errors should supersede the old platform-specific string a
 
 1. Read this file and `MODERNIZATION_AUDIT.md`.
 2. Inspect `git status`, branch, and remote HEAD; preserve any new owner changes.
-3. Read the latest task messages for approval and constraints. Current state is **awaiting plan approval**.
-4. If approved, begin step 1 on its proposed branch. Follow applicable repository instructions and the PR skill when creating a PR.
+3. Read the latest task messages for approval and constraints. Current state is **step 1 complete; stopped for review**.
+4. Do not begin step 2 until explicitly instructed. Follow applicable repository instructions and the PR skill when creating a PR.
 5. Update these documents after each diff with commit/PR links, checks, decisions, and next action.
 
 The files persist on disk when the app closes. No automatic 20:30 wakeup or background schedule was created. Reopen this task and send a message, or start a task that reads these files. Temporary audit files under `/tmp` are disposable and are not required to resume.
