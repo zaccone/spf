@@ -2,10 +2,10 @@ package spf
 
 import (
 	"net"
+	"strings"
 	"sync"
 
 	"github.com/miekg/dns"
-	"strings"
 )
 
 // NewMiekgDNSResolver returns new instance of Resolver
@@ -67,7 +67,7 @@ func (r *MiekgDNSResolver) LookupTXT(name string) ([]string, error) {
 	txts := make([]string, 0, len(res.Answer))
 	for _, a := range res.Answer {
 		if r, ok := a.(*dns.TXT); ok {
-			txts = append(txts, strings.Join(r.Txt,""))
+			txts = append(txts, strings.Join(r.Txt, ""))
 		}
 	}
 	return txts, nil
@@ -92,7 +92,7 @@ func (r *MiekgDNSResolver) LookupTXTStrict(name string) ([]string, error) {
 	txts := make([]string, 0, len(res.Answer))
 	for _, a := range res.Answer {
 		if r, ok := a.(*dns.TXT); ok {
-			txts = append(txts, strings.Join(r.Txt,""))
+			txts = append(txts, strings.Join(r.Txt, ""))
 		}
 	}
 	return txts, nil
