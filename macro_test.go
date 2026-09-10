@@ -21,6 +21,7 @@ type MacroTest struct {
 }
 
 func TestMacroIteration(t *testing.T) {
+	_, testResolver := newTestDNS(t)
 	testCases := []*MacroTest{
 		{"matching.com", "matching.com"},
 		{"%%matching.com", "%matching.com"},
@@ -68,6 +69,7 @@ func TestMacroIteration(t *testing.T) {
 // TestMacroExpansionRFCExamples will execute examples from RFC 7208, section
 // 7.4
 func TestMacroExpansionRFCExamples(t *testing.T) {
+	_, testResolver := newTestDNS(t)
 	testCases := []*MacroTest{
 		{"", ""},
 		{"%{s}", "strong-bad@email.example.com"},
@@ -115,6 +117,7 @@ func TestMacroExpansionRFCExamples(t *testing.T) {
 
 // TODO(zaccone): Fill epected error messages and compare with those returned.
 func TestParsingErrors(t *testing.T) {
+	_, testResolver := newTestDNS(t)
 	testcases := []*MacroTest{
 		{"%", ""},
 		{"%{?", ""},

@@ -1,91 +1,111 @@
 package spf
 
 import (
-	"fmt"
+	"context"
 	"net"
-	"os"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
 	"github.com/miekg/dns"
 )
 
-var testResolver Resolver
-
-func TestMain(m *testing.M) {
-	s, err := runLocalUDPServer("127.0.0.1:0")
+func newTestDNS(t *testing.T) (*dns.ServeMux, Resolver) {
+	t.Helper()
+	mux := dns.NewServeMux()
+	mux.HandleFunc(".", func(w dns.ResponseWriter, req *dns.Msg) {
+		response := new(dns.Msg)
+		response.SetRcode(req, dns.RcodeNameError)
+		writeDNSResponse(t, w, response)
+	})
+	addr := startTestDNS(t, mux)
+	resolver, err := NewMiekgDNSResolver(addr)
 	if err != nil {
-		panic(fmt.Sprintf("unable to run local server: %v", err))
+		t.Fatal(err)
 	}
-
-	dns.HandleFunc(".", rootZone)
-
-	defer func() {
-		dns.HandleRemove(".")
-		_ = s.Shutdown()
-	}()
-
-	testResolver, _ = NewMiekgDNSResolver(s.PacketConn.LocalAddr().String())
-	os.Exit(m.Run())
+	return mux, resolver
 }
 
-func runLocalUDPServer(laddr string) (*dns.Server, error) {
-	pc, err := net.ListenPacket("udp", laddr)
+func startTestDNS(t *testing.T, handler dns.Handler) string {
+	t.Helper()
+	conn, err := net.ListenPacket("udp", "127.0.0.1:0")
 	if err != nil {
-		return nil, err
+		t.Fatal(err)
 	}
-	server := &dns.Server{PacketConn: pc, ReadTimeout: time.Second, WriteTimeout: time.Second}
-
-	waitLock := sync.Mutex{}
-	waitLock.Lock()
-	server.NotifyStartedFunc = waitLock.Unlock
-
-	go func() {
-		_ = server.ActivateAndServe()
-		_ = pc.Close()
-	}()
-
-	waitLock.Lock()
-	return server, nil
-}
-
-func rootZone(w dns.ResponseWriter, req *dns.Msg) {
-	m := new(dns.Msg)
-	switch req.Question[0].Name {
-	case ".":
-		m.SetReply(req)
-		rr, _ := dns.NewRR(". 0 IN SOA a.root-servers.net. nstld.verisign-grs.com. 2016110600 1800 900 604800 86400")
-		m.Ns = []dns.RR{rr}
-	default:
-		m.SetRcode(req, dns.RcodeNameError)
+	started := make(chan struct{})
+	done := make(chan error, 1)
+	server := &dns.Server{
+		PacketConn:        conn,
+		Handler:           handler,
+		ReadTimeout:       time.Second,
+		WriteTimeout:      time.Second,
+		NotifyStartedFunc: func() { close(started) },
 	}
-	_ = w.WriteMsg(m)
-}
-
-func zone(zone map[uint16][]string) func(dns.ResponseWriter, *dns.Msg) {
-	return func(w dns.ResponseWriter, req *dns.Msg) {
-		m := new(dns.Msg)
-		m.SetReply(req)
-
-		rr, ok := zone[req.Question[0].Qtype]
-		if !ok {
-			_ = w.WriteMsg(m)
-			return
+	go func() { done <- server.ActivateAndServe() }()
+	select {
+	case <-started:
+	case err := <-done:
+		conn.Close()
+		t.Fatalf("DNS server failed to start: %v", err)
+	case <-time.After(5 * time.Second):
+		conn.Close()
+		t.Fatal("DNS server startup timed out")
+	}
+	t.Cleanup(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := server.ShutdownContext(ctx); err != nil {
+			t.Errorf("DNS server shutdown: %v", err)
+			conn.Close()
 		}
-		m.Answer = make([]dns.RR, 0, len(rr))
-		for _, r := range rr {
-			if !strings.HasPrefix(r, req.Question[0].Name) {
-				continue
-			}
-			a, err := dns.NewRR(r)
+		select {
+		case err := <-done:
 			if err != nil {
-				fmt.Printf("unable to prepare dns response: %s\n", err)
-				continue
+				t.Errorf("DNS server: %v", err)
 			}
-			m.Answer = append(m.Answer, a)
+		case <-ctx.Done():
+			t.Error("DNS server did not exit")
 		}
-		_ = w.WriteMsg(m)
+	})
+	return conn.LocalAddr().String()
+}
+
+func writeDNSResponse(t *testing.T, w dns.ResponseWriter, response *dns.Msg) {
+	t.Helper()
+	if err := w.WriteMsg(response); err != nil {
+		t.Errorf("writing DNS response: %v", err)
+	}
+}
+
+func zone(t *testing.T, records map[uint16][]string) dns.HandlerFunc {
+	t.Helper()
+	var parsed []dns.RR
+	for qtype, values := range records {
+		for _, value := range values {
+			rr, err := dns.NewRR(value)
+			if err != nil {
+				t.Fatalf("invalid DNS fixture %q: %v", value, err)
+			}
+			if rr.Header().Rrtype != qtype {
+				t.Fatalf("DNS fixture %q has wrong record type", value)
+			}
+			parsed = append(parsed, rr)
+		}
+	}
+	return func(w dns.ResponseWriter, req *dns.Msg) {
+		response := new(dns.Msg)
+		response.SetReply(req)
+		if len(req.Question) != 1 {
+			response.Rcode = dns.RcodeFormatError
+		} else {
+			question := req.Question[0]
+			for _, rr := range parsed {
+				h := rr.Header()
+				if strings.EqualFold(h.Name, question.Name) && h.Rrtype == question.Qtype && h.Class == question.Qclass {
+					response.Answer = append(response.Answer, dns.Copy(rr))
+				}
+			}
+		}
+		writeDNSResponse(t, w, response)
 	}
 }

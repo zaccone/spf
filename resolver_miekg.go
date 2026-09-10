@@ -134,41 +134,18 @@ func matchIP(rrs []dns.RR, matcher IPMatcherFunc) (bool, error) {
 // Then IPMatcherFunc used to compare checked IP to the returned address(es).
 // If any address matches, the mechanism matches
 func (r *MiekgDNSResolver) MatchIP(name string, matcher IPMatcherFunc) (bool, error) {
-	var wg sync.WaitGroup
-	qTypes := []uint16{dns.TypeA, dns.TypeAAAA}
-	hits := make(chan hit, len(qTypes))
-
-	for _, qType := range qTypes {
-		wg.Add(1)
-		go func(qType uint16) {
-			defer wg.Done()
-
-			req := new(dns.Msg)
-			req.SetQuestion(name, qType)
-			res, err := r.exchange(req)
-			if err != nil {
-				hits <- hit{false, err}
-				return
-			}
-
-			if m, e := matchIP(res.Answer, matcher); m || e != nil {
-				hits <- hit{m, e}
-				return
-			}
-		}(qType)
-	}
-
-	go func() {
-		wg.Wait()
-		close(hits)
-	}()
-
-	for h := range hits {
-		if h.found || h.err != nil {
-			return h.found, h.err
+	// Keep matcher calls synchronous so none can outlive this lookup.
+	for _, qType := range []uint16{dns.TypeA, dns.TypeAAAA} {
+		req := new(dns.Msg)
+		req.SetQuestion(name, qType)
+		res, err := r.exchange(req)
+		if err != nil {
+			return false, err
+		}
+		if found, err := matchIP(res.Answer, matcher); found || err != nil {
+			return found, err
 		}
 	}
-
 	return false, nil
 }
 
@@ -185,32 +162,14 @@ func (r *MiekgDNSResolver) MatchMX(name string, matcher IPMatcherFunc) (bool, er
 		return false, err
 	}
 
-	var wg sync.WaitGroup
-	hits := make(chan hit, len(res.Answer))
-
 	for _, rr := range res.Answer {
 		mx, ok := rr.(*dns.MX)
 		if !ok {
 			continue
 		}
-		wg.Add(1)
-		go func(name string) {
-			found, err := r.MatchIP(name, matcher)
-			hits <- hit{found, err}
-			wg.Done()
-		}(mx.Mx)
-	}
-
-	go func() {
-		wg.Wait()
-		close(hits)
-	}()
-
-	for h := range hits {
-		if h.found || h.err != nil {
-			return h.found, h.err
+		if found, err := r.MatchIP(mx.Mx, matcher); found || err != nil {
+			return found, err
 		}
 	}
-
 	return false, nil
 }

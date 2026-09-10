@@ -1,9 +1,6 @@
 package spf
 
-import (
-	"net"
-	"sync"
-)
+import "net"
 
 // DNSResolver implements Resolver using local DNS
 type DNSResolver struct{}
@@ -82,11 +79,6 @@ func (r *DNSResolver) Exists(name string) (bool, error) {
 	return len(ips) > 0, nil
 }
 
-type hit struct {
-	found bool
-	err   error
-}
-
 // MatchIP provides an address lookup, which should be done on the name
 // using the type of lookup (A or AAAA).
 // Then IPMatcherFunc used to compare checked IP to the returned address(es).
@@ -116,28 +108,10 @@ func (r *DNSResolver) MatchMX(name string, matcher IPMatcherFunc) (bool, error) 
 		return false, err
 	}
 
-	var wg sync.WaitGroup
-	hits := make(chan hit, len(mxs))
-
 	for _, mx := range mxs {
-		wg.Add(1)
-		go func(name string) {
-			found, err := r.MatchIP(name, matcher)
-			hits <- hit{found, err}
-			wg.Done()
-		}(mx.Host)
-	}
-
-	go func() {
-		wg.Wait()
-		close(hits)
-	}()
-
-	for h := range hits {
-		if h.found || h.err != nil {
-			return h.found, h.err
+		if found, err := r.MatchIP(mx.Host, matcher); found || err != nil {
+			return found, err
 		}
 	}
-
 	return false, nil
 }
