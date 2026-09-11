@@ -922,8 +922,10 @@ func TestParse(t *testing.T) {
 		{"v=spf1 redirect:loop2.matching.com -all", net.IP{10, 0, 0, 1}, Permerror},
 	}
 
+	// These are evaluation tests, not budget-boundary tests. Allow all
+	// fixture lookups; exhausted budgets now propagate instead of disappearing.
 	for _, testcase := range parseTestCases {
-		result, _, err := newParser("matching.com", "matching.com", testcase.IP, testcase.Query, NewLimitedResolver(testResolver, 4, 4)).parse()
+		result, _, err := newParser("matching.com", "matching.com", testcase.IP, testcase.Query, NewLimitedResolver(testResolver, 10, 10)).parse()
 		if result != Permerror && result != Temperror && err != nil {
 			t.Errorf("%q Unexpected error while parsing: %s", testcase.Query, err)
 		}
@@ -1088,75 +1090,48 @@ func TestHandleExplanationNegative(t *testing.T) {
 		},
 	}))
 
-	// Malformed exp domain-specs are covered by TestCompleteRecordSyntax:
-	// they now fail before evaluation, even after an early match.
-	expTestCases := []ExpTestCase{
-		// TXT record for 1.exp.matching.com. is invalid, hence we also return
-		// an error indicating what's wrong.
-		{"v=spf1 -all exp=1.exp.matching.com", "unexpected eof for macro (%{)"},
-	}
-	for _, testcase := range expTestCases {
-		p := newParser("matching.com", "matching.com", ip, testcase.Query, testResolver)
-		r, e, err := p.parse()
-		if err == nil {
-			t.Errorf("Expected error for query: %q", testcase.Query)
-		}
-
-		if r != Fail {
-			t.Errorf("Expected Result set to Fail for query: %q", testcase.Query)
-		}
-
-		if e != "" {
-			t.Errorf("Expected explanation returned to be empty string for query: %q",
-				testcase.Query)
-		}
-
-		// if the err is of type SyntaxErr substract underlying err variable,
-		// we don't care about associated *token attribute.
-		var serr SyntaxError
-		var ok bool
-		if serr, ok = err.(SyntaxError); ok {
-			if serr.err.Error() != testcase.Explanation {
-				t.Errorf("%q expected error %s, got %s\n", testcase.Query,
-					testcase.Explanation, serr.err.Error())
-			}
-		}
+	// RFC 7208 section 6.2: invalid fetched text is ignored without
+	// replacing the SPF result or returning an evaluation error.
+	p := newParser("matching.com", "matching.com", ip, "v=spf1 -all exp=1.exp.matching.com", testResolver)
+	result, explanation, err := p.parse()
+	if result != Fail || explanation != "" || err != nil {
+		t.Fatalf("got (%v, %q, %v), want fail with an empty explanation and no error", result, explanation, err)
 	}
 }
 
 func TestSelectingRecord(t *testing.T) {
 	mux, testResolver := newTestDNS(t)
-	mux.HandleFunc("v-spf2.", zone(t, map[uint16][]string{
+	mux.HandleFunc("v-spf2.example.", zone(t, map[uint16][]string{
 		dns.TypeTXT: {
-			`v-spf2. 0 IN TXT "v=spf2"`,
+			`v-spf2.example. 0 IN TXT "v=spf2"`,
 		},
 	}))
 
-	mux.HandleFunc("v-spf10.", zone(t, map[uint16][]string{
+	mux.HandleFunc("v-spf10.example.", zone(t, map[uint16][]string{
 		dns.TypeTXT: {
-			`v-spf10. 0 IN TXT "v=spf10"`,
+			`v-spf10.example. 0 IN TXT "v=spf10"`,
 		},
 	}))
 
-	mux.HandleFunc("no-record.", zone(t, map[uint16][]string{
+	mux.HandleFunc("no-record.example.", zone(t, map[uint16][]string{
 		dns.TypeTXT: {
-			`no-record. 0 IN TXT ""`,
+			`no-record.example. 0 IN TXT ""`,
 		},
 	}))
 
-	mux.HandleFunc("many-records.", zone(t, map[uint16][]string{
+	mux.HandleFunc("many-records.example.", zone(t, map[uint16][]string{
 		dns.TypeTXT: {
-			`many-records. 0 IN TXT "v=spf1"`,
-			`many-records. 0 IN TXT "v=spf1"`,
-			`many-records. 0 IN TXT ""`,
+			`many-records.example. 0 IN TXT "v=spf1"`,
+			`many-records.example. 0 IN TXT "v=spf1"`,
+			`many-records.example. 0 IN TXT ""`,
 		},
 	}))
 
-	mux.HandleFunc("mixed-records.", zone(t, map[uint16][]string{
+	mux.HandleFunc("mixed-records.example.", zone(t, map[uint16][]string{
 		dns.TypeTXT: {
-			`mixed-records. 0 IN TXT "v=spf1 +all"`,
-			`mixed-records. 0 IN TXT "v-spf10"`,
-			`mixed-records. 0 IN TXT ""`,
+			`mixed-records.example. 0 IN TXT "v=spf1 +all"`,
+			`mixed-records.example. 0 IN TXT "v-spf10"`,
+			`mixed-records.example. 0 IN TXT ""`,
 		},
 	}))
 
@@ -1165,12 +1140,12 @@ func TestSelectingRecord(t *testing.T) {
 		r Result
 		e error
 	}{
-		{"notexists", None, ErrDNSPermerror},
-		{"v-spf2", None, ErrSPFNotFound},
-		{"v-spf10", None, ErrSPFNotFound},
-		{"no-record", None, ErrSPFNotFound},
-		{"many-records", Permerror, errTooManySPFRecords},
-		{"mixed-records", Pass, nil},
+		{"notexists.example", None, ErrDNSPermerror},
+		{"v-spf2.example", None, ErrSPFNotFound},
+		{"v-spf10.example", None, ErrSPFNotFound},
+		{"no-record.example", None, ErrSPFNotFound},
+		{"many-records.example", Permerror, errTooManySPFRecords},
+		{"mixed-records.example", Pass, nil},
 	}
 
 	ip := net.ParseIP("10.0.0.1")

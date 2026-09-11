@@ -24,6 +24,10 @@ func validName(s string) bool {
 // validMacroString checks RFC 7208 section 7 syntax without expanding macros
 // or performing DNS work. The second result identifies a final macro-expand.
 func validMacroString(s string) (bool, bool) {
+	return validMacroStringLetters(s, "slodiphvSLODIPHV")
+}
+
+func validMacroStringLetters(s, letters string) (bool, bool) {
 	finalMacro := false
 	for i := 0; i < len(s); {
 		finalMacro = false
@@ -43,7 +47,7 @@ func validMacroString(s string) (bool, bool) {
 			i++
 		case '{':
 			i++
-			if i == len(s) || !strings.ContainsRune("slodiphvSLODIPHV", rune(s[i])) {
+			if i == len(s) || !strings.ContainsRune(letters, rune(s[i])) {
 				return false, false
 			}
 			i++
