@@ -184,24 +184,10 @@ func filterSPF(txt []string) (string, error) {
 	)
 
 	for _, s := range txt {
-		if len(s) < vLen {
-			continue
+		if len(s) >= vLen && strings.EqualFold(s[:vLen], v) && (len(s) == vLen || s[vLen] == ' ') {
+			spf = s
+			n++
 		}
-		if len(s) == vLen {
-			if s == v {
-				spf = s
-				n++
-			}
-			continue
-		}
-		if s[vLen] != ' ' && s[vLen] != '\t' {
-			continue
-		}
-		if !strings.HasPrefix(s, v) {
-			continue
-		}
-		spf = s
-		n++
 	}
 	if n > 1 {
 		return "", errTooManySPFRecords
