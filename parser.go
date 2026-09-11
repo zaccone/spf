@@ -62,6 +62,9 @@ func newParser(sender, domain string, ip net.IP, query string, resolver Resolver
 // returns matched result.
 func (p *parser) parse() (Result, string, error) {
 	tokens := lex(p.Query)
+	if err := validateRecord(p.Query, tokens); err != nil {
+		return Permerror, "", err
+	}
 
 	if err := p.sortTokens(tokens); err != nil {
 		return Permerror, "", err
@@ -150,7 +153,7 @@ func nonemptyString(s, def string) string {
 }
 
 func (p *parser) parseVersion(t *token) (bool, Result, error) {
-	if t.value == "spf1" {
+	if strings.EqualFold(t.value, "spf1") {
 		return false, None, nil
 	}
 	return true, Permerror, SyntaxError{t,
@@ -168,49 +171,41 @@ func (p *parser) parseAll(t *token) (bool, Result, error) {
 
 func (p *parser) parseIP4(t *token) (bool, Result, error) {
 	result, _ := matchingResult(t.qualifier)
-
-	if ip, ipnet, err := net.ParseCIDR(t.value); err == nil {
-		if ip.To4() == nil {
-			return true, Permerror, SyntaxError{t, errors.New("address isn't ipv4")}
-		}
-		return ipnet.Contains(p.IP), result, nil
+	if !validIPNetwork(t.value, false) {
+		return true, Permerror, SyntaxError{t, errors.New("invalid IPv4 network")}
 	}
-
-	ip := net.ParseIP(t.value).To4()
-	if ip == nil {
-		return true, Permerror, SyntaxError{t, errors.New("address isn't ipv4")}
+	if p.IP.To4() == nil {
+		return false, result, nil
 	}
-	return ip.Equal(p.IP), result, nil
+	if _, network, err := net.ParseCIDR(t.value); err == nil {
+		return network.Contains(p.IP), result, nil
+	}
+	return net.ParseIP(t.value).Equal(p.IP), result, nil
 }
 
 func (p *parser) parseIP6(t *token) (bool, Result, error) {
 	result, _ := matchingResult(t.qualifier)
-
-	if ip, ipnet, err := net.ParseCIDR(t.value); err == nil {
-		if ip.To16() == nil {
-			return true, Permerror, SyntaxError{t, errors.New("address isn't ipv6")}
-		}
-		return ipnet.Contains(p.IP), result, nil
-
+	if !validIPNetwork(t.value, true) {
+		return true, Permerror, SyntaxError{t, errors.New("invalid IPv6 network")}
 	}
-
-	ip := net.ParseIP(t.value)
-	if ip.To4() != nil || ip.To16() == nil {
-		return true, Permerror, SyntaxError{t, errors.New("address isn't ipv6")}
+	if p.IP.To4() != nil {
+		return false, result, nil
 	}
-	return ip.Equal(p.IP), result, nil
-
+	if _, network, err := net.ParseCIDR(t.value); err == nil {
+		return network.Contains(p.IP), result, nil
+	}
+	return net.ParseIP(t.value).Equal(p.IP), result, nil
 }
 
 func (p *parser) parseA(t *token) (bool, Result, error) {
-	host, ip4Mask, ip6Mask, err := splitDomainDualCIDR(nonemptyString(t.value, p.Domain))
+	host, ip4Mask, ip6Mask, err := splitDomainDualCIDR(t.value)
 	if err != nil {
 		return true, Permerror, SyntaxError{t, err}
 	}
 
 	result, _ := matchingResult(t.qualifier)
 
-	found, err := p.resolver.MatchIP(NormalizeFQDN(host), func(ip net.IP) (bool, error) {
+	found, err := p.resolver.MatchIP(NormalizeFQDN(nonemptyString(host, p.Domain)), func(ip net.IP) (bool, error) {
 		n := net.IPNet{
 			IP: ip,
 		}
@@ -226,13 +221,13 @@ func (p *parser) parseA(t *token) (bool, Result, error) {
 }
 
 func (p *parser) parseMX(t *token) (bool, Result, error) {
-	host, ip4Mask, ip6Mask, err := splitDomainDualCIDR(nonemptyString(t.value, p.Domain))
+	host, ip4Mask, ip6Mask, err := splitDomainDualCIDR(t.value)
 	if err != nil {
 		return true, Permerror, SyntaxError{t, err}
 	}
 
 	result, _ := matchingResult(t.qualifier)
-	found, err := p.resolver.MatchMX(NormalizeFQDN(host), func(ip net.IP) (bool, error) {
+	found, err := p.resolver.MatchMX(NormalizeFQDN(nonemptyString(host, p.Domain)), func(ip net.IP) (bool, error) {
 		n := net.IPNet{
 			IP: ip,
 		}
@@ -370,6 +365,14 @@ func parseCIDRMask(s string, bits int) (net.IPMask, error) {
 	if s == "" {
 		return net.CIDRMask(bits, bits), nil
 	}
+	if len(s) > 1 && s[0] == '0' {
+		return nil, errInvalidCIDRLength
+	}
+	for _, c := range s {
+		if !isDigit(c) {
+			return nil, errInvalidCIDRLength
+		}
+	}
 	var (
 		l   int
 		err error
@@ -384,35 +387,62 @@ func parseCIDRMask(s string, bits int) (net.IPMask, error) {
 	return mask, nil
 }
 
-func splitDomainDualCIDR(domain string) (string, net.IPMask, net.IPMask, error) {
-	var (
-		ip4Mask net.IPMask
-		ip6Mask net.IPMask
-		ip4Len  string
-		ip6Len  string
-		err     error
-	)
-
-	parts := strings.SplitN(domain, "/", 3)
-	domain = parts[0]
-	if len(parts) > 1 {
-		ip4Len = parts[1]
+// splitDomainDualCIDR ignores slashes inside macro expansions.
+func splitDomainDualCIDR(value string) (string, net.IPMask, net.IPMask, error) {
+	if validDomainSpec(value) {
+		return value, net.CIDRMask(32, 32), net.CIDRMask(128, 128), nil
 	}
-	if len(parts) > 2 {
-		ip6Len = parts[2]
-	}
-
-	if !isDomainName(domain) {
+	// Find the final mask, then its optional IPv6 separator and IPv4
+	// prefix. Working from the right preserves slashes inside domain-spec.
+	end := strings.LastIndexByte(value, '/')
+	if end < 0 {
+		if value == "" {
+			return "", net.CIDRMask(32, 32), net.CIDRMask(128, 128), nil
+		}
 		return "", nil, nil, ErrInvalidDomain
 	}
-	ip4Mask, err = parseCIDRMask(ip4Len, 8*net.IPv4len)
-	if err != nil {
-		return "", nil, nil, err
+	if end > 0 && value[end-1] == '/' {
+		end--
+		start := end
+		for start > 0 && isDigit(rune(value[start-1])) {
+			start--
+		}
+		if start > 0 && start < end && value[start-1] == '/' {
+			end = start - 1
+		}
 	}
-	ip6Mask, err = parseCIDRMask(ip6Len, 8*net.IPv6len)
-	if err != nil {
-		return "", nil, nil, err
+	domain, suffix := value[:end], value[end:]
+	m4, m6 := net.CIDRMask(32, 32), net.CIDRMask(128, 128)
+	if domain != "" && !validDomainSpec(domain) {
+		return "", nil, nil, ErrInvalidDomain
 	}
-
-	return domain, ip4Mask, ip6Mask, nil
+	var err error
+	if suffix != "" && !strings.HasPrefix(suffix, "//") {
+		if suffix[0] != '/' {
+			return "", nil, nil, errInvalidCIDRLength
+		}
+		suffix = suffix[1:]
+		n := strings.IndexByte(suffix, '/')
+		if n < 0 {
+			n = len(suffix)
+		}
+		if n == 0 {
+			return "", nil, nil, errInvalidCIDRLength
+		}
+		m4, err = parseCIDRMask(suffix[:n], 32)
+		if err != nil {
+			return "", nil, nil, err
+		}
+		suffix = suffix[n:]
+	}
+	if suffix != "" {
+		if !strings.HasPrefix(suffix, "//") || len(suffix) == 2 {
+			return "", nil, nil, errInvalidCIDRLength
+		}
+		m6, err = parseCIDRMask(suffix[2:], 128)
+		if err != nil {
+			return "", nil, nil, err
+		}
+	}
+	return domain, m4, m6, nil
 }

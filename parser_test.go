@@ -313,7 +313,7 @@ func TestParseA(t *testing.T) {
 		{&token{tA, qPlus, "negative.matching.com"}, Pass, false},
 		{&token{tA, qPlus, "range.matching.com/16"}, Pass, true},
 		{&token{tA, qPlus, "range.matching.com/128"}, Permerror, true},
-		{&token{tA, qPlus, "idontexist"}, Pass, false},
+		{&token{tA, qPlus, "idontexist.example"}, Pass, false},
 		{&token{tA, qPlus, "#%$%^"}, Permerror, true},
 		{&token{tA, qPlus, "lb.matching.com"}, Pass, true},
 		{&token{tA, qMinus, ""}, Fail, true},
@@ -330,11 +330,12 @@ func TestParseA(t *testing.T) {
 		{&token{tA, qPlus, "positive.matching.com/128"}, Permerror, true},
 		{&token{tA, qPlus, "positive.matching.com/128"}, Permerror, true},
 
-		// test dual-cidr syntax
+		// RFC 7208 section 5 requires two slashes before the IPv6 mask;
+		// an explicit trailing slash cannot stand for an omitted mask.
 		{&token{tA, qPlus, "positive.matching.com//128"}, Pass, true},
-		{&token{tA, qPlus, "positive.matching.com/32/"}, Pass, true},
-		{&token{tA, qPlus, "positive.matching.com/0/0"}, Pass, true},
-		{&token{tA, qPlus, "positive.matching.com/24/24"}, Pass, true},
+		{&token{tA, qPlus, "positive.matching.com/32/"}, Permerror, true},
+		{&token{tA, qPlus, "positive.matching.com/0//0"}, Pass, true},
+		{&token{tA, qPlus, "positive.matching.com/24//24"}, Pass, true},
 		{&token{tA, qPlus, "positive.matching.com/33/100"}, Permerror, true},
 		{&token{tA, qPlus, "positive.matching.com/24/129"}, Permerror, true},
 		{&token{tA, qPlus, "positive.matching.com/128/32"}, Permerror, true},
@@ -530,15 +531,15 @@ func TestParseMX(t *testing.T) {
 	testcases := []TokenTestCase{
 		{&token{tMX, qPlus, "matching.com"}, Pass, true},
 		{&token{tMX, qPlus, "matching.com/24"}, Pass, true},
-		{&token{tMX, qPlus, "matching.com/24/64"}, Pass, true},
+		{&token{tMX, qPlus, "matching.com/24//64"}, Pass, true},
 		{&token{tMX, qPlus, ""}, Pass, true},
 		{&token{tMX, qMinus, ""}, Fail, true},
-		{&token{tMX, qPlus, "idontexist"}, Pass, false},
+		{&token{tMX, qPlus, "idontexist.example"}, Pass, false},
 		// Mind that the domain is matching.NET and we expect Parser
 		// to not match results.
 		{&token{tMX, qPlus, "matching.net"}, Pass, false},
 		{&token{tMX, qPlus, "matching.net/24"}, Pass, false},
-		{&token{tMX, qPlus, "matching.net/24/64"}, Pass, false},
+		{&token{tMX, qPlus, "matching.net/24//64"}, Pass, false},
 	}
 
 	var match bool
@@ -588,7 +589,7 @@ func TestParseMXNegativeTests(t *testing.T) {
 		{&token{tMX, qPlus, "matching.com"}, Pass, false},
 		{&token{tMX, qPlus, ""}, Pass, false},
 		//TokenTestCase{&Token{tMX, qPlus, "google.com"}, Pass, false},
-		{&token{tMX, qPlus, "idontexist"}, Pass, false},
+		{&token{tMX, qPlus, "idontexist.example"}, Pass, false},
 		{&token{tMX, qMinus, "matching.com"}, Fail, false},
 	}
 
@@ -1062,7 +1063,7 @@ func TestHandleExplanation(t *testing.T) {
 			"127.0.0.1 is not one of matching.com's designated mail servers."},
 		{"v=spf1 -all exp=redirect.exp.matching.com",
 			"See http://matching.com/why.html?s=matching.com&i=127.0.0.1"},
-		{"v=spf1 -all exp=idontexist", ""},
+		{"v=spf1 -all exp=idontexist.example", ""},
 	}
 
 	for _, testcase := range expTestCases {
@@ -1087,14 +1088,9 @@ func TestHandleExplanationNegative(t *testing.T) {
 		},
 	}))
 
+	// Malformed exp domain-specs are covered by TestCompleteRecordSyntax:
+	// they now fail before evaluation, even after an early match.
 	expTestCases := []ExpTestCase{
-		// While evaluating exp domain we never encounter closing '}', hence we
-		// should raise appropriate error and return ""
-		{"v=spf1 -all exp=%{randomstuff", "unexpected char (97), expected '}'"},
-		// We cut the domain name, and eventually what we get is empty string.
-		// We cannot find any explanation's domain, so we return "" AND
-		// a SyntaxError{} error as an indication for operators.
-		{"v=spf1 -all exp=%{d0}", "empty domain"},
 		// TXT record for 1.exp.matching.com. is invalid, hence we also return
 		// an error indicating what's wrong.
 		{"v=spf1 -all exp=1.exp.matching.com", "unexpected eof for macro (%{)"},

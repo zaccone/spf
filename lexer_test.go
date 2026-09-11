@@ -61,6 +61,13 @@ func TestLexerScanIdent(t *testing.T) {
 		{"-:localhost", &token{tErr, qErr, ""}},
 		{"", &token{tErr, qErr, ""}},
 		{"qowie", &token{tErr, qErr, ""}},
+		{"A/24", &token{tA, qPlus, "/24"}},
+		{"MX//64", &token{tMX, qPlus, "//64"}},
+		{"x-test=", &token{tUnknown, qPlus, ""}},
+		{"EXP=explain.example", &token{tExp, qPlus, "explain.example"}},
+		{"++all", &token{tErr, qErr, ""}},
+		{"+redirect=example.com", &token{tErr, qErr, ""}},
+		{"all:example.com", &token{tErr, qErr, ""}},
 	}
 
 	for _, testpair := range testpairs {
@@ -107,10 +114,11 @@ func TestLexFunc(t *testing.T) {
 				versionToken,
 				{tInclude, qPlus, "example.org"},
 				{tAll, qMinus, ""}}},
+		// Only redirect and exp are known modifiers; include= is ignored.
 		{"v=spf1  include=example.org -all  ",
 			[]*token{
 				versionToken,
-				{tErr, qErr, ""},
+				{tUnknown, qPlus, "example.org"},
 				{tAll, qMinus, ""}}},
 		{"v=spf1  exists:%{ir}.%{l1r+-}._spf.%{d} +all",
 			[]*token{

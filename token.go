@@ -1,6 +1,9 @@
 package spf
 
-import "strconv"
+import (
+	"strconv"
+	"strings"
+)
 
 type tokenType int
 
@@ -26,6 +29,7 @@ const (
 
 	tRedirect // redirect
 	tExp      // explanation
+	tUnknown  // ignored extension modifier
 
 	modifierEnd
 
@@ -73,7 +77,7 @@ func (tok tokenType) String() string {
 }
 
 func tokenTypeFromString(s string) tokenType {
-	switch s {
+	switch strings.ToLower(s) {
 	case "v":
 		return tVersion
 	case "all":
@@ -94,7 +98,7 @@ func tokenTypeFromString(s string) tokenType {
 		return tRedirect
 	case "exists":
 		return tExists
-	case "explanation", "exp":
+	case "exp":
 		return tExp
 	default:
 		return tErr
@@ -109,35 +113,6 @@ func (tok tokenType) isMechanism() bool {
 
 func (tok tokenType) isModifier() bool {
 	return tok > modifierBeg && tok < modifierEnd
-}
-
-func checkTokenSyntax(tkn *token, delimiter rune) bool {
-	if tkn == nil {
-		return false
-	}
-
-	if tkn.mechanism == tErr && tkn.qualifier == qErr {
-		return true // syntax is ok
-	}
-
-	// special case for v=spf1 token
-
-	if tkn.mechanism == tVersion {
-		return true
-	}
-
-	//mechanism include must not have empty content
-	if tkn.mechanism == tInclude && tkn.value == "" {
-		return false
-	}
-	if tkn.mechanism.isModifier() && delimiter != '=' {
-		return false
-	}
-	if tkn.mechanism.isMechanism() && delimiter != ':' {
-		return false
-	}
-
-	return true
 }
 
 // token represents SPF term (modifier or mechanism) like all, include, a, mx,

@@ -70,7 +70,7 @@ func (l *lexer) moveon() { l.start = l.pos }
 func (l *lexer) back() { l.pos = l.prev }
 
 // scanWhitespaces moves position to a first rune which is not a
-// whitespace or tab
+// space
 func (l *lexer) scanWhitespaces() {
 	for {
 		if ch, eof := l.next(); eof {
@@ -88,45 +88,70 @@ func (l *lexer) scanWhitespaces() {
 // and value itself.
 // The default token has `mechanism` set to tErr, that is, error state.
 func (l *lexer) scanIdent() *token {
-	t := &token{tErr, qPlus, ""}
-	cursor := l.start
-	for cursor < l.pos {
-		ch, size := utf8.DecodeRuneInString(l.input[cursor:])
-		cursor += size
-
-		if isQualifier(ch) {
-			t.qualifier, _ = qualifiers[ch]
-			l.start = cursor
-			continue
-		} else if isDelimiter(ch) { // add error handling
-			t.mechanism = tokenTypeFromString(l.input[l.start : cursor-size])
-			t.value = strings.TrimSpace(l.input[cursor:l.pos])
-
-			if t.value == "" || !checkTokenSyntax(t, ch) {
-				t.qualifier = qErr
-				t.mechanism = tErr
-			}
-
-			break
-		}
+	raw := strings.TrimRight(l.input[l.start:l.pos], " ")
+	bad := &token{tErr, qErr, ""}
+	if raw == "" {
+		return bad
 	}
-
-	if t.mechanism.isErr() {
-		t.mechanism = tokenTypeFromString(
-			strings.TrimSpace(l.input[l.start:cursor]))
-		if t.mechanism.isErr() {
-			t.qualifier = qErr
-			t.value = ""
+	t := &token{tErr, qPlus, ""}
+	qualified := isQualifier(rune(raw[0]))
+	if qualified {
+		t.qualifier = qualifiers[rune(raw[0])]
+		raw = raw[1:]
+	}
+	end := strings.IndexAny(raw, ":=/")
+	name := raw
+	if end >= 0 {
+		name = raw[:end]
+	}
+	if !validName(name) {
+		return bad
+	}
+	t.mechanism = tokenTypeFromString(name)
+	if end >= 0 {
+		switch raw[end] {
+		case '=':
+			if qualified {
+				return bad
+			}
+			if t.mechanism != tVersion && t.mechanism != tRedirect && t.mechanism != tExp {
+				t.mechanism = tUnknown
+			}
+			t.value = raw[end+1:]
+		case ':':
+			if !t.mechanism.isMechanism() || t.mechanism == tVersion || t.mechanism == tAll {
+				return bad
+			}
+			t.value = raw[end+1:]
+			if t.value == "" {
+				return bad
+			}
+			if t.mechanism == tA || t.mechanism == tMX {
+				if strings.HasPrefix(t.value, "/") && !validDomainSpec(t.value) {
+					return bad
+				}
+			}
+		case '/':
+			if t.mechanism != tA && t.mechanism != tMX {
+				return bad
+			}
+			t.value = raw[end:]
+			domain, _, _, err := splitDomainDualCIDR(t.value)
+			if err != nil || domain != "" {
+				return bad
+			}
 		}
+	} else if t.mechanism != tAll && t.mechanism != tA && t.mechanism != tMX && t.mechanism != tPTR {
+		return bad
+	}
+	if t.mechanism.isErr() {
+		return bad
 	}
 	return t
 }
 
-// isWhitespace returns true if the rune is a space, tab, or newline.
-func isWhitespace(ch rune) bool { return ch == ' ' || ch == '\t' || ch == '\n' }
-
-// isDelimiter returns true if rune equals to ':' or '=', false otherwise
-func isDelimiter(ch rune) bool { return ch == ':' || ch == '=' }
+// isWhitespace returns true if the rune is an ASCII space.
+func isWhitespace(ch rune) bool { return ch == ' ' }
 
 // isQualifier returns true if rune is a SPF delimiter (+,-,!,?)
 func isQualifier(ch rune) bool { return ch == '+' || ch == '-' || ch == '~' || ch == '?' }
