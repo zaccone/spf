@@ -11,6 +11,7 @@ import (
 var (
 	ErrDNSTemperror      = errors.New("temporary DNS error")
 	ErrDNSPermerror      = errors.New("permanent DNS error")
+	ErrInvalidIP         = errors.New("invalid IP address")
 	ErrInvalidDomain     = errors.New("invalid domain name")
 	ErrDNSLimitExceeded  = errors.New("limit exceeded")
 	ErrSPFNotFound       = errors.New("SPF record not found")
@@ -129,29 +130,28 @@ func CheckHost(ip net.IP, domain, sender string) (Result, string, error) {
 // Note, that DNS lookup limits need to be enforced by provided Resolver.
 //
 // The function returns result of verification, explanations as result of "exp=",
-// and error as the reason for the encountered problem.
+// and error as the reason for the encountered problem. Invalid IP arguments
+// return None and ErrInvalidIP; invalid or single-label domains return None and
+// ErrInvalidDomain, before DNS lookup. A bare sender is treated as a HELO domain
+// with local-part "postmaster"; an empty sender uses the supplied domain.
+// Unavailable or invalid explanation text leaves Fail unchanged with no error.
 func CheckHostWithResolver(ip net.IP, domain, sender string, resolver Resolver) (Result, string, error) {
-	/*
-	* As per RFC 7208 Section 4.3:
-	* If the <domain> is malformed (e.g., label longer than 63
-	* characters, zero-length label not at the end, etc.) or is not
-	* a multi-label
-	* domain name, [...], check_host() immediately returns None
-	 */
-	if !isDomainName(domain) {
+	if ip.To16() == nil {
+		return None, "", ErrInvalidIP
+	}
+	addr := parseAddrSpec(sender, domain)
+	return checkHost(ip, domain, addr.local+"@"+addr.domain, resolver, false)
+}
+
+// checkHost carries the normalized sender and explanation policy unchanged
+// through recursion. Includes suppress explanations throughout their subtree.
+func checkHost(ip net.IP, domain, sender string, resolver Resolver, suppressExplanation bool) (Result, string, error) {
+	if !validEvaluationDomain(domain) {
 		return None, "", ErrInvalidDomain
 	}
-
 	txts, err := resolver.LookupTXTStrict(NormalizeFQDN(domain))
-	switch err {
-	case nil:
-		// continue
-	case ErrDNSLimitExceeded:
-		return Permerror, "", err
-	case ErrDNSPermerror:
-		return None, "", err
-	default:
-		return Temperror, "", err
+	if err != nil {
+		return dnsErrorResult(err), "", err
 	}
 
 	// If the resultant record set includes no records, check_host()
@@ -165,7 +165,38 @@ func CheckHostWithResolver(ip net.IP, domain, sender string, resolver Resolver) 
 		return None, "", ErrSPFNotFound
 	}
 
-	return newParser(sender, domain, ip, spf, resolver).parse()
+	p := newParser(sender, domain, ip, spf, resolver)
+	p.suppressExplanation = suppressExplanation
+	return p.parse()
+}
+
+// validEvaluationDomain applies the SPF multi-label requirement and DNS wire
+// length limit in addition to the existing ASCII name checks. A 253-byte name
+// without its optional final dot occupies 255 bytes on the wire.
+func validEvaluationDomain(domain string) bool {
+	name := strings.TrimSuffix(domain, ".")
+	return strings.Contains(name, ".") && validDNSDomain(domain)
+}
+
+func validDNSDomain(domain string) bool {
+	return len(strings.TrimSuffix(domain, ".")) <= 253 && isDomainName(domain)
+}
+
+// dnsErrorResult interprets errors supplied by legacy and custom resolvers.
+// Missing answers are context dependent: no SPF at the entrypoint, a non-match
+// for address mechanisms, and Permerror for include/redirect targets.
+func dnsErrorResult(err error) Result {
+	if errors.Is(err, ErrDNSLimitExceeded) {
+		return Permerror
+	}
+	if errors.Is(err, ErrDNSPermerror) || errors.Is(err, ErrSPFNotFound) {
+		return None
+	}
+	var dnsErr *net.DNSError
+	if errors.As(err, &dnsErr) && dnsErr.IsNotFound {
+		return None
+	}
+	return Temperror
 }
 
 // Starting with the set of records that were returned by the lookup,

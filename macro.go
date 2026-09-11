@@ -157,7 +157,7 @@ func scanMacro(m *macro, p *parser) (stateFn, error) {
 		m.moveon()
 
 	case 'l':
-		email = parseAddrSpec(p.Sender, p.Sender)
+		email = parseAddrSpec(p.Sender, p.Domain)
 		curItem = item{email.local, negative, delimiter, false}
 		m.moveon()
 		result, err = parseDelimiter(m, &curItem)
@@ -168,7 +168,7 @@ func scanMacro(m *macro, p *parser) (stateFn, error) {
 		m.moveon()
 
 	case 'o':
-		email = parseAddrSpec(p.Sender, p.Sender)
+		email = parseAddrSpec(p.Sender, p.Domain)
 		curItem = item{email.domain, negative, delimiter, false}
 		m.moveon()
 		result, err = parseDelimiter(m, &curItem)
@@ -199,7 +199,7 @@ func scanMacro(m *macro, p *parser) (stateFn, error) {
 		m.moveon()
 
 	case 'p':
-		// let's not use it for the moment, RFC doesn't recommend it.
+		return nil, errors.New("PTR macro expansion is not implemented")
 	case 'v':
 		// TODO(zaccone): move such functions to some generic utils module
 		if p.IP.To4() == nil {
@@ -209,6 +209,8 @@ func scanMacro(m *macro, p *parser) (stateFn, error) {
 		}
 		m.moveon()
 		// TODO(zaccone): add remaining "c", "r", "t"
+	default:
+		return nil, fmt.Errorf("unsupported macro letter %q", r)
 	}
 
 	if err != nil {

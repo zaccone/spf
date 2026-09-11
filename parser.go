@@ -34,25 +34,29 @@ func (e SyntaxError) Error() string {
 	return fmt.Sprintf("parse error for token %v: %v", e.token, e.err.Error())
 }
 
+// Unwrap exposes the underlying cause to errors.Is and errors.As.
+func (e SyntaxError) Unwrap() error { return e.err }
+
 // parser represents parsing structure. It keeps all arguments provided by top
 // level CheckHost method as well as tokenized terms from TXT RR. One should
 // call parser.Parse() for a proper SPF evaluation.
 type parser struct {
-	Sender      string
-	Domain      string
-	IP          net.IP
-	Query       string
-	Mechanisms  []*token
-	Explanation *token
-	Redirect    *token
-	resolver    Resolver
+	Sender              string
+	Domain              string
+	IP                  net.IP
+	Query               string
+	Mechanisms          []*token
+	Explanation         *token
+	Redirect            *token
+	resolver            Resolver
+	suppressExplanation bool
 }
 
 // newParser creates new Parser objects and returns its reference.
 // It accepts CheckHost() parameters as well as SPF query (fetched from TXT RR
 // during initial DNS lookup.
 func newParser(sender, domain string, ip net.IP, query string, resolver Resolver) *parser {
-	return &parser{sender, domain, ip, query, make([]*token, 0, 10), nil, nil, resolver}
+	return &parser{Sender: sender, Domain: domain, IP: ip, Query: query, Mechanisms: make([]*token, 0, 10), resolver: resolver}
 }
 
 // parse aggregates all steps required for SPF evaluation.
@@ -70,11 +74,10 @@ func (p *parser) parse() (Result, string, error) {
 		return Permerror, "", err
 	}
 
-	var result = Neutral
-	var matches bool
-	var err error
-
 	for _, token := range p.Mechanisms {
+		result := Neutral
+		var matches bool
+		var err error
 		switch token.mechanism {
 		case tVersion:
 			matches, result, err = p.parseVersion(token)
@@ -94,19 +97,19 @@ func (p *parser) parse() (Result, string, error) {
 			matches, result, err = p.parseExists(token)
 		}
 
+		if err != nil {
+			return result, "", err
+		}
 		if matches {
-			if result == Fail && p.Explanation != nil {
-				explanation, expError := p.handleExplanation()
-				return result, explanation, expError
+			if result == Fail && p.Explanation != nil && !p.suppressExplanation {
+				return result, p.handleExplanation(), nil
 			}
 			return result, "", err
 		}
 
 	}
 
-	result, err = p.handleRedirect(Neutral)
-
-	return result, "", err
+	return p.handleRedirect(Neutral)
 }
 
 func (p *parser) sortTokens(tokens []*token) error {
@@ -217,7 +220,7 @@ func (p *parser) parseA(t *token) (bool, Result, error) {
 		}
 		return n.Contains(p.IP), nil
 	})
-	return found, result, err
+	return mechanismDNSResult(found, result, err)
 }
 
 func (p *parser) parseMX(t *token) (bool, Result, error) {
@@ -239,7 +242,7 @@ func (p *parser) parseMX(t *token) (bool, Result, error) {
 		}
 		return n.Contains(p.IP), nil
 	})
-	return found, result, err
+	return mechanismDNSResult(found, result, err)
 }
 
 func (p *parser) parseInclude(t *token) (bool, Result, error) {
@@ -247,7 +250,7 @@ func (p *parser) parseInclude(t *token) (bool, Result, error) {
 	if domain == "" {
 		return true, Permerror, SyntaxError{t, errors.New("empty domain")}
 	}
-	theirResult, _, err := CheckHostWithResolver(p.IP, domain, p.Sender, p.resolver)
+	theirResult, _, err := checkHost(p.IP, domain, p.Sender, p.resolver, true)
 
 	/* Adhere to following result table:
 	* +---------------------------------+---------------------------------+
@@ -302,63 +305,69 @@ func (p *parser) parseExists(t *token) (bool, Result, error) {
 	result, _ := matchingResult(t.qualifier)
 
 	found, err := p.resolver.Exists(NormalizeFQDN(resolvedDomain))
-	switch err {
-	case nil:
+	return mechanismDNSResult(found, result, err)
+}
+
+func mechanismDNSResult(found bool, result Result, err error) (bool, Result, error) {
+	if err == nil {
 		return found, result, nil
-	case ErrDNSPermerror:
+	}
+	failure := dnsErrorResult(err)
+	if failure == None {
 		return false, result, nil
-	default:
-		return false, Temperror, err // was true 8-|
 	}
+	return true, failure, err
 }
 
-func (p *parser) handleRedirect(oldResult Result) (Result, error) {
+func (p *parser) handleRedirect(oldResult Result) (Result, string, error) {
 	if p.Redirect == nil {
-		return oldResult, nil
+		return oldResult, "", nil
 	}
-
-	var (
-		err    error
-		result Result
-	)
-
-	redirectDomain := p.Redirect.value
-
-	if result, _, err = CheckHostWithResolver(p.IP, redirectDomain, p.Sender, p.resolver); err != nil {
-		//TODO(zaccone): confirm result value
-		result = Permerror
-	} else if result == None || result == Permerror {
-		// See RFC7208, section 6.1
-		//
-		// if no SPF record is found, or if the <target-name> is malformed, the
-		// result is a "permerror" rather than "none".
+	result, explanation, err := checkHost(p.IP, p.Redirect.value, p.Sender, p.resolver, p.suppressExplanation)
+	if result == None {
 		result = Permerror
 	}
-
-	return result, err
+	if err != nil {
+		err = SyntaxError{p.Redirect, err}
+	}
+	return result, explanation, err
 }
 
-func (p *parser) handleExplanation() (string, error) {
+// Explanation failure is not an SPF evaluation error (RFC 7208 section 6.2).
+// Resolvers concatenate the strings within each TXT RR; separate RRs must
+// never be concatenated here.
+func (p *parser) handleExplanation() string {
 	domain, err := parseMacroToken(p, p.Explanation)
-	if err != nil {
-		return "", SyntaxError{p.Explanation, err}
+	if err != nil || !validDNSDomain(domain) {
+		return ""
 	}
-	if domain == "" {
-		return "", SyntaxError{p.Explanation, errors.New("empty domain")}
-	}
-
 	txts, err := p.resolver.LookupTXT(NormalizeFQDN(domain))
-	if err != nil {
-		return "", err
+	if err != nil || len(txts) != 1 || !validExplainString(txts[0]) {
+		return ""
 	}
+	exp, err := parseMacro(p, txts[0])
+	if err != nil || !printableASCII(exp) {
+		return ""
+	}
+	return exp
+}
 
-	// RFC 7208, section 6.2 specifies that result strings should be
-	// concatenated with no spaces.
-	exp, err := parseMacro(p, strings.Join(txts, ""))
-	if err != nil {
-		return "", SyntaxError{p.Explanation, err}
+func printableASCII(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] < ' ' || s[i] > '~' {
+			return false
+		}
 	}
-	return exp, nil
+	return true
+}
+
+func validExplainString(s string) bool {
+	for _, part := range strings.Split(s, " ") {
+		if valid, _ := validMacroStringLetters(part, "slodiphvcrtSLODIPHVCRT"); !valid {
+			return false
+		}
+	}
+	return true
 }
 
 func parseCIDRMask(s string, bits int) (net.IPMask, error) {
