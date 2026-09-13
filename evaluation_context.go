@@ -23,9 +23,8 @@ type ContextResolver interface {
 }
 
 // Options configures one evaluation. A nil Resolver selects DNSResolver.
-// HELO, Receiver and Time are retained across recursion for macro support;
-// their macro expansion is not yet implemented. Missing identities use
-// "unknown" and a zero Time captures the time at entry.
+// HELO, Receiver and Time supply macro values unchanged through recursion.
+// Missing identities use "unknown"; zero Time captures the time at entry.
 type Options struct {
 	Resolver ContextResolver
 	HELO     string
@@ -75,12 +74,17 @@ func evaluate(ctx context.Context, ip net.IP, domain, sender string, options Opt
 // evaluation is also the private Resolver adapter used by the existing parser.
 // One instance is shared through includes and redirects, never between checks.
 type evaluation struct {
-	ctx          context.Context
-	dns          ContextResolver
-	legacy       Resolver
-	options      Options
-	network      string
-	terms, voids int
+	ctx              context.Context
+	dns              ContextResolver
+	legacy           Resolver
+	options          Options
+	network          string
+	terms, voids     int
+	explaining       bool
+	reverseDone      bool
+	reverseResult    []string
+	reverseErr       error
+	reverseDNSFailed bool
 }
 
 func (e *evaluation) useTerm() error {
@@ -221,10 +225,25 @@ func (e *evaluation) MatchMX(name string, matcher IPMatcherFunc) (bool, error) {
 	return false, nil
 }
 
-// validatedNames prepares bounded reverse/forward validation for step 6.
+// Reverse validation depends only on the client IP, which is unchanged
+// throughout evaluation. Reuse it across PTR and p expansions to bound work,
+// while selecting the preferred p name against each parser's current domain.
+func (e *evaluation) reverseNames(ip net.IP) ([]string, error) {
+	if err := e.ctx.Err(); err != nil {
+		return nil, err
+	}
+	if !e.reverseDone {
+		e.reverseResult, e.reverseErr = e.validatedNames(ip)
+		e.reverseDone = true
+	}
+	return e.reverseResult, e.reverseErr
+}
+
+// validatedNames performs bounded reverse/forward validation.
 // Caller charges the DNS-causing term; extra PTR candidates are ignored.
 // Ordinary DNS failures are ignored by PTR, but budgets and cancellation are not.
 func (e *evaluation) validatedNames(ip net.IP) ([]string, error) {
+	e.reverseDNSFailed = false
 	if e.dns == nil {
 		return nil, ErrUnsupportedResolver
 	}
@@ -233,6 +252,7 @@ func (e *evaluation) validatedNames(ip net.IP) ([]string, error) {
 	}
 	names, err := e.dns.LookupAddrContext(e.ctx, ip.String())
 	if err = e.answer(len(names), err); err != nil {
+		e.reverseDNSFailed = true
 		return nil, e.ptrError(err)
 	}
 	if len(names) > 10 {
@@ -245,6 +265,7 @@ func (e *evaluation) validatedNames(ip net.IP) ([]string, error) {
 		}
 		ips, err := e.lookupIP(e.network, NormalizeFQDN(name))
 		if err != nil {
+			e.reverseDNSFailed = true
 			if fatal := e.ptrError(err); fatal != nil {
 				return nil, fatal
 			}
@@ -262,7 +283,10 @@ func (e *evaluation) validatedNames(ip net.IP) ([]string, error) {
 
 func (e *evaluation) ptrError(err error) error {
 	if e.ctx.Err() != nil {
-		return e.ctx.Err()
+		return errors.Join(e.ctx.Err(), err)
+	}
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return err
 	}
 	if errors.Is(err, ErrDNSLimitExceeded) {
 		return err

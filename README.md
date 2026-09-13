@@ -112,9 +112,36 @@ or pre-dispatch MX/PTR limits. Wrapping a built-in resolver in
 `LimitedResolver` selects this legacy path: that wrapper limits method calls
 and MX matcher callbacks, not SPF terms. Its configured limit is inclusive.
 
-Step 5 adds reverse lookup and bounded forward-validation infrastructure.
-PTR mechanism evaluation and the remaining macro work are still step 6.
-`Options.HELO`, `Receiver`, and `Time` are reserved for that macro work and do
-not yet change expansion; identities and a single evaluation timestamp are
-retained through recursion. Missing identities use `unknown`, and zero Time
-captures the entry time. These changes do not establish full RFC conformance.
+## Macros and PTR
+
+Domain-specs in `a`, `mx`, `include`, `exists`, `ptr`, `redirect`, and `exp`
+are expanded before use. Macro transformations support IPv6 nibbles, multiple
+delimiters (including empty parts), reversal, rightmost-part selection, and
+uppercase URL escaping. Names exceeding 253 characters lose complete labels
+from the left. Expanded names must pass the existing ASCII hostname and
+63-character label checks; invalid names produce Permerror, or the empty
+explanation fallback for `exp`.
+
+Pass SMTP identities through `Options.HELO` and `Options.Receiver`. They remain
+unchanged through includes and redirects; `%{d}` follows the current policy
+domain. Missing identities expand to `unknown`. `Options.Time` supplies the
+explanation timestamp; a zero value captures the time once at entry. The
+`c`, `r`, and `t` macros are accepted only in fetched explanation text.
+
+`ptr` and `%{p}` validate reverse names through same-family forward lookups,
+processing at most the first ten PTR candidates. Matching uses DNS label
+boundaries and ignores case. Completed reverse validation is reused within
+one evaluation; `%{p}` prefers the current domain, then its subdomains, then
+another validated name. Each evaluated `%{p}` counts toward the shared ten-term
+budget in addition to its containing mechanism or redirect; explanation work
+has no term charge and uses a separate void allowance. Ordinary reverse DNS
+errors make `ptr` a non-match; forward DNS errors skip that candidate. For
+`%{p}`, DNS errors or no validated names produce `unknown`. Cancellation and
+exhausted budgets still stop evaluation, while explanation failures leave
+Fail unchanged.
+
+Legacy-only resolvers cannot perform reverse validation: `ptr` returns
+Permerror with `ErrUnsupportedResolver`, and `%{p}` expands to `unknown`.
+No other DNS source is consulted. PTR is supported for existing policies,
+though RFC 7208 discourages publishing it. Full corpus conformance and release
+readiness remain separate work.
