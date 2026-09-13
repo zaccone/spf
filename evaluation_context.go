@@ -96,7 +96,7 @@ func (e *evaluation) useTerm() error {
 
 func (e *evaluation) answer(count int, err error) error {
 	if ctxErr := e.ctx.Err(); ctxErr != nil {
-		return ctxErr
+		return errors.Join(ctxErr, err)
 	}
 	if err != nil && !dnsNotFound(err) {
 		return err
@@ -175,7 +175,7 @@ func (e *evaluation) MatchIP(name string, matcher IPMatcherFunc) (bool, error) {
 	if e.dns == nil {
 		found, err := e.legacy.MatchIP(name, matcher)
 		if e.ctx.Err() != nil {
-			return false, e.ctx.Err()
+			return false, errors.Join(e.ctx.Err(), err)
 		}
 		return found, err
 	}
@@ -193,7 +193,7 @@ func (e *evaluation) MatchMX(name string, matcher IPMatcherFunc) (bool, error) {
 	if e.dns == nil {
 		found, err := e.legacy.MatchMX(name, matcher)
 		if e.ctx.Err() != nil {
-			return false, e.ctx.Err()
+			return false, errors.Join(e.ctx.Err(), err)
 		}
 		return found, err
 	}
