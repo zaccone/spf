@@ -53,6 +53,16 @@ for evidence and limitations. CI also runs bounded fuzz smoke tests and pinned
 `govulncheck` v1.8.0. The corpus runs offline as part of ordinary `go test`;
 Python is needed only to regenerate the vendored JSON fixtures.
 
+## Benchmarks
+
+On a four-vCPU Ubuntu VM, the Go evaluator achieved about 5.4× the throughput
+of four pyspf processes on two CPU-bound synthetic policies. With simulated
+DNS delay, both implementations benefited from concurrent evaluations and
+performed similarly at low concurrency. These are library microbenchmarks,
+not production SMTP capacity measurements. See the [benchmark report](benchmarks/vm/REPORT.md)
+for methodology, results and limitations, and the [reproduction instructions](benchmarks/vm/README.md)
+for scripts and raw measurements.
+
 ## Dependencies
 The library uses [miekg/dns](https://github.com/miekg/dns) for its configurable
 DNS resolver. The SPF lexer, parser, and macro implementation remain part of
