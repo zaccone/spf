@@ -55,6 +55,10 @@ jobs:
           cache-dependency-path: go.sum
       - run: go test -race -count=1 -timeout=60s ./...
       - run: go vet ./...
+      - name: Smoke test the runnable policy service
+        run: |
+          go build -o /tmp/spfd ./cmd/spfd
+          python3 tools/smoke_spfd.py /tmp/spfd
       - name: Check formatting
         run: |
           unformatted=$(gofmt -l .)

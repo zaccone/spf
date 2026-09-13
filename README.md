@@ -20,6 +20,15 @@ see the [conformance matrix and known limits](CONFORMANCE.md),
 [migration notes](MIGRATION.md), and [runnable examples](example_test.go).
 Release readiness requires owner review and green hosted CI for the final commit.
 
+## Runnable binary
+
+Build `spfd` with `go build -o /tmp/spfd ./cmd/spfd`. Use `spfd check` for a
+single JSON result, or `spfd serve` for a bounded concurrent Postfix policy
+service over loopback TCP or a Unix socket. The service logs SPF results by
+default; `-enforce` enables fail rejection and temporary-error deferral. See
+[the binary usage and deployment guide](cmd/spfd/README.md) for flags, Postfix
+configuration, Linux builds and a systemd unit.
+
 ## Building and testing
 
 Go 1.27 or later is required. Use the latest patch release of Go 1.27;
