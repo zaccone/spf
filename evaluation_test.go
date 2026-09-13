@@ -284,7 +284,8 @@ func TestExplanationExpansionFailure(t *testing.T) {
 		policy, text, sender string
 		calls                int
 	}{
-		{"v=spf1 -all exp=%{s}", "ignored", "sender@example.com", 1},
+		// A mailbox-shaped DNS label is legal; an absent TXT answer still falls back.
+		{"v=spf1 -all exp=%{s}", "ignored", "sender@example.com", 2},
 		{"v=spf1 -all exp=exp.example", "Denied %{s}", "a\nb@example.com", 2},
 	} {
 		r := &evaluationResolver{records: map[string][]string{"example.com.": {tc.policy}, "exp.example.": {tc.text}}}

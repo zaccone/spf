@@ -1,0 +1,357 @@
+{
+  "revision": "1042e9e15dd29047dc9b0a1bb77437e2fd81e775",
+  "scenarios": [
+    {
+      "description": "check basic exists with macros\n",
+      "tests": {
+        "exists-fail": {
+          "helo": "mail.example.net",
+          "host": "1.2.3.4",
+          "mailfrom": "lyme.eater@example.co.uk",
+          "result": [
+            "fail"
+          ]
+        },
+        "exists-pass": {
+          "header": "Pass (receiver.com: domain of example.co.uk designates 1.2.3.5 as permitted sender) client-ip=1.2.3.5; envelope-from=\"lyme.eater@example.co.uk\"; helo=mail.example.net; receiver=receiver.com; mechanism=\"exists:%{l}.%{d}.%{i}.spf.example.net\"; identity=mailfrom",
+          "helo": "mail.example.net",
+          "host": "1.2.3.5",
+          "mailfrom": "lyme.eater@example.co.uk",
+          "receiver": "receiver.com",
+          "result": [
+            "pass"
+          ]
+        }
+      },
+      "zone": {
+        "example.co.uk": [
+          {
+            "text": [
+              "v=spf1 mx/26 exists:%{l}.%{d}.%{i}.spf.example.net -all"
+            ],
+            "type": "TXT"
+          }
+        ],
+        "lyme.eater.example.co.uk.1.2.3.5.spf.example.net": [
+          {
+            "type": "A",
+            "value": "127.0.0.1"
+          }
+        ]
+      }
+    },
+    {
+      "description": "permerror detection\n",
+      "tests": {
+        "badall": {
+          "helo": "mail.example.com",
+          "host": "66.150.186.79",
+          "mailfrom": "chuckvsr@examplec.com",
+          "result": [
+            "permerror"
+          ]
+        },
+        "baddomain": {
+          "header": "PermError (receiver.com: permanent error in processing domain of exampled.com: Invalid domain found (use FQDN)) client-ip=66.150.186.79; envelope-from=\"chuckvsr@exampled.com\"; helo=mail.example.com; receiver=receiver.com; problem=\"examplea.com:8080\"; identity=mailfrom",
+          "helo": "mail.example.com",
+          "host": "66.150.186.79",
+          "mailfrom": "chuckvsr@exampled.com",
+          "receiver": "receiver.com",
+          "result": [
+            "permerror"
+          ]
+        },
+        "badip": {
+          "helo": "mail.example.com",
+          "host": "66.150.186.79",
+          "mailfrom": "chuckvsr@examplee.com",
+          "result": [
+            "permerror"
+          ]
+        },
+        "incloop": {
+          "comment": "include loop\n",
+          "helo": "mail.example.com",
+          "host": "66.150.186.79",
+          "mailfrom": "chuckvsr@examplea.com",
+          "result": [
+            "permerror"
+          ]
+        },
+        "tworecs": {
+          "header": "PermError (receiver.com: permanent error in processing domain of examplef.com: Two or more type TXT spf records found.) client-ip=66.150.186.79; envelope-from=\"chuckvsr@examplef.com\"; helo=mail.example.com; receiver=receiver.com; identity=mailfrom",
+          "helo": "mail.example.com",
+          "host": "66.150.186.79",
+          "mailfrom": "chuckvsr@examplef.com",
+          "receiver": "receiver.com",
+          "result": [
+            "permerror"
+          ]
+        }
+      },
+      "zone": {
+        "examplea.com": [
+          {
+            "text": [
+              "v=spf1 a mx include:b.com"
+            ],
+            "type": "TXT"
+          }
+        ],
+        "exampleb.com": [
+          {
+            "text": [
+              "v=spf1 a mx include:a.com"
+            ],
+            "type": "TXT"
+          }
+        ],
+        "examplec.com": [
+          {
+            "text": [
+              "v=spf1 -all:foobar"
+            ],
+            "type": "TXT"
+          }
+        ],
+        "exampled.com": [
+          {
+            "text": [
+              "v=spf1 a:examplea.com:8080"
+            ],
+            "type": "TXT"
+          }
+        ],
+        "examplee.com": [
+          {
+            "text": [
+              "v=spf1 ip4:1.2.3.4:8080"
+            ],
+            "type": "TXT"
+          }
+        ],
+        "examplef.com": [
+          {
+            "text": [
+              "v=spf1 -all"
+            ],
+            "type": "TXT"
+          },
+          {
+            "text": [
+              "v=spf1 +all"
+            ],
+            "type": "TXT"
+          }
+        ]
+      }
+    },
+    {
+      "description": "",
+      "tests": {
+        "empty": {
+          "comment": "test empty\n",
+          "helo": "mail1.example1.com",
+          "host": "1.2.3.4",
+          "mailfrom": "foo@example1.com",
+          "result": [
+            "neutral"
+          ]
+        },
+        "nospace1": {
+          "comment": "test no space\ntest multi-line comment\n",
+          "helo": "mail.example1.com",
+          "host": "1.2.3.4",
+          "mailfrom": "foo@example2.com",
+          "result": [
+            "none"
+          ]
+        },
+        "nospace2": {
+          "helo": "mail.example1.com",
+          "host": "1.2.3.4",
+          "mailfrom": "foo@example3.com",
+          "result": [
+            "pass"
+          ]
+        }
+      },
+      "zone": {
+        "example1.com": [
+          {
+            "text": [
+              "v=spf1"
+            ],
+            "type": "TXT"
+          }
+        ],
+        "example2.com": [
+          {
+            "text": [
+              "v=spf1mx"
+            ],
+            "type": "TXT"
+          }
+        ],
+        "example3.com": [
+          {
+            "text": [
+              "v=spf1",
+              "mx"
+            ],
+            "type": "TXT"
+          },
+          {
+            "text": [
+              "v=spf1 ",
+              "mx"
+            ],
+            "type": "TXT"
+          },
+          {
+            "preference": 0,
+            "type": "MX",
+            "value": "mail.example1.com"
+          }
+        ],
+        "mail.example1.com": [
+          {
+            "type": "A",
+            "value": "1.2.3.4"
+          }
+        ]
+      }
+    },
+    {
+      "description": "corner cases\n",
+      "tests": {
+        "cname-chain": {
+          "comment": "pyspf was duplicating TXT (and other) records while following CNAME\n",
+          "helo": "mail.example.com",
+          "host": "1.2.3.4",
+          "mailfrom": "foo@e2.example.com",
+          "result": [
+            "pass"
+          ]
+        },
+        "default-modifier": {
+          "comment": "default modifier implemented in lax mode for compatibility\n",
+          "helo": "mail.example.com",
+          "host": "1.2.3.4",
+          "mailfrom": "root@e1.example.com",
+          "result": [
+            "fail"
+          ],
+          "strict": 0
+        },
+        "default-modifier-harsh": {
+          "comment": "default modifier implemented in lax mode for compatibility\n",
+          "helo": "mail.example.com",
+          "host": "1.2.3.4",
+          "mailfrom": "root@e1.example.com",
+          "result": [
+            "ambiguous"
+          ],
+          "strict": 2
+        },
+        "emptyMX": {
+          "comment": "test empty MX\n",
+          "helo": "mail.example.com",
+          "host": "1.2.3.4",
+          "mailfrom": "",
+          "result": [
+            "neutral"
+          ]
+        },
+        "localhost": {
+          "helo": "mail.example.com",
+          "host": "127.0.0.1",
+          "mailfrom": "root@example.com",
+          "result": [
+            "fail"
+          ]
+        },
+        "null-cname": {
+          "comment": "pyspf was getting a type error for null CNAMEs\nThanks to Kazuhiro Ogura <kazuhiro.ogura@hde.co.jp>\n",
+          "helo": "mail.example.com",
+          "host": "1.2.3.4",
+          "mailfrom": "bar@e3.example.com",
+          "result": [
+            "softfail"
+          ]
+        }
+      },
+      "zone": {
+        "c1.example.com": [
+          {
+            "type": "CNAME",
+            "value": "c2.example.com."
+          }
+        ],
+        "c2.example.com": [
+          {
+            "text": [
+              "v=spf1 a a:c1.example.com -all"
+            ],
+            "type": "TXT"
+          },
+          {
+            "type": "A",
+            "value": "1.2.3.4"
+          }
+        ],
+        "e1.example.com": [
+          {
+            "text": [
+              "v=spf1 default=-"
+            ],
+            "type": "TXT"
+          }
+        ],
+        "e2.example.com": [
+          {
+            "type": "CNAME",
+            "value": "c1.example.com."
+          }
+        ],
+        "e3.example.com": [
+          {
+            "text": [
+              "v=spf1 a:mx1.example.com mx:mx1.example.com ~all"
+            ],
+            "type": "TXT"
+          }
+        ],
+        "example.com": [
+          {
+            "text": [
+              "v=spf1 -all"
+            ],
+            "type": "TXT"
+          }
+        ],
+        "mail.example.com": [
+          {
+            "preference": 0,
+            "type": "MX",
+            "value": ""
+          },
+          {
+            "text": [
+              "v=spf1 mx"
+            ],
+            "type": "TXT"
+          }
+        ],
+        "mx1.example.com": [
+          {
+            "type": "CNAME",
+            "value": ""
+          }
+        ]
+      }
+    }
+  ],
+  "sha256": "180fe83dd5b71ccd76d9d428deec4fa0afd6d75f5f9a7df473dc21c310ceba27",
+  "source": "test.yml"
+}
