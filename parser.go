@@ -75,6 +75,17 @@ func (p *parser) parse() (Result, string, error) {
 	}
 
 	for _, token := range p.Mechanisms {
+		if e, ok := p.resolver.(*evaluation); ok {
+			if err := e.ctx.Err(); err != nil {
+				return Temperror, "", err
+			}
+			switch token.mechanism {
+			case tA, tMX, tInclude, tExists, tPTR:
+				if err := e.useTerm(); err != nil {
+					return dnsErrorResult(err), "", err
+				}
+			}
+		}
 		result := Neutral
 		var matches bool
 		var err error
@@ -212,10 +223,9 @@ func (p *parser) parseA(t *token) (bool, Result, error) {
 		n := net.IPNet{
 			IP: ip,
 		}
-		switch len(ip) {
-		case net.IPv4len:
-			n.Mask = ip4Mask
-		case net.IPv6len:
+		if ip.To4() != nil {
+			n.IP, n.Mask = ip.To4(), ip4Mask
+		} else {
 			n.Mask = ip6Mask
 		}
 		return n.Contains(p.IP), nil
@@ -234,10 +244,9 @@ func (p *parser) parseMX(t *token) (bool, Result, error) {
 		n := net.IPNet{
 			IP: ip,
 		}
-		switch len(ip) {
-		case net.IPv4len:
-			n.Mask = ip4Mask
-		case net.IPv6len:
+		if ip.To4() != nil {
+			n.IP, n.Mask = ip.To4(), ip4Mask
+		} else {
 			n.Mask = ip6Mask
 		}
 		return n.Contains(p.IP), nil
@@ -322,6 +331,11 @@ func mechanismDNSResult(found bool, result Result, err error) (bool, Result, err
 func (p *parser) handleRedirect(oldResult Result) (Result, string, error) {
 	if p.Redirect == nil {
 		return oldResult, "", nil
+	}
+	if e, ok := p.resolver.(*evaluation); ok {
+		if err := e.useTerm(); err != nil {
+			return dnsErrorResult(err), "", err
+		}
 	}
 	result, explanation, err := checkHost(p.IP, p.Redirect.value, p.Sender, p.resolver, p.suppressExplanation)
 	if result == None {
