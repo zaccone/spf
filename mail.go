@@ -14,7 +14,7 @@ type addrSpec struct {
 // The domain will be used if no domain specified in addr.
 // A bare address without @ is interpreted as a HELO domain identity.
 func parseAddrSpec(addr, domain string) *addrSpec {
-	const postmaster = "postmaster"
+	const postmaster string = "postmaster"
 	if addr == "" {
 		return &addrSpec{postmaster, domain}
 	}
