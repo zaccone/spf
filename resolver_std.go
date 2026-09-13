@@ -1,117 +1,74 @@
 package spf
 
-import "net"
+import (
+	"context"
+	"errors"
+	"fmt"
+	"net"
+)
 
-// DNSResolver implements Resolver using local DNS
+// DNSResolver implements Resolver and ContextResolver using net.DefaultResolver.
+// The system resolver owns alias handling and TCP fallback. Its intermediate
+// wire responses and retries are not observable; budgets count logical lookups.
 type DNSResolver struct{}
 
-func errDNS(e error) error {
-	if e == nil {
+func dnsNotFound(err error) bool {
+	if errors.Is(err, ErrDNSPermerror) || errors.Is(err, ErrSPFNotFound) {
+		return true
+	}
+	var de *net.DNSError
+	return errors.As(err, &de) && de.IsNotFound
+}
+
+// wrapDNSError preserves typed DNS and transport causes as well as the legacy
+// sentinels. Checking ctx first retains cancellation even when a transport
+// reports a closed socket or a platform-specific timeout.
+func wrapDNSError(ctx context.Context, err error) error {
+	if ctxErr := ctx.Err(); ctxErr != nil {
+		return errors.Join(ErrDNSTemperror, ctxErr, err)
+	}
+	if err == nil {
 		return nil
 	}
-	if dnsErr, ok := e.(*net.DNSError); ok {
-		// That is the most reliable way I found to detect Permerror
-		// https://github.com/golang/go/blob/master/src/net/dnsclient.go#L43
-		// Upon RCODE 3 return code we should return None result and pretend no
-		//  From RFC7208:
-		//  Several mechanisms rely on information fetched from the DNS.  For
-		//  these DNS queries, except where noted, if the DNS server returns an
-		//  error (RCODE other than 0 or 3) or the query times out, the
-		//  mechanism stops and the topmost check_host() returns "temperror".
-		//  If the server returns "Name Error" (RCODE 3), then evaluation of
-		//  the mechanism continues as if the server returned no error (RCODE
-		//  0) and zero answer records.
-		if dnsErr.Err == "no such host" {
-			return nil
-		}
+	if dnsNotFound(err) {
+		return errors.Join(ErrDNSPermerror, err)
 	}
-	return ErrDNSTemperror
+	return errors.Join(ErrDNSTemperror, err)
 }
 
-// LookupTXTStrict returns DNS TXT records for the given name, however it
-// will return ErrDNSPermerror upon NXDOMAIN (RCODE 3)
-func (r *DNSResolver) LookupTXTStrict(name string) ([]string, error) {
-	txts, err := net.LookupTXT(name)
-
-	if dnsErr, ok := err.(*net.DNSError); ok {
-		// That is the most reliable way I found to detect Permerror
-		// https://github.com/golang/go/blob/master/src/net/dnsclient.go#L43
-		// Upon RCODE 3 return code we should return None result and pretend no
-		//  From RFC7208:
-		//  Several mechanisms rely on information fetched from the DNS.  For
-		//  these DNS queries, except where noted, if the DNS server returns an
-		//  error (RCODE other than 0 or 3) or the query times out, the
-		//  mechanism stops and the topmost check_host() returns "temperror".
-		//  If the server returns "Name Error" (RCODE 3), then evaluation of
-		//  the mechanism continues as if the server returned no error (RCODE
-		//  0) and zero answer records.
-		if dnsErr.Err == "no such host" {
-			return nil, ErrDNSPermerror
-		}
-	}
-
-	err = errDNS(err)
-	if err != nil {
-		return nil, err
-	}
-	return txts, nil
+// LookupTXTContext returns one concatenated string per TXT resource record.
+func (r *DNSResolver) LookupTXTContext(ctx context.Context, name string) ([]string, error) {
+	records, err := net.DefaultResolver.LookupTXT(ctx, NormalizeFQDN(name))
+	return records, wrapDNSError(ctx, err)
 }
 
-// LookupTXT returns the DNS TXT records for the given domain name.
-func (r *DNSResolver) LookupTXT(name string) ([]string, error) {
-	txts, err := net.LookupTXT(name)
-	err = errDNS(err)
-	if err != nil {
-		return nil, err
+// LookupIPContext looks up only network ("ip4" or "ip6").
+func (r *DNSResolver) LookupIPContext(ctx context.Context, network, name string) ([]net.IP, error) {
+	if network != "ip4" && network != "ip6" {
+		return nil, fmt.Errorf("invalid address network %q", network)
 	}
-	return txts, nil
+	records, err := net.DefaultResolver.LookupIP(ctx, network, NormalizeFQDN(name))
+	return records, wrapDNSError(ctx, err)
 }
 
-// Exists is used for a DNS A RR lookup (even when the
-// connection type is IPv6).  If any A record is returned, this
-// mechanism matches.
-func (r *DNSResolver) Exists(name string) (bool, error) {
-	ips, err := net.LookupIP(name)
-	err = errDNS(err)
-	if err != nil {
-		return false, err
-	}
-	return len(ips) > 0, nil
+// LookupMXContext returns exchanges without resolving their addresses.
+func (r *DNSResolver) LookupMXContext(ctx context.Context, name string) ([]*net.MX, error) {
+	records, err := net.DefaultResolver.LookupMX(ctx, NormalizeFQDN(name))
+	return records, wrapDNSError(ctx, err)
 }
 
-// MatchIP provides an address lookup, which should be done on the name
-// using the type of lookup (A or AAAA).
-// Then IPMatcherFunc used to compare checked IP to the returned address(es).
-// If any address matches, the mechanism matches
+// LookupAddrContext returns reverse DNS candidates without forward validation.
+func (r *DNSResolver) LookupAddrContext(ctx context.Context, addr string) ([]string, error) {
+	records, err := net.DefaultResolver.LookupAddr(ctx, addr)
+	return records, wrapDNSError(ctx, err)
+}
+
+func (r *DNSResolver) LookupTXTStrict(name string) ([]string, error) { return legacyTXT(r, name, true) }
+func (r *DNSResolver) LookupTXT(name string) ([]string, error)       { return legacyTXT(r, name, false) }
+func (r *DNSResolver) Exists(name string) (bool, error)              { return legacyExists(r, name) }
 func (r *DNSResolver) MatchIP(name string, matcher IPMatcherFunc) (bool, error) {
-	ips, err := net.LookupIP(name)
-	err = errDNS(err)
-	if err != nil {
-		return false, err
-	}
-	for _, ip := range ips {
-		if m, e := matcher(ip); m || e != nil {
-			return m, e
-		}
-	}
-	return false, nil
+	return legacyMatchIP(r, name, matcher)
 }
-
-// MatchMX is similar to MatchIP but first performs an MX lookup on the
-// name.  Then it performs an address lookup on each MX name returned.
-// Then IPMatcherFunc used to compare checked IP to the returned address(es).
-// If any address matches, the mechanism matches
 func (r *DNSResolver) MatchMX(name string, matcher IPMatcherFunc) (bool, error) {
-	mxs, err := net.LookupMX(name)
-	err = errDNS(err)
-	if err != nil {
-		return false, err
-	}
-
-	for _, mx := range mxs {
-		if found, err := r.MatchIP(mx.Host, matcher); found || err != nil {
-			return found, err
-		}
-	}
-	return false, nil
+	return legacyMatchMX(r, name, matcher)
 }

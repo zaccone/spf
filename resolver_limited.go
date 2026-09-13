@@ -6,7 +6,9 @@ import (
 )
 
 // LimitedResolver wraps a Resolver and limits number of lookups possible to do
-// with it. All overlimited calls return ErrDNSLimitExceeded.
+// with it. All overlimited calls return ErrDNSLimitExceeded. This legacy
+// wrapper counts method calls and MX matcher callbacks, not SPF terms or DNS
+// dispatches. Use CheckHostWithOptions for evaluation-wide SPF accounting.
 type LimitedResolver struct {
 	lookupLimit    int32
 	mxQueriesLimit uint16
@@ -26,7 +28,15 @@ func NewLimitedResolver(r Resolver, lookupLimit, mxQueriesLimit uint16) Resolver
 }
 
 func (r *LimitedResolver) canLookup() bool {
-	return atomic.AddInt32(&r.lookupLimit, -1) > 0
+	for {
+		remaining := atomic.LoadInt32(&r.lookupLimit)
+		if remaining <= 0 {
+			return false
+		}
+		if atomic.CompareAndSwapInt32(&r.lookupLimit, remaining, remaining-1) {
+			return true
+		}
+	}
 }
 
 // LookupTXT returns the DNS TXT records for the given domain name.
@@ -81,10 +91,8 @@ func (r *LimitedResolver) MatchIP(name string, matcher IPMatcherFunc) (bool, err
 // Then IPMatcherFunc used to compare checked IP to the returned address(es).
 // If any address matches, the mechanism matches.
 //
-// In addition to that limit, the evaluation of each "MX" record MUST NOT
-// result in querying more than 10 address records -- either "A" or "AAAA"
-// resource records.  If this limit is exceeded, the "mx" mechanism MUST
-// produce a "permerror" result.
+// mxQueriesLimit bounds matcher callbacks, not underlying address lookups.
+// The Resolver interface cannot enforce a pre-dispatch MX fan-out limit.
 //
 // Returns false and ErrDNSLimitExceeded if total number of lookups made
 // by underlying resolver exceed the limit.
@@ -95,7 +103,7 @@ func (r *LimitedResolver) MatchMX(name string, matcher IPMatcherFunc) (bool, err
 
 	limit := int32(r.mxQueriesLimit)
 	return r.resolver.MatchMX(name, func(ip net.IP) (bool, error) {
-		if atomic.AddInt32(&limit, -1) < 1 {
+		if atomic.AddInt32(&limit, -1) < 0 {
 			return false, ErrDNSLimitExceeded
 		}
 		return matcher(ip)

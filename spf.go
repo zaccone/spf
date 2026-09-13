@@ -1,6 +1,7 @@
 package spf
 
 import (
+	"context"
 	"errors"
 	"net"
 	"strconv"
@@ -123,11 +124,14 @@ func (r Result) String() string {
 // CheckHost returns result of verification, explanations as result of "exp=",
 // and error as the reason for the encountered problem.
 func CheckHost(ip net.IP, domain, sender string) (Result, string, error) {
-	return CheckHostWithResolver(ip, domain, sender, NewLimitedResolver(&DNSResolver{}, 10, 10))
+	return CheckHostWithOptions(context.Background(), ip, domain, sender, Options{})
 }
 
 // CheckHostWithResolver allows using custom Resolver.
-// Note, that DNS lookup limits need to be enforced by provided Resolver.
+// The evaluator enforces shared term limits. ContextResolver implementations
+// also support family selection, void accounting, cancellation, and MX fan-out
+// limits. Legacy-only resolvers cannot provide those guarantees; they are never
+// supplemented with another DNS source.
 //
 // The function returns result of verification, explanations as result of "exp=",
 // and error as the reason for the encountered problem. Invalid IP arguments
@@ -136,11 +140,13 @@ func CheckHost(ip net.IP, domain, sender string) (Result, string, error) {
 // with local-part "postmaster"; an empty sender uses the supplied domain.
 // Unavailable or invalid explanation text leaves Fail unchanged with no error.
 func CheckHostWithResolver(ip net.IP, domain, sender string, resolver Resolver) (Result, string, error) {
-	if ip.To16() == nil {
-		return None, "", ErrInvalidIP
+	if r, ok := resolver.(ContextResolver); ok {
+		return CheckHostWithOptions(context.Background(), ip, domain, sender, Options{Resolver: r})
 	}
-	addr := parseAddrSpec(sender, domain)
-	return checkHost(ip, domain, addr.local+"@"+addr.domain, resolver, false)
+	if resolver == nil {
+		return None, "", ErrUnsupportedResolver
+	}
+	return evaluate(context.Background(), ip, domain, sender, Options{}, resolver)
 }
 
 // checkHost carries the normalized sender and explanation policy unchanged
