@@ -42,8 +42,12 @@ func TestLimitedResolver(t *testing.T) {
 			t.Error("failed on 1st LookupTXT")
 		}
 		a, err = r.LookupTXT("domain.")
+		if len(a) == 0 || err != nil {
+			t.Fatal("second call must be allowed")
+		}
+		a, err = r.LookupTXT("domain.")
 		if len(a) != 0 || err != ErrDNSLimitExceeded {
-			t.Error("failed on 2nd LookupTXT")
+			t.Error("failed on 3rd LookupTXT")
 		}
 	}
 	{
@@ -53,8 +57,12 @@ func TestLimitedResolver(t *testing.T) {
 			t.Error("failed on 1st Exists")
 		}
 		b, err = r.Exists("domain.")
+		if !b || err != nil {
+			t.Fatal("second call must be allowed")
+		}
+		b, err = r.Exists("domain.")
 		if b || err != ErrDNSLimitExceeded {
-			t.Error("failed on 2nd Exists")
+			t.Error("failed on 3rd Exists")
 		}
 	}
 	newMatcher := func(matchingIP net.IP) func(ip net.IP) (bool, error) {
@@ -69,8 +77,12 @@ func TestLimitedResolver(t *testing.T) {
 			t.Error("failed on 1st MatchIP")
 		}
 		b, err = r.MatchIP("domain.", newMatcher(net.ParseIP("10.0.0.1")))
+		if !b || err != nil {
+			t.Fatal("second call must be allowed")
+		}
+		b, err = r.MatchIP("domain.", newMatcher(net.ParseIP("10.0.0.1")))
 		if b || err != ErrDNSLimitExceeded {
-			t.Error("failed on 2nd MatchIP")
+			t.Error("failed on 3rd MatchIP")
 		}
 	}
 	{
@@ -80,8 +92,19 @@ func TestLimitedResolver(t *testing.T) {
 			t.Error("failed on 1st MatchMX")
 		}
 		b, err = r.MatchMX("domain.", newMatcher(net.ParseIP("10.0.0.1")))
+		if !b || err != nil {
+			t.Fatal("second call must be allowed")
+		}
+		b, err = r.MatchMX("domain.", newMatcher(net.ParseIP("10.0.0.1")))
 		if b || err != ErrDNSLimitExceeded {
-			t.Error("failed on 2nd MatchMX")
+			t.Error("failed on 3rd MatchMX")
+		}
+	}
+	{
+		r := NewLimitedResolver(testResolver, 2, 2)
+		found, err := r.MatchMX("mxmustfail.", newMatcher(net.ParseIP("10.0.0.2")))
+		if !found || err != nil {
+			t.Fatalf("second MX callback must be allowed: %v %v", found, err)
 		}
 	}
 	{
@@ -89,6 +112,15 @@ func TestLimitedResolver(t *testing.T) {
 		b, err := r.MatchMX("mxmustfail.", newMatcher(net.ParseIP("10.0.0.10")))
 		if b || err != ErrDNSLimitExceeded {
 			t.Errorf("MatchMX got: %v, %v; want false, ErrDNSLimitExceeded", b, err)
+		}
+	}
+}
+
+func TestLimitedResolverZeroBudget(t *testing.T) {
+	r := NewLimitedResolver(nil, 0, 0)
+	for i := 0; i < 3; i++ {
+		if _, err := r.LookupTXTStrict("example.test."); err != ErrDNSLimitExceeded {
+			t.Fatal(err)
 		}
 	}
 }
