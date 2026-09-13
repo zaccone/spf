@@ -11,7 +11,9 @@ import (
 // ContextResolver supplies DNS records before the evaluator performs address
 // matching or MX/PTR fan-out. Implementations must honor ctx, return only the
 // requested family (network is "ip4" or "ip6"), and join strings within each
-// TXT RR, never across RRs. Names are absolute. Empty results or errors wrapping
+// TXT RR, never across RRs. Names use literal dot-separated ASCII labels,
+// including punctuation/spaces, with a final root dot and no DNS presentation
+// escapes. Empty results or errors wrapping
 // a net.DNSError with IsNotFound set denote a void logical lookup. Intermediate
 // CNAME responses and transport retries are not exposed by this interface.
 // Implementations must be safe for concurrent evaluations.

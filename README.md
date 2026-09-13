@@ -1,19 +1,24 @@
 # Sender Policy Framework
 
-A comprehensive RFC7208 implementation
+SPF policy evaluation in Go, with explicit conformance evidence and resolver limits.
 
 [![Build Status](https://github.com/zaccone/spf/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/zaccone/spf/actions/workflows/go.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/zaccone/spf)](https://goreportcard.com/report/github.com/zaccone/spf)
-[![GoDoc](https://godoc.org/github.com/zaccone/spf?status.svg)](https://godoc.org/github.com/zaccone/spf)
+[![Go Reference](https://pkg.go.dev/badge/github.com/zaccone/spf.svg)](https://pkg.go.dev/github.com/zaccone/spf)
 
 ## About
-The SPF Library implements Sender Policy Framework described in RFC 7208. It aims to cover all rough edge cases from RFC 7208.
-Hence, the library does not operate on strings only, rather "understands" SPF records and reacts properly to valid and invalid 
-input. Wherever I found it useful, I added comments with RFC sections and quotes directly in the source code, so the readers can follow 
-implemented logic.
+This library evaluates Sender Policy Framework policies using its own lexer,
+parser, and macro implementation. It returns the SPF result, optional explanation,
+and diagnostic error; SMTP disposition and header generation belong to the caller.
 
 ## Current status
-The library is still under development. API may change, including function/methods names and signatures. I will consider it correct and stable once it passess all tests described in the most popular SPF implementation - pyspf.
+
+The local conformance runner covers all 203 cases in the pinned RFC 7208 suite
+and 14 applicable pySPF development cases. Two pySPF-only compatibility modes
+are explicitly excluded. This is not a full-conformance or stability claim:
+see the [conformance matrix and known limits](CONFORMANCE.md),
+[migration notes](MIGRATION.md), and [runnable examples](example_test.go).
+Release readiness requires owner review and green hosted CI for the final commit.
 
 ## Building and testing
 
@@ -43,8 +48,10 @@ go test -race -count=1 -timeout=60s ./...
 GitHub Actions runs ordinary tests on Linux, macOS, and Windows, plus race
 tests, vet, formatting, and module consistency checks on Linux. Resolver
 callbacks finish before a lookup returns. Passing these checks does not
-establish complete RFC 7208 conformance; see the modernization plan for the
-remaining correctness work.
+establish complete RFC 7208 conformance; see [CONFORMANCE.md](CONFORMANCE.md)
+for evidence and limitations. CI also runs bounded fuzz smoke tests and pinned
+`govulncheck` v1.8.0. The corpus runs offline as part of ordinary `go test`;
+Python is needed only to regenerate the vendored JSON fixtures.
 
 ## Dependencies
 The library uses [miekg/dns](https://github.com/miekg/dns) for its configurable
@@ -95,7 +102,8 @@ TCP. The system backend uses Go's resolver and configured system DNS servers
 connections can be canceled; platform-native resolver behavior, including
 native split-DNS routing, may differ. It relies on the recursive DNS server
 for complete alias answers instead of issuing its own CNAME follow-up queries.
-For explicit server selection and client-side alias traversal, use miekg.
+For explicit server selection, client-side alias traversal, and utility labels
+containing punctuation/spaces rejected by Go's system resolver, use miekg.
 Neither interface exposes intermediate wire responses or retries: void limits
 count logical lookups after alias processing, not individual DNS packets.
 
@@ -118,9 +126,10 @@ Domain-specs in `a`, `mx`, `include`, `exists`, `ptr`, `redirect`, and `exp`
 are expanded before use. Macro transformations support IPv6 nibbles, multiple
 delimiters (including empty parts), reversal, rightmost-part selection, and
 uppercase URL escaping. Names exceeding 253 characters lose complete labels
-from the left. Expanded names must pass the existing ASCII hostname and
-63-character label checks; invalid names produce Permerror, or the empty
-explanation fallback for `exp`.
+from the left. Expanded labels may contain punctuation and spaces; dots separate labels and
+backslashes are literal. Empty/oversized labels and non-printable/non-ASCII
+output produce Permerror, or the empty explanation fallback for `exp`. Initial
+identity domains retain the stricter hostname checks.
 
 Pass SMTP identities through `Options.HELO` and `Options.Receiver`. They remain
 unchanged through includes and redirects; `%{d}` follows the current policy
@@ -143,5 +152,5 @@ Fail unchanged.
 Legacy-only resolvers cannot perform reverse validation: `ptr` returns
 Permerror with `ErrUnsupportedResolver`, and `%{p}` expands to `unknown`.
 No other DNS source is consulted. PTR is supported for existing policies,
-though RFC 7208 discourages publishing it. Full corpus conformance and release
-readiness remain separate work.
+though RFC 7208 discourages publishing it. See [CONFORMANCE.md](CONFORMANCE.md)
+for the corpus results, explicit exceptions, and release gate.

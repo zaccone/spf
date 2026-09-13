@@ -219,7 +219,7 @@ func (p *parser) parseA(t *token) (bool, Result, error) {
 		return true, Permerror, SyntaxError{t, err}
 	}
 
-	host, err = p.expandDomain(nonemptyString(host, p.Domain))
+	host, err = p.expandDomainOrCurrent(host)
 	if err != nil {
 		return true, macroErrorResult(err), SyntaxError{t, err}
 	}
@@ -246,7 +246,7 @@ func (p *parser) parseMX(t *token) (bool, Result, error) {
 		return true, Permerror, SyntaxError{t, err}
 	}
 
-	host, err = p.expandDomain(nonemptyString(host, p.Domain))
+	host, err = p.expandDomainOrCurrent(host)
 	if err != nil {
 		return true, macroErrorResult(err), SyntaxError{t, err}
 	}
@@ -327,7 +327,7 @@ func (p *parser) parseExists(t *token) (bool, Result, error) {
 }
 
 func (p *parser) parsePTR(t *token) (bool, Result, error) {
-	domain, err := p.expandDomain(nonemptyString(t.value, p.Domain))
+	domain, err := p.expandDomainOrCurrent(t.value)
 	if err != nil {
 		return true, macroErrorResult(err), SyntaxError{t, err}
 	}
