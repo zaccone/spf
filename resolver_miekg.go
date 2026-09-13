@@ -1,175 +1,207 @@
 package spf
 
 import (
+	"context"
+	"errors"
+	"fmt"
 	"net"
 	"strings"
-	"sync"
 
 	"github.com/miekg/dns"
 )
 
-// NewMiekgDNSResolver returns new instance of Resolver
-func NewMiekgDNSResolver(addr string) (Resolver, error) {
-	if _, _, e := net.SplitHostPort(addr); e != nil {
-		return nil, e
+// NewMiekgDNSResolver returns a resolver using the specified DNS server.
+func NewMiekgDNSResolver(addr string) (Resolver, error) { return newMiekgResolver(addr) }
+
+// NewMiekgDNSResolverContext returns the context-capable view of the resolver.
+func NewMiekgDNSResolverContext(addr string) (ContextResolver, error) { return newMiekgResolver(addr) }
+
+func newMiekgResolver(addr string) (*MiekgDNSResolver, error) {
+	if _, _, err := net.SplitHostPort(addr); err != nil {
+		return nil, err
 	}
-	return &MiekgDNSResolver{
-		client:     new(dns.Client),
-		serverAddr: addr,
-	}, nil
+	return &MiekgDNSResolver{client: new(dns.Client), serverAddr: addr}, nil
 }
 
-// MiekgDNSResolver implements Resolver using github.com/miekg/dns
+// MiekgDNSResolver implements Resolver and ContextResolver using miekg/dns.
+// Each query owns its connection. Aliases are limited to ten hops, including
+// aliases present in a single response. Truncated UDP is retried once over TCP.
 type MiekgDNSResolver struct {
-	mu         sync.Mutex
 	client     *dns.Client
 	serverAddr string
 }
 
-// If the DNS lookup returns a server failure (RCODE 2) or some other
-// error (RCODE other than 0 or 3), or if the lookup times out, then
-// check_host() terminates immediately with the result "temperror".
-// From RFC 7208:
-// Several mechanisms rely on information fetched from the DNS.  For
-// these DNS queries, except where noted, if the DNS server returns an
-// error (RCODE other than 0 or 3) or the query times out, the mechanism
-// stops and the topmost check_host() returns "temperror".  If the
-// server returns "Name Error" (RCODE 3), then evaluation of the
-// mechanism continues as if the server returned no error (RCODE 0) and
-// zero answer records.
-func (r *MiekgDNSResolver) exchange(req *dns.Msg) (*dns.Msg, error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	res, _, err := r.client.Exchange(req, r.serverAddr)
-	if err != nil {
-		return nil, ErrDNSTemperror
+func (r *MiekgDNSResolver) exchangeContext(ctx context.Context, req *dns.Msg, tcp bool) (*dns.Msg, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, wrapDNSError(ctx, err)
 	}
-	// RCODE 3
-	if res.Rcode == dns.RcodeNameError {
-		return res, nil
+	client := *r.client
+	if tcp {
+		client.Net = "tcp"
+	}
+	conn, err := client.DialContext(ctx, r.serverAddr)
+	if err != nil {
+		return nil, wrapDNSError(ctx, err)
+	}
+	// ExchangeWithConnContext honors deadlines; closing the connection also
+	// interrupts a read when a context is explicitly canceled before its deadline.
+	stopped := make(chan struct{})
+	stop := context.AfterFunc(ctx, func() { conn.Close(); close(stopped) })
+	defer func() {
+		if !stop() {
+			<-stopped
+		}
+		conn.Close()
+	}()
+	res, _, err := client.ExchangeWithConnContext(ctx, req, conn)
+	if err = wrapDNSError(ctx, err); err != nil {
+		return nil, err
+	}
+	if res == nil || !res.Response || res.Opcode != req.Opcode || len(res.Question) != 1 ||
+		!strings.EqualFold(res.Question[0].Name, req.Question[0].Name) ||
+		res.Question[0].Qtype != req.Question[0].Qtype || res.Question[0].Qclass != req.Question[0].Qclass {
+		return nil, wrapDNSError(ctx, errors.New("mismatched DNS response"))
+	}
+	if res.Truncated {
+		if !tcp {
+			return r.exchangeContext(ctx, req, true)
+		}
+		return nil, wrapDNSError(ctx, errors.New("truncated TCP DNS response"))
 	}
 	if res.Rcode != dns.RcodeSuccess {
-		return nil, ErrDNSTemperror
+		cause := &net.DNSError{Err: dns.RcodeToString[res.Rcode], Name: req.Question[0].Name, Server: r.serverAddr,
+			IsNotFound: res.Rcode == dns.RcodeNameError, IsTemporary: res.Rcode != dns.RcodeNameError}
+		return nil, wrapDNSError(ctx, cause)
 	}
 	return res, nil
 }
 
-// LookupTXT returns the DNS TXT records for the given domain name.
-func (r *MiekgDNSResolver) LookupTXT(name string) ([]string, error) {
-	req := new(dns.Msg)
-	req.SetQuestion(name, dns.TypeTXT)
-
-	res, err := r.exchange(req)
-	if err != nil {
-		return nil, err
-	}
-
-	txts := make([]string, 0, len(res.Answer))
-	for _, a := range res.Answer {
-		if r, ok := a.(*dns.TXT); ok {
-			txts = append(txts, strings.Join(r.Txt, ""))
+// lookup only accepts records whose owner is the queried name or a validated
+// alias target. Unrelated records in Answer (or Additional) cannot cause a match.
+func (r *MiekgDNSResolver) lookup(ctx context.Context, name string, qtype uint16) ([]dns.RR, error) {
+	ctx, cancel := context.WithTimeout(ctx, evaluationTimeout)
+	defer cancel()
+	name = NormalizeFQDN(name)
+	seen := map[string]bool{strings.ToLower(name): true}
+	hops := 0
+	for {
+		req := new(dns.Msg)
+		req.SetQuestion(name, qtype)
+		res, err := r.exchangeContext(ctx, req, false)
+		if err != nil {
+			return nil, err
+		}
+		followed := false
+		for {
+			var records []dns.RR
+			target := ""
+			for _, rr := range res.Answer {
+				h := rr.Header()
+				if h.Class != dns.ClassINET || !strings.EqualFold(h.Name, name) {
+					continue
+				}
+				if h.Rrtype == qtype {
+					records = append(records, rr)
+				}
+				if cname, ok := rr.(*dns.CNAME); ok {
+					if target != "" && !strings.EqualFold(target, cname.Target) {
+						return nil, wrapDNSError(ctx, errors.New("conflicting CNAME targets"))
+					}
+					target = cname.Target
+				}
+			}
+			if target == "" {
+				if len(records) > 0 || !followed {
+					return records, nil
+				}
+				// The last alias target wasn't included in this response. Query it.
+				break
+			}
+			if len(records) > 0 {
+				return nil, wrapDNSError(ctx, errors.New("CNAME and data at the same owner"))
+			}
+			hops++
+			key := strings.ToLower(NormalizeFQDN(target))
+			if hops > 10 || seen[key] {
+				return nil, wrapDNSError(ctx, errors.New("CNAME chain limit or cycle"))
+			}
+			seen[key] = true
+			name, followed = NormalizeFQDN(target), true
 		}
 	}
-	return txts, nil
 }
 
-// LookupTXTStrict returns DNS TXT records for the given name, however it
-// will return ErrDNSPermerror upon NXDOMAIN (RCODE 3)
-func (r *MiekgDNSResolver) LookupTXTStrict(name string) ([]string, error) {
-
-	req := new(dns.Msg)
-	req.SetQuestion(name, dns.TypeTXT)
-
-	res, err := r.exchange(req)
-	if err != nil {
-		return nil, err
-	}
-
-	if res.Rcode == dns.RcodeNameError {
-		return nil, ErrDNSPermerror
-	}
-
-	txts := make([]string, 0, len(res.Answer))
-	for _, a := range res.Answer {
-		if r, ok := a.(*dns.TXT); ok {
-			txts = append(txts, strings.Join(r.Txt, ""))
-		}
-	}
-	return txts, nil
-}
-
-// Exists is used for a DNS A RR lookup (even when the
-// connection type is IPv6).  If any A record is returned, this
-// mechanism matches.
-func (r *MiekgDNSResolver) Exists(name string) (bool, error) {
-	req := new(dns.Msg)
-	req.SetQuestion(name, dns.TypeA)
-
-	res, err := r.exchange(req)
-	if err != nil {
-		return false, err
-	}
-
-	return len(res.Answer) > 0, nil
-}
-
-func matchIP(rrs []dns.RR, matcher IPMatcherFunc) (bool, error) {
+// LookupTXTContext returns one string per TXT RR, joining its component strings.
+func (r *MiekgDNSResolver) LookupTXTContext(ctx context.Context, name string) ([]string, error) {
+	rrs, err := r.lookup(ctx, name, dns.TypeTXT)
+	var records []string
 	for _, rr := range rrs {
-		var ip net.IP
+		if txt, ok := rr.(*dns.TXT); ok {
+			records = append(records, strings.Join(txt.Txt, ""))
+		}
+	}
+	return records, err
+}
+
+// LookupIPContext queries only the selected address family.
+func (r *MiekgDNSResolver) LookupIPContext(ctx context.Context, network, name string) ([]net.IP, error) {
+	qtype := uint16(dns.TypeA)
+	switch network {
+	case "ip4":
+	case "ip6":
+		qtype = dns.TypeAAAA
+	default:
+		return nil, fmt.Errorf("invalid address network %q", network)
+	}
+	rrs, err := r.lookup(ctx, name, qtype)
+	var records []net.IP
+	for _, rr := range rrs {
 		switch a := rr.(type) {
 		case *dns.A:
-			ip = a.A
+			records = append(records, a.A)
 		case *dns.AAAA:
-			ip = a.AAAA
-		}
-		if m, e := matcher(ip); m || e != nil {
-			return m, e
+			records = append(records, a.AAAA)
 		}
 	}
-	return false, nil
+	return records, err
 }
 
-// MatchIP provides an address lookup, which should be done on the name
-// using the type of lookup (A or AAAA).
-// Then IPMatcherFunc used to compare checked IP to the returned address(es).
-// If any address matches, the mechanism matches
-func (r *MiekgDNSResolver) MatchIP(name string, matcher IPMatcherFunc) (bool, error) {
-	// Keep matcher calls synchronous so none can outlive this lookup.
-	for _, qType := range []uint16{dns.TypeA, dns.TypeAAAA} {
-		req := new(dns.Msg)
-		req.SetQuestion(name, qType)
-		res, err := r.exchange(req)
-		if err != nil {
-			return false, err
-		}
-		if found, err := matchIP(res.Answer, matcher); found || err != nil {
-			return found, err
+// LookupMXContext returns exchanges before address resolution.
+func (r *MiekgDNSResolver) LookupMXContext(ctx context.Context, name string) ([]*net.MX, error) {
+	rrs, err := r.lookup(ctx, name, dns.TypeMX)
+	var records []*net.MX
+	for _, rr := range rrs {
+		if mx, ok := rr.(*dns.MX); ok {
+			records = append(records, &net.MX{Host: mx.Mx, Pref: mx.Preference})
 		}
 	}
-	return false, nil
+	return records, err
 }
 
-// MatchMX is similar to MatchIP but first performs an MX lookup on the
-// name.  Then it performs an address lookup on each MX name returned.
-// Then IPMatcherFunc used to compare checked IP to the returned address(es).
-// If any address matches, the mechanism matches
-func (r *MiekgDNSResolver) MatchMX(name string, matcher IPMatcherFunc) (bool, error) {
-	req := new(dns.Msg)
-	req.SetQuestion(name, dns.TypeMX)
-
-	res, err := r.exchange(req)
+// LookupAddrContext performs the IPv4 or IPv6 reverse query, without validation.
+func (r *MiekgDNSResolver) LookupAddrContext(ctx context.Context, addr string) ([]string, error) {
+	name, err := dns.ReverseAddr(addr)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
+	rrs, err := r.lookup(ctx, name, dns.TypePTR)
+	var records []string
+	for _, rr := range rrs {
+		if ptr, ok := rr.(*dns.PTR); ok {
+			records = append(records, ptr.Ptr)
+		}
+	}
+	return records, err
+}
 
-	for _, rr := range res.Answer {
-		mx, ok := rr.(*dns.MX)
-		if !ok {
-			continue
-		}
-		if found, err := r.MatchIP(mx.Mx, matcher); found || err != nil {
-			return found, err
-		}
-	}
-	return false, nil
+func (r *MiekgDNSResolver) LookupTXTStrict(name string) ([]string, error) {
+	return legacyTXT(r, name, true)
+}
+func (r *MiekgDNSResolver) LookupTXT(name string) ([]string, error) { return legacyTXT(r, name, false) }
+func (r *MiekgDNSResolver) Exists(name string) (bool, error)        { return legacyExists(r, name) }
+func (r *MiekgDNSResolver) MatchIP(name string, matcher IPMatcherFunc) (bool, error) {
+	return legacyMatchIP(r, name, matcher)
+}
+func (r *MiekgDNSResolver) MatchMX(name string, matcher IPMatcherFunc) (bool, error) {
+	return legacyMatchMX(r, name, matcher)
 }
