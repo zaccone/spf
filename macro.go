@@ -309,7 +309,7 @@ func (p *parser) expandDomain(input string) (string, error) {
 		}
 		name = name[dot+1:]
 	}
-	if !validDNSDomain(name) {
+	if !validExpandedDomain(name) {
 		return "", ErrInvalidDomain
 	}
 	return name, nil
@@ -328,4 +328,32 @@ func withinDomain(name, domain string) bool {
 	name = strings.ToLower(strings.TrimSuffix(name, "."))
 	domain = strings.ToLower(strings.TrimSuffix(domain, "."))
 	return name == domain || strings.HasSuffix(name, "."+domain)
+}
+
+// Expanded DNS labels are not restricted to hostname letters/digits/hyphens.
+// Macro literals and escapes can produce punctuation and spaces (RFC 7208
+// sections 4.8 and 7). Dots separate labels; no DNS presentation escapes apply.
+func validExpandedDomain(name string) bool {
+	name = strings.TrimSuffix(name, ".")
+	if len(name) == 0 || len(name) > 253 {
+		return false
+	}
+	for _, label := range strings.Split(name, ".") {
+		if len(label) == 0 || len(label) > 63 {
+			return false
+		}
+		for i := range label {
+			if label[i] < ' ' || label[i] > '~' {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func (p *parser) expandDomainOrCurrent(input string) (string, error) {
+	if input == "" {
+		return p.Domain, nil
+	}
+	return p.expandDomain(input)
 }

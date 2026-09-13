@@ -112,7 +112,7 @@ func TestStep6DomainLength(t *testing.T) {
 	if err != nil || got != tail+"." {
 		t.Fatalf("root dot: %q %v", got, err)
 	}
-	for _, local := range []string{strings.Repeat("x", 254), "bad..test", "-bad.test"} {
+	for _, local := range []string{strings.Repeat("x", 254), "bad..test", "bad\n.test"} {
 		p.Sender = local + "@example.test"
 		if _, err := p.expandDomain("%{l}"); !errors.Is(err, ErrInvalidDomain) {
 			t.Errorf("%q: %v", local, err)
