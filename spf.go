@@ -152,7 +152,7 @@ func CheckHostWithResolver(ip net.IP, domain, sender string, resolver Resolver) 
 // checkHost carries the normalized sender and explanation policy unchanged
 // through recursion. Includes suppress explanations throughout their subtree.
 func checkHost(ip net.IP, domain, sender string, resolver Resolver, suppressExplanation bool) (Result, string, error) {
-	if !validEvaluationDomain(domain) {
+	if !validExpandedDomain(domain) || !strings.Contains(strings.TrimSuffix(domain, "."), ".") {
 		return None, "", ErrInvalidDomain
 	}
 	txts, err := resolver.LookupTXTStrict(NormalizeFQDN(domain))

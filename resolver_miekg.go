@@ -81,7 +81,13 @@ func (r *MiekgDNSResolver) exchangeContext(ctx context.Context, req *dns.Msg, tc
 func (r *MiekgDNSResolver) lookup(ctx context.Context, name string, qtype uint16) ([]dns.RR, error) {
 	ctx, cancel := context.WithTimeout(ctx, evaluationTimeout)
 	defer cancel()
-	name = NormalizeFQDN(name)
+	// Normalize presentation escaping once at the API boundary. DNS replies
+	// use escaped presentation strings, including for spaces and backslashes.
+	var err error
+	name, err = dnsPresentationName(name)
+	if err != nil {
+		return nil, err
+	}
 	seen := map[string]bool{strings.ToLower(name): true}
 	hops := 0
 	for {
@@ -172,7 +178,11 @@ func (r *MiekgDNSResolver) LookupMXContext(ctx context.Context, name string) ([]
 	var records []*net.MX
 	for _, rr := range rrs {
 		if mx, ok := rr.(*dns.MX); ok {
-			records = append(records, &net.MX{Host: mx.Mx, Pref: mx.Preference})
+			host, nameErr := dnsLiteralName(mx.Mx)
+			if nameErr != nil {
+				return nil, nameErr
+			}
+			records = append(records, &net.MX{Host: host, Pref: mx.Preference})
 		}
 	}
 	return records, err
@@ -188,7 +198,11 @@ func (r *MiekgDNSResolver) LookupAddrContext(ctx context.Context, addr string) (
 	var records []string
 	for _, rr := range rrs {
 		if ptr, ok := rr.(*dns.PTR); ok {
-			records = append(records, ptr.Ptr)
+			host, nameErr := dnsLiteralName(ptr.Ptr)
+			if nameErr != nil {
+				return nil, nameErr
+			}
+			records = append(records, host)
 		}
 	}
 	return records, err
@@ -204,4 +218,46 @@ func (r *MiekgDNSResolver) MatchIP(name string, matcher IPMatcherFunc) (bool, er
 }
 func (r *MiekgDNSResolver) MatchMX(name string, matcher IPMatcherFunc) (bool, error) {
 	return legacyMatchMX(r, name, matcher)
+}
+
+// The evaluator supplies literal dot-separated labels. Build the wire name
+// directly, then let miekg/dns produce its canonical presentation spelling.
+func dnsPresentationName(name string) (string, error) {
+	if name == "." {
+		return name, nil
+	}
+	if !validExpandedDomain(name) {
+		return "", ErrInvalidDomain
+	}
+	wire := make([]byte, 0, 255)
+	for _, label := range strings.Split(strings.TrimSuffix(name, "."), ".") {
+		wire = append(wire, byte(len(label)))
+		wire = append(wire, label...)
+	}
+	wire = append(wire, 0)
+	name, _, err := dns.UnpackDomainName(wire, 0)
+	return name, err
+}
+
+// MX/PTR values leave the transport in the same literal form as query names.
+// A label containing a dot cannot be represented by this interface and must
+// not be mistaken for a subdomain boundary during PTR validation.
+func dnsLiteralName(name string) (string, error) {
+	wire := make([]byte, 255)
+	end, err := dns.PackDomainName(name, wire, 0, nil, false)
+	if err != nil {
+		return "", err
+	}
+	var labels []string
+	for pos := 0; pos < end && wire[pos] != 0; {
+		length := int(wire[pos])
+		pos++
+		label := string(wire[pos : pos+length])
+		pos += length
+		if strings.Contains(label, ".") {
+			return "", ErrInvalidDomain
+		}
+		labels = append(labels, label)
+	}
+	return strings.Join(labels, ".") + ".", nil
 }
