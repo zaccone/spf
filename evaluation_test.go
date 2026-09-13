@@ -286,12 +286,6 @@ func TestExplanationExpansionFailure(t *testing.T) {
 	}{
 		{"v=spf1 -all exp=%{s}", "ignored", "sender@example.com", 1},
 		{"v=spf1 -all exp=exp.example", "Denied %{s}", "a\nb@example.com", 2},
-		// These valid macro features remain unimplemented until step 6. An
-		// unavailable expansion must yield the empty explanation fallback.
-		{"v=spf1 -all exp=exp.example", "Denied %{c}", "sender@example.com", 2},
-		{"v=spf1 -all exp=exp.example", "Denied %{p}", "sender@example.com", 2},
-		{"v=spf1 -all exp=exp.example", "Denied %{S}", "sender@example.com", 2},
-		{"v=spf1 -all exp=exp.example", "Denied %{l1r+-}", "sender@example.com", 2},
 	} {
 		r := &evaluationResolver{records: map[string][]string{"example.com.": {tc.policy}, "exp.example.": {tc.text}}}
 		got, exp, err := CheckHostWithResolver(net.IP{192, 0, 2, 1}, "example.com", tc.sender, r)

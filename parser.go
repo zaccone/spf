@@ -106,6 +106,8 @@ func (p *parser) parse() (Result, string, error) {
 			matches, result, err = p.parseInclude(token)
 		case tExists:
 			matches, result, err = p.parseExists(token)
+		case tPTR:
+			matches, result, err = p.parsePTR(token)
 		}
 
 		if err != nil {
@@ -217,9 +219,14 @@ func (p *parser) parseA(t *token) (bool, Result, error) {
 		return true, Permerror, SyntaxError{t, err}
 	}
 
+	host, err = p.expandDomain(nonemptyString(host, p.Domain))
+	if err != nil {
+		return true, macroErrorResult(err), SyntaxError{t, err}
+	}
+
 	result, _ := matchingResult(t.qualifier)
 
-	found, err := p.resolver.MatchIP(NormalizeFQDN(nonemptyString(host, p.Domain)), func(ip net.IP) (bool, error) {
+	found, err := p.resolver.MatchIP(NormalizeFQDN(host), func(ip net.IP) (bool, error) {
 		n := net.IPNet{
 			IP: ip,
 		}
@@ -239,8 +246,13 @@ func (p *parser) parseMX(t *token) (bool, Result, error) {
 		return true, Permerror, SyntaxError{t, err}
 	}
 
+	host, err = p.expandDomain(nonemptyString(host, p.Domain))
+	if err != nil {
+		return true, macroErrorResult(err), SyntaxError{t, err}
+	}
+
 	result, _ := matchingResult(t.qualifier)
-	found, err := p.resolver.MatchMX(NormalizeFQDN(nonemptyString(host, p.Domain)), func(ip net.IP) (bool, error) {
+	found, err := p.resolver.MatchMX(NormalizeFQDN(host), func(ip net.IP) (bool, error) {
 		n := net.IPNet{
 			IP: ip,
 		}
@@ -255,9 +267,9 @@ func (p *parser) parseMX(t *token) (bool, Result, error) {
 }
 
 func (p *parser) parseInclude(t *token) (bool, Result, error) {
-	domain := t.value
-	if domain == "" {
-		return true, Permerror, SyntaxError{t, errors.New("empty domain")}
+	domain, err := p.expandDomain(t.value)
+	if err != nil {
+		return true, macroErrorResult(err), SyntaxError{t, err}
 	}
 	theirResult, _, err := checkHost(p.IP, domain, p.Sender, p.resolver, true)
 
@@ -303,18 +315,37 @@ func (p *parser) parseInclude(t *token) (bool, Result, error) {
 }
 
 func (p *parser) parseExists(t *token) (bool, Result, error) {
-	resolvedDomain, err := parseMacroToken(p, t)
+	resolvedDomain, err := p.expandDomain(t.value)
 	if err != nil {
-		return true, Permerror, SyntaxError{t, err}
-	}
-	if resolvedDomain == "" {
-		return true, Permerror, SyntaxError{t, errors.New("empty domain")}
+		return true, macroErrorResult(err), SyntaxError{t, err}
 	}
 
 	result, _ := matchingResult(t.qualifier)
 
 	found, err := p.resolver.Exists(NormalizeFQDN(resolvedDomain))
 	return mechanismDNSResult(found, result, err)
+}
+
+func (p *parser) parsePTR(t *token) (bool, Result, error) {
+	domain, err := p.expandDomain(nonemptyString(t.value, p.Domain))
+	if err != nil {
+		return true, macroErrorResult(err), SyntaxError{t, err}
+	}
+	e, ok := p.resolver.(*evaluation)
+	if !ok {
+		return true, Permerror, ErrUnsupportedResolver
+	}
+	names, err := e.reverseNames(p.IP)
+	if err != nil {
+		return true, macroErrorResult(err), err
+	}
+	result, _ := matchingResult(t.qualifier)
+	for _, name := range names {
+		if withinDomain(name, domain) {
+			return true, result, nil
+		}
+	}
+	return false, result, nil
 }
 
 func mechanismDNSResult(found bool, result Result, err error) (bool, Result, error) {
@@ -337,7 +368,11 @@ func (p *parser) handleRedirect(oldResult Result) (Result, string, error) {
 			return dnsErrorResult(err), "", err
 		}
 	}
-	result, explanation, err := checkHost(p.IP, p.Redirect.value, p.Sender, p.resolver, p.suppressExplanation)
+	domain, err := p.expandDomain(p.Redirect.value)
+	if err != nil {
+		return macroErrorResult(err), "", SyntaxError{p.Redirect, err}
+	}
+	result, explanation, err := checkHost(p.IP, domain, p.Sender, p.resolver, p.suppressExplanation)
 	if result == None {
 		result = Permerror
 	}
@@ -351,8 +386,18 @@ func (p *parser) handleRedirect(oldResult Result) (Result, string, error) {
 // Resolvers concatenate the strings within each TXT RR; separate RRs must
 // never be concatenated here.
 func (p *parser) handleExplanation() string {
-	domain, err := parseMacroToken(p, p.Explanation)
-	if err != nil || !validDNSDomain(domain) {
+	// Explanation work has its own void allowance and no term charge. Reuse
+	// any completed reverse validation, without changing evaluation counters.
+	copyParser := *p
+	if e, ok := p.resolver.(*evaluation); ok {
+		copyEvaluation := *e
+		copyEvaluation.voids = 0
+		copyEvaluation.explaining = true
+		copyParser.resolver = &copyEvaluation
+	}
+	p = &copyParser
+	domain, err := p.expandDomain(p.Explanation.value)
+	if err != nil {
 		return ""
 	}
 	txts, err := p.resolver.LookupTXT(NormalizeFQDN(domain))
