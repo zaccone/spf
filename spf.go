@@ -192,6 +192,9 @@ func validDNSDomain(domain string) bool {
 // Missing answers are context dependent: no SPF at the entrypoint, a non-match
 // for address mechanisms, and Permerror for include/redirect targets.
 func dnsErrorResult(err error) Result {
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return Temperror
+	}
 	if errors.Is(err, ErrDNSLimitExceeded) {
 		return Permerror
 	}

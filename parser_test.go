@@ -1,6 +1,7 @@
 package spf
 
 import (
+	"errors"
 	"net"
 	"reflect"
 	"testing"
@@ -1151,7 +1152,7 @@ func TestSelectingRecord(t *testing.T) {
 	ip := net.ParseIP("10.0.0.1")
 	for i, s := range samples {
 		r, _, e := CheckHostWithResolver(ip, s.d, s.d, testResolver)
-		if r != s.r || e != s.e {
+		if r != s.r || !errors.Is(e, s.e) {
 			t.Errorf("#%d `%s` want [`%v` `%v`], got [`%v` `%v`]", i, s.d, s.r, s.e, r, e)
 		}
 	}
