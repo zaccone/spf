@@ -58,9 +58,7 @@ func readRequest(r *bufio.Reader) (map[string]string, error) {
 		if !ok || key == "" || strings.ContainsAny(value, "\x00\r") {
 			return nil, errors.New("malformed policy attribute")
 		}
-		if _, exists := attrs[key]; exists {
-			return nil, errors.New("duplicate policy attribute")
-		}
+		// Postfix permits duplicate attributes; consistently keep the last value.
 		attrs[key] = val
 	}
 	return nil, errors.New("too many policy attributes")
@@ -143,7 +141,7 @@ func (s *server) connection(ctx context.Context, conn net.Conn) {
 			return
 		}
 		action := unavailable
-		if err == nil {
+		if err == nil && !s.stopping.Load() {
 			action = s.policy(ctx, attrs)
 		}
 		if writeErr := conn.SetWriteDeadline(time.Now().Add(s.ioTimeout)); writeErr != nil {

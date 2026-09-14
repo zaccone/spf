@@ -37,7 +37,7 @@ class DNS(socketserver.BaseRequestHandler):
 
 @contextlib.contextmanager
 def daemon(binary, dns, enforce):
-    with tempfile.TemporaryFile(mode='w+') as log:
+    with tempfile.TemporaryDirectory() as tmp, open(Path(tmp) / 'daemon.log', 'w+') as log:
         args = [binary, 'serve', '-dns', dns, '-listen', '127.0.0.1:0', '-shutdown-timeout', '100ms']
         if enforce:
             args.append('-enforce')
@@ -45,9 +45,10 @@ def daemon(binary, dns, enforce):
         try:
             deadline = time.monotonic() + 5
             while True:
-                log.seek(0)
-                line = log.readline()
-                if line:
+                # A separate descriptor avoids moving the daemon's write offset.
+                with open(log.name) as reader:
+                    line = reader.readline()
+                if line.endswith('\n'):
                     startup = json.loads(line)
                     assert startup['msg'] == 'policy service listening', startup
                     break
@@ -64,6 +65,9 @@ def daemon(binary, dns, enforce):
                 process.kill()
                 process.wait()
                 raise
+            entries = [json.loads(line) for line in Path(log.name).read_text().splitlines()]
+            assert entries[0]['msg'] == 'policy service listening', 'startup log overwritten'
+            assert entries[-1]['msg'] == 'policy service stopped', 'missing shutdown log'
 
 
 def exchange(stream, sender):
