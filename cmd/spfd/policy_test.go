@@ -151,7 +151,7 @@ func TestDeadline(t *testing.T) {
 }
 func TestReadRequestBounds(t *testing.T) {
 	for _, raw := range []string{
-		"\n", "missing-equals\n\n", "request=x\nrequest=y\n\n", "a=\x00\n\n",
+		"\n", "missing-equals\n\n", "a=\x00\n\n",
 		"a=" + strings.Repeat("x", 4096) + "\n\n", "request=x\n", strings.Repeat("x", 4096),
 	} {
 		if _, err := readRequest(bufio.NewReaderSize(strings.NewReader(raw), 4096)); err == nil {
@@ -323,4 +323,52 @@ func TestShutdownDrainsCompletedCheck(t *testing.T) {
 	case <-time.After(2 * time.Second):
 		t.Fatal("server did not drain")
 	}
+}
+
+func TestDuplicateAttributesUseLastValue(t *testing.T) {
+	raw := "request=old\nrequest=smtpd_access_policy\nunknown=first\nunknown=last\n\n"
+	attrs, err := readRequest(bufio.NewReader(strings.NewReader(raw)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if attrs["request"] != "smtpd_access_policy" || attrs["unknown"] != "last" {
+		t.Fatal(attrs)
+	}
+}
+
+// The reader is already blocked waiting for a request when shutdown starts.
+func TestShutdownDoesNotStartAnotherEvaluation(t *testing.T) {
+	entered := make(chan string, 1)
+	s := testServer(fixtureResolver{policy: "v=spf1 +all", entered: entered})
+	client, peer := net.Pipe()
+	defer client.Close()
+	done := make(chan struct{})
+	ready := make(chan struct{})
+	wrapped := &readNotifyingConn{Conn: peer, ready: ready}
+	go func() { defer close(done); defer peer.Close(); s.connection(context.Background(), wrapped) }()
+	<-ready
+	s.stopping.Store(true)
+	client.SetDeadline(time.Now().Add(time.Second))
+	if _, err := io.WriteString(client, wireRequest); err != nil {
+		t.Fatal(err)
+	}
+	attrs, err := readRequest(bufio.NewReader(client))
+	if err != nil || attrs["action"] != unavailable {
+		t.Fatalf("got %v, %v", attrs, err)
+	}
+	<-done
+	if len(entered) != 0 {
+		t.Fatal("started DNS after shutdown")
+	}
+}
+
+type readNotifyingConn struct {
+	net.Conn
+	ready chan struct{}
+	once  sync.Once
+}
+
+func (c *readNotifyingConn) Read(p []byte) (int, error) {
+	c.once.Do(func() { close(c.ready) })
+	return c.Conn.Read(p)
 }
