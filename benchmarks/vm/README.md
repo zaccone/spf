@@ -31,4 +31,6 @@ per-evaluation latency. Python pool setup, shutdown, result gathering and (in
 process mode) sample serialization are included in throughput timing; Go includes
 goroutine creation and joining. Sorting is excluded. Interpreter/binary launch
 and warmup are excluded. Percentiles measure evaluation time, not client latency.
+Worker and sample counts must be positive, delay must be nonnegative, and
+scenario must be `simple` or `include`; invalid settings exit without measurements.
 No throughput or latency thresholds are suitable as CI gates on arbitrary hosts.
