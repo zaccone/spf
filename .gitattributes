@@ -1,0 +1,2 @@
+# Corpus provenance and integrity checks require the pinned bytes on every OS.
+testdata/pyspf/* -text
