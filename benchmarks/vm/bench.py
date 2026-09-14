@@ -1,13 +1,15 @@
 """Synthetic DNS benchmark. Thread workers share no SPF query state."""
 import argparse, concurrent.futures, json, time, multiprocessing
-import spf
 p = argparse.ArgumentParser()
 p.add_argument('--workers', type=int, default=1)
 p.add_argument('--n', type=int, default=20000)
 p.add_argument('--delay', type=int, default=0)
-p.add_argument('--scenario', default='simple')
+p.add_argument('--scenario', choices=('simple', 'include'), default='simple')
 p.add_argument('--processes', action='store_true')
 a = p.parse_args()
+if a.workers < 1 or a.n < 1 or a.delay < 0:
+    p.error('workers and n must be positive; delay must be nonnegative')
+import spf
 def lookup(name, qtype, *args):
     if qtype != 'TXT':
         raise AssertionError((name, qtype))

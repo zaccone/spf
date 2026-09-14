@@ -11,9 +11,10 @@ def grouped(name, expected):
     assert len(rows) == expected, (name, len(rows))
     groups = collections.defaultdict(list)
     for r in rows:
-        assert r['seconds'] > 0 and r['n'] > 0
+        assert r['seconds'] > 0 and r['n'] > 0 and r['workers'] > 0
+        assert r['delay_us'] >= 0 and r['scenario'] in ('simple', 'include')
         groups[r['scenario'], r['delay_us'], r['implementation'], r['workers']].append(r)
-    assert all(len(v) == 3 for v in groups.values())
+    assert all(len(v) == 3 and {r['repeat'] for r in v} == {1, 2, 3} for v in groups.values())
     return groups
 
 sweep = grouped('results.jsonl', 96)

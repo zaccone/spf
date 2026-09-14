@@ -5,12 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	spf "github.com/zaccone/spf"
+	"fmt"
 	"net"
 	"os"
 	"sort"
 	"sync"
 	"time"
+
+	spf "github.com/zaccone/spf"
 )
 
 type resolver struct {
@@ -46,6 +48,10 @@ func main() {
 	delay := flag.Int("delay", 0, "microseconds per DNS call")
 	scenario := flag.String("scenario", "simple", "")
 	flag.Parse()
+	if *workers < 1 || *n < 1 || *delay < 0 || (*scenario != "simple" && *scenario != "include") || flag.NArg() != 0 {
+		fmt.Fprintln(os.Stderr, "workers and n must be positive, delay must be nonnegative, and scenario must be simple or include; positional arguments are not accepted")
+		os.Exit(2)
+	}
 	r := resolver{time.Duration(*delay) * time.Microsecond, *scenario}
 	ip := net.ParseIP("192.0.2.1")
 	check := func() {
