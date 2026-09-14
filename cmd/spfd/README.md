@@ -90,8 +90,8 @@ do not configure a failure action of `OK`. Start in monitor mode and review logs
 before enabling rejection. Validate changes with `postfix check` before reload.
 
 Protocol requests are `name=value` lines followed by a blank line. Connections
-can carry multiple requests in order. Unknown attributes are tolerated; duplicate
-attributes and malformed framing are rejected. Requests are limited to 64 KiB,
+can carry multiple requests in order. Unknown attributes are tolerated; repeated attributes use their last value,
+as permitted by the Postfix protocol. Malformed framing is rejected. Requests are limited to 64 KiB,
 256 attributes, and lines that fit the 4096-byte read buffer.
 
 ## Concurrency, deadlines and shutdown
