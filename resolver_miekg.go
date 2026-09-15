@@ -188,7 +188,8 @@ func (r *MiekgDNSResolver) LookupMXContext(ctx context.Context, name string) ([]
 	return records, err
 }
 
-// LookupAddrContext performs the IPv4 or IPv6 reverse query, without validation.
+// LookupAddrContext performs the IPv4 or IPv6 reverse query, without forward
+// validation. Only the first ten PTR candidates are returned (RFC 7208, 4.6.4).
 func (r *MiekgDNSResolver) LookupAddrContext(ctx context.Context, addr string) ([]string, error) {
 	name, err := dns.ReverseAddr(addr)
 	if err != nil {
@@ -198,6 +199,11 @@ func (r *MiekgDNSResolver) LookupAddrContext(ctx context.Context, addr string) (
 	var records []string
 	for _, rr := range rrs {
 		if ptr, ok := rr.(*dns.PTR); ok {
+			// Ignore excess candidates before conversion: an unrepresentable
+			// name beyond the limit must not invalidate the usable candidates.
+			if len(records) == 10 {
+				break
+			}
 			host, nameErr := dnsLiteralName(ptr.Ptr)
 			if nameErr != nil {
 				return nil, nameErr
