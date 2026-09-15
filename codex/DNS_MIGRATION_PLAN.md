@@ -4,6 +4,24 @@ Assessed 2026-09-15 against SPF commit `8d17653`, using the source archive of
 `codeberg.org/miekg/dns v0.6.109` (2026-09-04,
 `3543e6e5dc72f729965f75405b6c27a564e5b118`). This is a plan, not an implemented port.
 
+## Implementation status (2026-09-15)
+
+- Stage 1 is implemented in [PR #48](https://github.com/zaccone/spf/pull/48):
+  `ServerResolver`, one preferred constructor, deprecated compatibility aliases,
+  updated CLI/docs, and passing cross-platform CI.
+- Stage 2 is implemented in `tools/dnscompat`, an isolated comparison module.
+  Its strict gate fails in nine raw-wire label-boundary cases against v0.6.109.
+  Literal-name and malformed-name controls pass. Closing an owned connection
+  restores prompt cancellation of a blocked read.
+- **Go/no-go: defer stages 3–5.** The new dependency is not in the production
+  module. See [spike findings and reproduction](../tools/dnscompat/README.md).
+  A blanket packet rejection would also risk regressing the latest fix that
+  ignores unrepresentable PTR candidates after the first ten; an upstream or
+  local solution must preserve candidate selection before name conversion.
+
+The sections below retain the original plan and static assessment as context;
+executable evidence and current status are documented above and in the spike.
+
 ## Recommendation
 
 **Prepare the migration, but gate shipping on preserving DNS label boundaries.**
