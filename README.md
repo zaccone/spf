@@ -46,8 +46,10 @@ go vet ./...
 ```
 
 DNS tests each own servers on ephemeral UDP/TCP ports on loopback. They require
-local socket access, but no public DNS or installed BIND server. The `_etc/bind`
-files are historical fixtures.
+local socket access, but no public DNS or installed resolver. For deployments,
+`_etc/unbound` contains a loopback-only recursive cache configuration. Install
+it as `/etc/unbound/unbound.conf`, validate it with `unbound-checkconf`, and
+point `NewServerResolver` or `spfd -dns` at `127.0.0.1:53`.
 
 To check for races:
 
