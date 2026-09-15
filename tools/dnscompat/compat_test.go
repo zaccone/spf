@@ -125,6 +125,45 @@ func TestMalformedNameControls(t *testing.T) {
 	}
 }
 
+// A future fix must not make Msg.Unpack reject an entire response merely because
+// an ignored record contains an unrepresentable name. SPF validates at most ten
+// PTR candidates and filters unrelated answers before converting their names.
+func TestSelectionBeforeNameValidation(t *testing.T) {
+	t.Run("eleventh PTR candidate", func(t *testing.T) {
+		wire := ptrCandidatesPacket(11, true)
+		m := dnsv2.Msg{Data: slices.Clone(wire)}
+		if err := m.Unpack(); err != nil {
+			blocker(t, "v2 rejected a response because the ignored eleventh PTR candidate contains an embedded dot: %v", err)
+			return
+		}
+		if len(m.Answer) != 11 {
+			t.Fatalf("decoded %d answers; want 11", len(m.Answer))
+		}
+		for i, rr := range m.Answer[:10] {
+			want := fmt.Sprintf("candidate%d.test.", i)
+			if got := rr.(*dnsv2.PTR).Ptr; got != want {
+				t.Fatalf("candidate %d = %q; want %q", i, got, want)
+			}
+		}
+	})
+
+	t.Run("unrelated answer owner", func(t *testing.T) {
+		wire := responseHeader(2)
+		wire = append(wire, wireName([]string{"query", "test"})...)
+		wire = append(wire, 0, 12, 0, 1)
+		wire = appendRR(wire, wireName([]string{"ignored.example", "test"}), 1, []byte{192, 0, 2, 1})
+		wire = appendRR(wire, wireName([]string{"query", "test"}), 12, wireName([]string{"usable", "test"}))
+		m := dnsv2.Msg{Data: slices.Clone(wire)}
+		if err := m.Unpack(); err != nil {
+			blocker(t, "v2 rejected a usable response because an unrelated answer owner contains an embedded dot: %v", err)
+			return
+		}
+		if got := m.Answer[1].(*dnsv2.PTR).Ptr; got != "usable.test." {
+			t.Fatalf("usable PTR = %q", got)
+		}
+	})
+}
+
 func assertV1Labels(t *testing.T, name string, labels []string) {
 	t.Helper()
 	wire := make([]byte, 255)
@@ -180,7 +219,7 @@ func decodeV2(wire []byte, field string) (string, error) {
 // constants below are DNS wire values, so the fixtures cannot share an encoding
 // mistake with the implementation being evaluated.
 func packet(field string, labels []string, compressed bool) []byte {
-	wire := []byte{0x12, 0x34, 0x81, 0x80, 0, 1, 0, 0, 0, 0, 0, 0}
+	wire := responseHeader(0)
 	name := wireName(labels)
 	if field == "question" {
 		return append(append(wire, name...), 0, 1, 0, 1)
@@ -212,6 +251,27 @@ func packet(field string, labels []string, compressed bool) []byte {
 	}
 	wire = appendRR(wire, owner, rrtype, rdata)
 	binary.BigEndian.PutUint16(wire[6:8], answers)
+	return wire
+}
+
+func responseHeader(answers uint16) []byte {
+	wire := []byte{0x12, 0x34, 0x81, 0x80, 0, 1, 0, 0, 0, 0, 0, 0}
+	binary.BigEndian.PutUint16(wire[6:8], answers)
+	return wire
+}
+
+func ptrCandidatesPacket(count int, embeddedDotLast bool) []byte {
+	wire := responseHeader(uint16(count))
+	owner := wireName([]string{"query", "test"})
+	wire = append(wire, owner...)
+	wire = append(wire, 0, 12, 0, 1)
+	for i := range count {
+		labels := []string{fmt.Sprintf("candidate%d", i), "test"}
+		if embeddedDotLast && i == count-1 {
+			labels = []string{"ignored.example", "test"}
+		}
+		wire = appendRR(wire, owner, 12, wireName(labels))
+	}
 	return wire
 }
 

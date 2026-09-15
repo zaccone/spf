@@ -38,6 +38,8 @@ integration suite and remaining migration-plan gates must pass too.
 | Embedded dot in CNAME target, plain/compressed | Label boundary lost |
 | Embedded dot in MX target, plain/compressed | Label boundary lost |
 | Embedded dot in PTR target, plain/compressed | Label boundary lost |
+| Embedded dot in ignored eleventh PTR candidate | Packet remains selectable; must stay so after a fix |
+| Embedded dot in unrelated answer owner | Usable answer remains selectable; must stay so after a fix |
 | Nine valid literal-name controls, incoming and outgoing | Passed |
 | Oversized labels/names, truncated labels, invalid pointers | Rejected as expected |
 | Cancel an in-flight native `ExchangeWithConn` read | Still blocked after 250 ms |
@@ -55,6 +57,11 @@ A single question has no earlier name to reference, so it has only the plain cas
 Controls cover punctuation, spaces, literal backslashes, the text `\032`, root,
 63-byte labels, and a 255-byte wire name. Invalid-name controls are representative,
 not a comprehensive DNS parser fuzz suite.
+
+The selection controls prevent a superficially safe fix from rejecting the whole
+message on any embedded dot. A suitable API must preserve or expose boundaries
+for records the caller selects while still allowing it to ignore excess PTR
+candidates and unrelated answers.
 
 The cancellation probe uses `net.Pipe` and observes entry into the response read
 before canceling. It is evidence about an in-flight read, not a full UDP/TCP
@@ -100,7 +107,7 @@ go -C tools/dnscompat mod why -m github.com/miekg/dns
 4. Then port the production client against the existing independent v1 test
    servers, preserve cancellation and validation, migrate fixtures, and complete
    the integration/race/fuzz/performance gates in
-   [the migration plan](../../codex/DNS_MIGRATION_PLAN.md).
+   [the migration plan](../../DNS_V2_MIGRATION.md).
 
 No upstream issue or message has been sent as part of this spike. No production
 wire validator, dependency switch, or performance claim is included.
