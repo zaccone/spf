@@ -67,19 +67,45 @@ Python is needed only to regenerate the vendored JSON fixtures.
 
 ## Benchmarks
 
-On a four-vCPU Ubuntu VM, the Go evaluator achieved about 5.4× the throughput
-of four pyspf processes on two CPU-bound synthetic policies. With simulated
-DNS delay, both implementations benefited from concurrent evaluations and
-performed similarly at low concurrency. These are library microbenchmarks,
-not production SMTP capacity measurements. See the [benchmark report](benchmarks/vm/REPORT.md)
-for methodology, results and limitations, and the [reproduction instructions](benchmarks/vm/README.md)
-for scripts and raw measurements.
+The latest archived run (15 September 2026) measured the Go library, `spfd`,
+and pyspf 2.0.14 against the same warmed local Unbound on a shared four-vCPU
+Ubuntu VM. At independently selected peak settings (64 Go goroutines and eight
+Python processes), library throughput was:
 
-The [cached Unbound benchmark](benchmarks/unbound/REPORT.md) measures the current
-Go library and `spfd` over loopback DNS, including throughput, p50/p75/p90/p99,
-CPU scaling, DNS controls, and bottleneck profiles. Its
-[reproduction guide](benchmarks/unbound/README.md) includes the VM configuration
-and measurement harness.
+| Policy / DNS queries per check | Go checks/s | pyspf checks/s | Go / pyspf |
+|---|---:|---:|---:|
+| Simple / 1 | 232,517 | 24,801 | 9.38× |
+| Include / 2 | 117,541 | 12,761 | 9.21× |
+| Include chain / 10 | 24,127 | 2,684 | 8.99× |
+
+Values are medians of three ten-second trials. These peak settings use different
+concurrency: Go had higher p99 latency than pyspf in all three rows. At matched
+four-worker concurrency, exploratory single trials showed 5.55–5.90× Go
+throughput with lower p50 and p99 latency.
+
+`spfd` reached 98,860 policy requests/s for the simple policy over persistent
+loopback TCP connections, including protocol handling and JSON logging to
+`/dev/null`. This is not a service-to-service pyspf comparison. Lower concurrency
+traded little throughput for better tail latency: at 16 workers/connections,
+the simple policy reached 225,256 library checks/s at p99 404 µs and 93,082
+`spfd` requests/s at p99 1,037 µs.
+
+Profiles and DNS controls identify per-query DNS transport work as the main
+library bottleneck in this fixture; reusable-socket controls suggest an
+optimization to investigate, not a demonstrated SPF speedup. All measured DNS
+answers were cache hits. These small, closed-loop fixtures exclude public DNS
+misses, realistic mail policy mixes, and log backpressure, so they do not
+establish production SMTP capacity or latency guarantees. See the
+[cached Unbound report](benchmarks/unbound/REPORT.md) for the measured revision,
+methodology, latency tables, CPU profiles and limitations, and its
+[reproduction guide](benchmarks/unbound/README.md) for scripts and raw results.
+
+The [earlier synthetic benchmark](benchmarks/vm/REPORT.md) remains a separate
+baseline: Go achieved about 5.4× the throughput of four pyspf processes on two
+CPU-bound policies, while both implementations performed similarly at low
+concurrency with simulated DNS delay. Those tests used resolver callbacks rather
+than real DNS transport; their ratios are not directly comparable to the cached
+Unbound results. See the [synthetic reproduction guide](benchmarks/vm/README.md).
 
 ## Dependencies
 The library uses [miekg/dns](https://github.com/miekg/dns) for its configurable
