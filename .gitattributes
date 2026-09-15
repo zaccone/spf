@@ -1,2 +1,6 @@
 # Corpus provenance and integrity checks require the pinned bytes on every OS.
 testdata/pyspf/* -text
+
+# Go rewrites module files with LF, including modules used by diagnostic tools.
+go.mod text eol=lf
+go.sum text eol=lf
