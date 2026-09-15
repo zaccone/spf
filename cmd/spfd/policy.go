@@ -120,11 +120,10 @@ func (s *server) policy(ctx context.Context, attrs map[string]string) string {
 	if sender == "<>" {
 		sender = ""
 	}
-	result, _, err := spf.CheckHostWithOptions(checkctx, ip, domain, sender, spf.Options{Resolver: s.resolver, HELO: attrs["helo_name"], Receiver: s.receiver})
+	result, _, _ := spf.CheckHostWithOptions(checkctx, ip, domain, sender, spf.Options{Resolver: s.resolver, HELO: attrs["helo_name"], Receiver: s.receiver})
+	// Invalid SPF domains (including HELO address literals) yield none,
+	// not a service failure. Preserve that result's DUNNO disposition.
 	action := disposition(result, s.enforce)
-	if result == spf.None && (errors.Is(err, spf.ErrInvalidDomain) || errors.Is(err, spf.ErrInvalidIP)) {
-		action = unavailable
-	}
 	// Do not log attacker-controlled sender addresses or DNS explanation text.
 	s.logger.Info("SPF evaluation", "result", result.String(), "action", action, "elapsed_ms", time.Since(start).Milliseconds())
 	return action

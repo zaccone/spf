@@ -112,6 +112,28 @@ func TestNullSenderAndInvalidRequests(t *testing.T) {
 		}
 	}
 }
+func TestNullSenderInvalidHELO(t *testing.T) {
+	for _, enforce := range []bool{false, true} {
+		for _, sender := range []string{"", "<>"} {
+			for _, helo := range []string{"[192.0.2.1]", "[IPv6:2001:db8::1]", "localhost", "bad..example.com"} {
+				t.Run(fmt.Sprintf("enforce=%v/sender=%q/helo=%s", enforce, sender, helo), func(t *testing.T) {
+					entered := make(chan string, 1)
+					s := testServer(fixtureResolver{policy: "v=spf1 -all", entered: entered})
+					s.enforce = enforce
+					a := request()
+					a["sender"], a["helo_name"] = sender, helo
+					if got := s.policy(context.Background(), a); got != "DUNNO" {
+						t.Fatalf("got %q, want DUNNO", got)
+					}
+					if len(entered) != 0 {
+						t.Fatal("unexpected DNS call for invalid HELO")
+					}
+				})
+			}
+		}
+	}
+}
+
 func TestConcurrentChecksAndOverload(t *testing.T) {
 	release := make(chan struct{})
 	entered := make(chan string, 2)

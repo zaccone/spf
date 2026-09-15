@@ -45,9 +45,12 @@ fail and temporarily defer SPF temperror. The response table is:
 | fail | DUNNO | 550 5.7.23 |
 | temperror | DUNNO | 451 4.7.24 |
 
-Malformed requests, unusable identities and exhausted evaluation capacity produce
-451 4.3.0 in both modes. Excess connections are closed immediately; Postfix then
-uses its policy-service failure action. DNS explanation strings are never copied
+Malformed requests (including invalid client IPs, malformed sender mailboxes,
+or a null sender without HELO) and exhausted evaluation capacity produce
+451 4.3.0 in both modes. Domains unsuitable for SPF, including HELO address
+literals, produce `none` and return `DUNNO` in both modes. Excess connections are
+closed immediately; Postfix then uses its policy-service failure action.
+DNS explanation strings are never copied
 into protocol responses. SPF pass never returns `OK`, so it cannot bypass other
 restrictions. Permerror is logged and left to other policy, rather than rejecting
 mail for a sender's broken SPF configuration.
