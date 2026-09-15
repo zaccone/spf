@@ -1,0 +1,160 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 3K of event 'task-clock:ppp'
+# Event count (approx.): 34606060260
+#
+# Overhead  Command  Shared Object      Symbol
+# ........  .......  .................  ..................................................................
+#
+     7.65%  spfd     [kernel.kallsyms]  [k] _raw_spin_unlock_irqrestore
+            |
+            ---_raw_spin_unlock_irqrestore
+               |
+                --6.86%--__wake_up_sync_key
+                          |
+                           --6.54%--sock_def_readable
+                                     |
+                                     |--4.44%--__udp_enqueue_schedule_skb
+                                     |          udp_queue_rcv_one_skb
+                                     |          udp_queue_rcv_skb
+                                     |          udp_unicast_rcv_skb
+                                     |          __udp4_lib_rcv
+                                     |          udp_rcv
+                                     |          ip_protocol_deliver_rcu
+                                     |          ip_local_deliver_finish
+                                     |          ip_local_deliver
+                                     |          ip_rcv
+                                     |          __netif_receive_skb_one_core
+                                     |          __netif_receive_skb
+                                     |          process_backlog
+                                     |          __napi_poll
+                                     |          net_rx_action
+                                     |          handle_softirqs
+                                     |          __do_softirq
+                                     |          do_softirq.part.0
+                                     |          __local_bh_enable_ip
+                                     |          __dev_queue_xmit
+                                     |          neigh_hh_output
+                                     |          ip_finish_output2
+                                     |          __ip_finish_output
+                                     |          ip_finish_output
+                                     |          ip_output
+                                     |          ip_send_skb
+                                     |          udp_send_skb
+                                     |          udp_sendmsg
+                                     |          inet_sendmsg
+                                     |          sock_write_iter
+                                     |          vfs_write
+                                     |          ksys_write
+                                     |          __x64_sys_write
+                                     |          x64_sys_call
+                                     |          do_syscall_64
+                                     |          entry_SYSCALL_64_after_hwframe
+                                     |          internal/runtime/syscall/linux.Syscall6
+                                     |          syscall.Syscall
+                                     |          syscall.write
+                                     |          syscall.Write (inlined)
+                                     |          internal/poll.ignoringEINTRIO (inlined)
+                                     |          internal/poll.(*FD).Write
+                                     |          net.wrapSyscallError (inlined)
+                                     |          net.(*netFD).Write
+                                     |          net.(*conn).Write
+                                     |          github.com/miekg/dns.(*Conn).Write
+                                     |          github.com/miekg/dns.(*Conn).WriteMsg
+                                     |          github.com/miekg/dns.(*Client).ExchangeWithConnContext
+                                     |          github.com/zaccone/spf.(*ServerResolver).exchangeContext
+                                     |          github.com/zaccone/spf.(*ServerResolver).lookup
+                                     |          github.com/zaccone/spf.(*ServerResolver).LookupTXTContext
+                                     |          github.com/zaccone/spf.(*evaluation).LookupTXTStrict
+                                     |          github.com/zaccone/spf.checkHost
+                                     |          github.com/zaccone/spf.evaluate
+                                     |          github.com/zaccone/spf.CheckHostWithOptions
+                                     |          main.(*server).policy
+                                     |          main.(*server).connection
+                                     |          main.(*server).serve.func2
+                                     |          runtime.goexit (inlined)
+                                     |
+                                      --2.10%--tcp_data_ready
+                                                tcp_rcv_established
+                                                tcp_v4_do_rcv
+                                                tcp_v4_rcv
+                                                ip_protocol_deliver_rcu
+                                                ip_local_deliver_finish
+                                                ip_local_deliver
+                                                ip_rcv
+                                                __netif_receive_skb_one_core
+                                                __netif_receive_skb
+                                                process_backlog
+                                                __napi_poll
+                                                net_rx_action
+                                                handle_softirqs
+                                                __do_softirq
+                                                do_softirq.part.0
+                                                __local_bh_enable_ip
+                                                __dev_queue_xmit
+                                                neigh_hh_output
+                                                ip_finish_output2
+                                                __ip_finish_output
+                                                ip_finish_output
+                                                ip_output
+                                                ip_local_out
+                                                __ip_queue_xmit
+                                                ip_queue_xmit
+                                                __tcp_transmit_skb
+                                                tcp_write_xmit
+                                                __tcp_push_pending_frames
+                                                tcp_push
+                                                tcp_sendmsg_locked
+                                                tcp_sendmsg
+                                                inet_sendmsg
+                                                sock_write_iter
+                                                vfs_write
+                                                ksys_write
+                                                __x64_sys_write
+                                                x64_sys_call
+                                                do_syscall_64
+                                                entry_SYSCALL_64_after_hwframe
+                                                internal/runtime/syscall/linux.Syscall6
+                                                syscall.Syscall
+                                                syscall.write
+                                                syscall.Write (inlined)
+                                                internal/poll.ignoringEINTRIO (inlined)
+                                                internal/poll.(*FD).Write
+                                                net.wrapSyscallError (inlined)
+                                                net.(*netFD).Write
+                                                net.(*conn).Write
+                                                fmt.Fprintf
+                                                main.(*server).connection
+                                                main.(*server).serve.func2
+                                                runtime.goexit (inlined)
+
+     1.78%  spfd     [kernel.kallsyms]  [k] do_syscall_64
+            |
+            ---do_syscall_64
+               entry_SYSCALL_64_after_hwframe
+               |
+                --1.75%--internal/runtime/syscall/linux.Syscall6
+                          |
+                           --1.02%--syscall.Syscall
+
+     1.49%  spfd     [vdso]             [.] 0x000000000000093d
+            |
+            ---0x7f0dd49b193d
+
+     1.20%  spfd     spfd               [.] internal/runtime/syscall/linux.Syscall6
+            |
+            ---internal/runtime/syscall/linux.Syscall6
+
+     1.05%  spfd     [kernel.kallsyms]  [k] __memcg_slab_post_alloc_hook
+            |
+            ---__memcg_slab_post_alloc_hook
+
+     1.02%  spfd     spfd               [.] github.com/miekg/dns.UnpackDomainName
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

@@ -1,0 +1,25 @@
+DNS Performance Testing Tool
+Version 2.15.0
+
+[Status] Command line: dnsperf -f inet6 -s ::1 -a ::1 -d results/dnsperf-queries.txt -l 15 -c 64 -T 2 -q 256
+[Status] Sending queries (to [::1]:53)
+[Status] Started at: Tue Sep 15 14:51:08 2026
+[Status] Stopping after 15.000000 seconds
+[Status] Testing complete (time limit)
+
+Statistics:
+
+  Queries sent:         10730971
+  Queries completed:    10730971 (100.00%)
+  Queries lost:         0 (0.00%)
+
+  Response codes:       NOERROR 10730971 (100.00%)
+  Average packet size:  request 39, response 80
+  Run time (s):         15.000064
+  Queries per second:   715395.014315
+
+  Average Latency (s):  0.000113 (min 0.000002, max 0.004978)
+  Latency StdDev (s):   0.000198
+
+
+{"unbound_cpu_pct": 155.63218365493557, "dns_delta": {"thread0.num.queries_ip_ratelimited": 0.0, "thread1.num.queries_ip_ratelimited": 0.0, "thread2.num.queries_ip_ratelimited": 0.0, "thread3.num.queries_ip_ratelimited": 0.0, "total.num.queries": 10730971.0, "total.num.queries_ip_ratelimited": 0.0, "total.num.queries_cookie_valid": 0.0, "total.num.queries_cookie_client": 0.0, "total.num.queries_cookie_invalid": 0.0, "total.num.queries_discard_timeout": 0.0, "total.num.queries_wait_limit": 0.0, "total.num.cachehits": 10730971.0, "total.num.cachemiss": 0.0, "total.num.prefetch": 0.0, "total.num.queries_timed_out": 0.0, "total.query.queue_time_us.max": 0.0, "total.num.expired": 0.0, "total.num.recursivereplies": 0.0, "total.num.dns_error_reports": 0.0, "total.requestlist.avg": 0.0, "total.requestlist.max": 0.0, "total.requestlist.overwritten": 0.0, "total.requestlist.exceeded": 0.0, "total.requestlist.current.all": 0.0, "total.requestlist.current.user": 0.0, "total.recursion.time.avg": 0.0, "total.recursion.time.median": 0.0, "total.tcpusage": 0.0, "num.query.ratelimited": 0.0}}

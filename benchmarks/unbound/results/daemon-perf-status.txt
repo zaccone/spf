@@ -1,0 +1,2 @@
+[ perf record: Woken up 1 times to write data ]
+[ perf record: Captured and wrote 0.812 MB /home/marek/spf-unbound-20260915/results/daemon.perf (3426 samples) ]

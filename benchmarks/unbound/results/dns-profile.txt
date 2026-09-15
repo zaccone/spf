@@ -1,0 +1,49 @@
+File: bench
+Build ID: bcc1679c5ea17a1560dfb0f41fac0bc0cd8b9aa6
+Type: cpu
+Time: 2026-09-15 11:15:16 UTC
+Duration: 15.01s, Total samples = 45.20s (301.20%)
+Showing nodes accounting for 33.24s, 73.54% of 45.20s total
+Dropped 332 nodes (cum <= 0.23s)
+Showing top 40 nodes out of 184
+      flat  flat%   sum%        cum   cum%
+    21.76s 48.14% 48.14%     21.76s 48.14%  internal/runtime/syscall/linux.Syscall6
+     1.15s  2.54% 50.69%      1.15s  2.54%  time.runtimeNow
+     0.95s  2.10% 52.79%      0.95s  2.10%  runtime.nanotime (inline)
+     0.64s  1.42% 54.20%      0.94s  2.08%  github.com/miekg/dns.UnpackDomainName
+     0.53s  1.17% 55.38%      0.55s  1.22%  runtime.lock2
+     0.46s  1.02% 56.39%      0.46s  1.02%  runtime.memclrNoHeapPointers
+     0.46s  1.02% 57.41%      0.55s  1.22%  runtime.unlock2
+     0.44s  0.97% 58.38%      0.44s  0.97%  runtime.nextFreeFast (inline)
+     0.42s  0.93% 59.31%      0.42s  0.93%  sync/atomic.StorePointer
+     0.39s  0.86% 60.18%      3.26s  7.21%  runtime.mallocgc
+     0.35s  0.77% 60.95%      0.35s  0.77%  runtime.(*mspan).specialFindSplicePoint (inline)
+     0.32s  0.71% 61.66%     43.61s 96.48%  main.main.func1
+     0.30s  0.66% 62.32%      0.30s  0.66%  runtime.memmove
+     0.28s  0.62% 62.94%      0.32s  0.71%  github.com/miekg/dns.packDomainName
+     0.28s  0.62% 63.56%      0.34s  0.75%  runtime.mallocgcSmallScanNoHeaderSC3
+     0.27s   0.6% 64.16%     17.22s 38.10%  net.(*Dialer).DialContext
+     0.27s   0.6% 64.76%      0.27s   0.6%  sync/atomic.(*Value).Load (inline)
+     0.26s  0.58% 65.33%      1.60s  3.54%  runtime.mallocgcSmallScanNoHeader
+     0.25s  0.55% 65.88%      0.27s   0.6%  github.com/miekg/dns.unpackMsgHdr
+     0.24s  0.53% 66.42%      0.27s   0.6%  runtime.exitsyscall
+     0.24s  0.53% 66.95%      0.38s  0.84%  runtime.mallocgcSmallNoScanSC4
+     0.22s  0.49% 67.43%      0.34s  0.75%  runtime.mallocgcSmallScanNoHeaderSC5
+     0.21s  0.46% 67.90%      1.02s  2.26%  context.(*cancelCtx).Done
+     0.21s  0.46% 68.36%      0.85s  1.88%  runtime.(*timer).modify
+     0.21s  0.46% 68.83%      1.28s  2.83%  runtime.SetFinalizer
+     0.20s  0.44% 69.27%     42.71s 94.49%  github.com/zaccone/spf.(*ServerResolver).lookup
+     0.20s  0.44% 69.71%     18.26s 40.40%  syscall.RawSyscall6
+     0.17s  0.38% 70.09%      0.31s  0.69%  runtime.mallocgcSmallScanNoHeaderSC2
+     0.16s  0.35% 70.44%     14.75s 32.63%  github.com/miekg/dns.(*Client).ExchangeWithConnContext
+     0.16s  0.35% 70.80%      0.41s  0.91%  github.com/zaccone/spf.validExpandedDomain
+     0.16s  0.35% 71.15%      0.34s  0.75%  runtime.(*timer).unlock (inline)
+     0.15s  0.33% 71.48%      6.75s 14.93%  net.(*netFD).dial
+     0.15s  0.33% 71.81%      0.25s  0.55%  runtime.(*timer).stop
+     0.14s  0.31% 72.12%     38.89s 86.04%  github.com/zaccone/spf.(*ServerResolver).exchangeContext
+     0.13s  0.29% 72.41%      1.07s  2.37%  net.(*Resolver).internetAddrList
+     0.11s  0.24% 72.65%      2.05s  4.54%  internal/poll.(*FD).Read
+     0.11s  0.24% 72.90%      0.38s  0.84%  strings.genSplit
+     0.10s  0.22% 73.12%      1.20s  2.65%  context.(*cancelCtx).propagateCancel
+     0.10s  0.22% 73.34%      1.35s  2.99%  github.com/miekg/dns.unpackRRslice
+     0.09s   0.2% 73.54%     12.80s 28.32%  net.(*sysDialer).dialSerial

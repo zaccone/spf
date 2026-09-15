@@ -1,0 +1,49 @@
+File: bench
+Build ID: bcc1679c5ea17a1560dfb0f41fac0bc0cd8b9aa6
+Type: cpu
+Time: 2026-09-15 11:15:47 UTC
+Duration: 15s, Total samples = 59.06s (393.80%)
+Showing nodes accounting for 40.10s, 67.90% of 59.06s total
+Dropped 261 nodes (cum <= 0.30s)
+Showing top 40 nodes out of 140
+      flat  flat%   sum%        cum   cum%
+     7.50s 12.70% 12.70%      7.50s 12.70%  time.runtimeNow
+     3.03s  5.13% 17.83%      3.03s  5.13%  runtime.nanotime
+     2.52s  4.27% 22.10%      4.21s  7.13%  runtime.mallocgcSmallScanNoHeaderSC4
+     2.19s  3.71% 25.80%      2.19s  3.71%  net/netip.parseIPv4Fields
+     1.89s  3.20% 29.00%      3.94s  6.67%  github.com/zaccone/spf.(*lexer).next
+     1.39s  2.35% 31.36%      1.39s  2.35%  unicode/utf8.DecodeRuneInString (inline)
+     1.32s  2.24% 33.59%      1.32s  2.24%  github.com/zaccone/spf.(*lexer).eof (inline)
+     1.32s  2.24% 35.83%      1.32s  2.24%  indexbytebody
+     1.11s  1.88% 37.71%      4.23s  7.16%  github.com/zaccone/spf.validateRecord
+     0.93s  1.57% 39.28%      0.93s  1.57%  runtime.getMCache (inline)
+     0.84s  1.42% 40.70%      2.75s  4.66%  github.com/zaccone/spf.validExpandedDomain
+     0.81s  1.37% 42.08%      0.81s  1.37%  runtime.acquirem (inline)
+     0.80s  1.35% 43.43%      0.80s  1.35%  github.com/zaccone/spf.isDomainName
+     0.77s  1.30% 44.73%      0.77s  1.30%  internal/bytealg.IndexByteString
+     0.77s  1.30% 46.04%      7.56s 12.80%  runtime.mallocgc
+     0.74s  1.25% 47.29%      2.13s  3.61%  internal/stringslite.Index
+     0.70s  1.19% 48.48%      1.20s  2.03%  runtime.mallocgcTinySC2
+     0.65s  1.10% 49.58%      7.02s 11.89%  github.com/zaccone/spf.(*lexer).scanIdent
+     0.65s  1.10% 50.68%      1.71s  2.90%  strings.IndexAny
+     0.64s  1.08% 51.76%      0.90s  1.52%  runtime.mallocgcSmallScanNoHeaderSC2
+     0.63s  1.07% 52.83%      0.93s  1.57%  runtime.mallocgcSmallScanNoHeaderSC5
+     0.62s  1.05% 53.88%      0.62s  1.05%  runtime.memclrNoHeapPointers
+     0.61s  1.03% 54.91%      0.61s  1.03%  net.isZeros (inline)
+     0.55s  0.93% 55.84%      2.45s  4.15%  runtime.concatstrings
+     0.55s  0.93% 56.77%      0.71s  1.20%  runtime.unlock2
+     0.54s  0.91% 57.69%      0.54s  0.91%  strings.EqualFold
+     0.50s  0.85% 58.53%     26.33s 44.58%  github.com/zaccone/spf.(*parser).parse
+     0.49s  0.83% 59.36%      0.72s  1.22%  runtime.mallocgcSmallScanNoHeaderSC7
+     0.49s  0.83% 60.19%      0.49s  0.83%  strings.ToLower
+     0.47s   0.8% 60.99%      2.33s  3.95%  net.parseIP
+     0.46s  0.78% 61.77%      0.46s  0.78%  runtime.(*mspan).writeHeapBitsSmall
+     0.44s  0.75% 62.51%      0.44s  0.75%  runtime.memmove
+     0.43s  0.73% 63.24%     12.67s 21.45%  github.com/zaccone/spf.(*lexer).scan
+     0.43s  0.73% 63.97%      2.86s  4.84%  runtime.mallocgcSmallScanNoHeader
+     0.40s  0.68% 64.65%      0.40s  0.68%  net/netip.AddrFrom4 (inline)
+     0.39s  0.66% 65.31%      0.69s  1.17%  runtime.mallocgcSmallNoScanSC4
+     0.39s  0.66% 65.97%      0.47s   0.8%  runtime.mallocgcSmallScanNoHeaderSC1
+     0.38s  0.64% 66.61%      0.87s  1.47%  github.com/zaccone/spf.tokenTypeFromString
+     0.38s  0.64% 67.25%      0.38s  0.64%  internal/bytealg.LastIndexByteString
+     0.38s  0.64% 67.90%      0.56s  0.95%  runtime.lock2

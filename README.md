@@ -75,6 +75,12 @@ not production SMTP capacity measurements. See the [benchmark report](benchmarks
 for methodology, results and limitations, and the [reproduction instructions](benchmarks/vm/README.md)
 for scripts and raw measurements.
 
+The [cached Unbound benchmark](benchmarks/unbound/REPORT.md) measures the current
+Go library and `spfd` over loopback DNS, including throughput, p50/p75/p90/p99,
+CPU scaling, DNS controls, and bottleneck profiles. Its
+[reproduction guide](benchmarks/unbound/README.md) includes the VM configuration
+and measurement harness.
+
 ## Dependencies
 The library uses [miekg/dns](https://github.com/miekg/dns) for its configurable
 DNS resolver. The SPF lexer, parser, and macro implementation remain part of

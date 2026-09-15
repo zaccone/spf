@@ -1,0 +1,49 @@
+File: bench
+Build ID: bcc1679c5ea17a1560dfb0f41fac0bc0cd8b9aa6
+Type: cpu
+Time: 2026-09-15 11:15:31 UTC
+Duration: 15.01s, Total samples = 33.87s (225.62%)
+Showing nodes accounting for 28.43s, 83.94% of 33.87s total
+Dropped 188 nodes (cum <= 0.17s)
+Showing top 40 nodes out of 97
+      flat  flat%   sum%        cum   cum%
+    18.06s 53.32% 53.32%     18.06s 53.32%  internal/runtime/syscall/linux.Syscall6
+     1.30s  3.84% 57.16%      1.30s  3.84%  runtime.nanotime (inline)
+     1.22s  3.60% 60.76%      1.22s  3.60%  time.runtimeNow
+     0.86s  2.54% 63.30%      1.46s  4.31%  github.com/miekg/dns.UnpackDomainName
+     0.71s  2.10% 65.40%      0.76s  2.24%  github.com/miekg/dns.packDomainName
+     0.41s  1.21% 66.61%     32.47s 95.87%  main.main.func1
+     0.35s  1.03% 67.64%      0.47s  1.39%  github.com/miekg/dns.unpackMsgHdr
+     0.34s  1.00% 68.64%      2.23s  6.58%  runtime.mallocgc
+     0.33s  0.97% 69.62%     30.87s 91.14%  github.com/miekg/dns.(*Client).ExchangeWithConnContext
+     0.28s  0.83% 70.45%      0.28s  0.83%  github.com/miekg/dns.(*TXT).Header
+     0.28s  0.83% 71.27%      0.32s  0.94%  runtime.exitsyscall
+     0.27s   0.8% 72.07%      0.27s   0.8%  runtime.memmove
+     0.25s  0.74% 72.81%      0.25s  0.74%  runtime.nextFreeFast (inline)
+     0.24s  0.71% 73.52%      0.39s  1.15%  runtime.(*timer).modify
+     0.24s  0.71% 74.22%      0.24s  0.71%  runtime.memclrNoHeapPointers
+     0.24s  0.71% 74.93%     17.93s 52.94%  syscall.RawSyscall6
+     0.22s  0.65% 75.58%     16.64s 49.13%  github.com/miekg/dns.(*Conn).Write
+     0.19s  0.56% 76.14%      0.98s  2.89%  github.com/miekg/dns.unpackHeader
+     0.19s  0.56% 76.71%      3.80s 11.22%  internal/poll.(*FD).Read
+     0.18s  0.53% 77.24%      0.22s  0.65%  github.com/miekg/dns.isPacketConn
+     0.17s   0.5% 77.74%      0.35s  1.03%  internal/poll.(*pollDesc).prepare
+     0.17s   0.5% 78.24%      0.24s  0.71%  runtime.mallocgcSmallScanNoHeaderSC2
+     0.16s  0.47% 78.71%     18.62s 54.97%  syscall.Syscall
+     0.15s  0.44% 79.16%      0.43s  1.27%  github.com/miekg/dns.unpackString
+     0.15s  0.44% 79.60%     16.33s 48.21%  net.(*conn).Write
+     0.13s  0.38% 79.98%      4.89s 14.44%  github.com/miekg/dns.(*Conn).ReadMsgHeader
+     0.13s  0.38% 80.37%      2.94s  8.68%  github.com/miekg/dns.unpackRRslice
+     0.13s  0.38% 80.75%      1.25s  3.69%  internal/poll.runtime_pollSetDeadline
+     0.13s  0.38% 81.13%      0.21s  0.62%  runtime.mallocgcSmallNoScanSC3
+     0.11s  0.32% 81.46%      0.18s  0.53%  internal/poll.runtime_pollReset
+     0.11s  0.32% 81.78%      0.52s  1.54%  runtime.newobject
+     0.10s   0.3% 82.08%      4.06s 11.99%  github.com/miekg/dns.(*Conn).Read
+     0.10s   0.3% 82.37%      0.75s  2.21%  runtime.slicebytetostring
+     0.09s  0.27% 82.64%      3.94s 11.63%  net.(*conn).Read
+     0.08s  0.24% 82.88%      0.62s  1.83%  runtime.mallocgcSmallNoscan
+     0.08s  0.24% 83.11%      0.30s  0.89%  runtime.mapaccess2
+     0.07s  0.21% 83.32%      9.99s 29.50%  github.com/miekg/dns.(*Conn).ReadMsg
+     0.07s  0.21% 83.53%     17.96s 53.03%  github.com/miekg/dns.(*Conn).WriteMsg
+     0.07s  0.21% 83.73%      3.96s 11.69%  github.com/miekg/dns.(*Msg).unpack
+     0.07s  0.21% 83.94%      0.35s  1.03%  runtime.mallocgcSmallScanNoHeader
