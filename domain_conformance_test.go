@@ -35,7 +35,7 @@ func TestRecursiveLiteralDomain(t *testing.T) {
 	}
 }
 
-func TestMiekgLiteralDNSLabels(t *testing.T) {
+func TestServerLiteralDNSLabels(t *testing.T) {
 	for _, name := range []string{"foo:bar/baz.example.test", "macro%percent  space%20url.example.test", `literal\032.example.test`, `semi;quote".example.test`, "-leading.example.test"} {
 		t.Run(name, func(t *testing.T) {
 			addr := startDualDNS(t, dns.HandlerFunc(func(w dns.ResponseWriter, q *dns.Msg) {
@@ -64,7 +64,7 @@ func TestMiekgLiteralDNSLabels(t *testing.T) {
 					t.Error(err)
 				}
 			}))
-			resolver, err := NewMiekgDNSResolverContext(addr)
+			resolver, err := NewServerResolver(addr)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -79,7 +79,7 @@ func TestMiekgLiteralDNSLabels(t *testing.T) {
 func TestSystemResolverUtilityLabelLimit(t *testing.T) {
 	// Go's net.Resolver rejects non-hostname labels before dialing. Keep this
 	// limitation visible rather than attributing fixture-level corpus coverage
-	// to the system backend. miekg supports these labels (tested above).
+	// to the system backend. ServerResolver supports these labels (tested above).
 	original := net.DefaultResolver
 	net.DefaultResolver = &net.Resolver{Dial: func(context.Context, string, string) (net.Conn, error) {
 		t.Error("unexpected DNS dispatch")

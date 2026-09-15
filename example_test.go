@@ -10,7 +10,7 @@ import (
 )
 
 // A deterministic resolver for this example; production applications can use
-// spf.NewMiekgDNSResolverContext("192.0.2.53:53") or their own ContextResolver.
+// spf.NewServerResolver("192.0.2.53:53") or their own ContextResolver.
 type exampleResolver struct{}
 
 func (exampleResolver) LookupTXTContext(_ context.Context, name string) ([]string, error) {

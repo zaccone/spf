@@ -16,7 +16,7 @@ import (
 )
 
 var _ ContextResolver = (*DNSResolver)(nil)
-var _ ContextResolver = (*MiekgDNSResolver)(nil)
+var _ ContextResolver = (*ServerResolver)(nil)
 
 // Both transports share one port so truncated UDP can retry against TCP.
 func startDualDNS(t *testing.T, handler dns.Handler) string {
@@ -63,8 +63,8 @@ func startDualDNS(t *testing.T, handler dns.Handler) string {
 
 func contextBackend(t *testing.T, backend, addr string) ContextResolver {
 	t.Helper()
-	if backend == "miekg" {
-		r, err := NewMiekgDNSResolverContext(addr)
+	if backend == "server" {
+		r, err := NewServerResolver(addr)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -80,7 +80,7 @@ func contextBackend(t *testing.T, backend, addr string) ContextResolver {
 }
 
 func TestContextDNSBackends(t *testing.T) {
-	for _, backend := range []string{"miekg", "standard"} {
+	for _, backend := range []string{"server", "standard"} {
 		t.Run(backend, func(t *testing.T) {
 			var mu sync.Mutex
 			queried := []string{}
@@ -190,7 +190,7 @@ func TestContextDNSBackends(t *testing.T) {
 }
 
 func TestContextDNSTCPFallback(t *testing.T) {
-	for _, backend := range []string{"miekg", "standard"} {
+	for _, backend := range []string{"server", "standard"} {
 		t.Run(backend, func(t *testing.T) {
 			var mu sync.Mutex
 			udp, tcp := 0, 0
@@ -223,7 +223,7 @@ func TestContextDNSTCPFallback(t *testing.T) {
 }
 
 func TestContextDNSCancellation(t *testing.T) {
-	for _, backend := range []string{"miekg", "standard"} {
+	for _, backend := range []string{"server", "standard"} {
 		for _, deadline := range []bool{false, true} {
 			t.Run(fmt.Sprintf("%s/deadline=%v", backend, deadline), func(t *testing.T) {
 				received := make(chan struct{}, 1)
@@ -267,7 +267,7 @@ func TestContextDNSCancellation(t *testing.T) {
 	}
 }
 
-func TestMiekgAliasBounds(t *testing.T) {
+func TestServerAliasBounds(t *testing.T) {
 	for _, test := range []string{"cycle", "chain10", "chain11", "unrelated", "packet10", "packet11"} {
 		t.Run(test, func(t *testing.T) {
 			var mu sync.Mutex
@@ -314,7 +314,7 @@ func TestMiekgAliasBounds(t *testing.T) {
 				}
 				writeDNSResponse(t, w, response)
 			}))
-			r := contextBackend(t, "miekg", addr)
+			r := contextBackend(t, "server", addr)
 			ips, err := r.LookupIPContext(context.Background(), "ip4", "hop0.test.")
 			if test == "chain10" || test == "packet10" {
 				if err != nil || len(ips) != 1 {
@@ -337,7 +337,7 @@ func TestMiekgAliasBounds(t *testing.T) {
 }
 
 func TestContextDNSTransportCause(t *testing.T) {
-	for _, backend := range []string{"miekg", "standard"} {
+	for _, backend := range []string{"server", "standard"} {
 		t.Run(backend, func(t *testing.T) {
 			// A local TCP server rejects a DNS stream before sending a response.
 			addr := startDualDNS(t, dns.HandlerFunc(func(w dns.ResponseWriter, q *dns.Msg) {
@@ -354,7 +354,7 @@ func TestContextDNSTransportCause(t *testing.T) {
 			if !errors.Is(err, ErrDNSTemperror) {
 				t.Fatalf("%v", err)
 			}
-			// miekg retains EOF directly; net exposes its structured DNSError wrapper.
+			// ServerResolver retains EOF directly; net exposes its structured DNSError wrapper.
 			if backend == "standard" {
 				var de *net.DNSError
 				if !errors.As(err, &de) {

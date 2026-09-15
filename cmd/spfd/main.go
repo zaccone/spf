@@ -133,7 +133,7 @@ func makeResolver(address string, timeout time.Duration) (spf.ContextResolver, e
 	if err != nil || portNumber < 1 || portNumber > 65535 {
 		return nil, errors.New("-dns requires a port between 1 and 65535")
 	}
-	return spf.NewMiekgDNSResolverContext(address)
+	return spf.NewServerResolver(address)
 }
 
 func listen(network, address string) (net.Listener, error) {
