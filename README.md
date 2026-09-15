@@ -2,9 +2,10 @@
 
 SPF policy evaluation in Go, with explicit conformance evidence and resolver limits.
 
-[![Build Status](https://github.com/zaccone/spf/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/zaccone/spf/actions/workflows/go.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/zaccone/spf)](https://goreportcard.com/report/github.com/zaccone/spf)
+[![CI](https://github.com/zaccone/spf/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/zaccone/spf/actions/workflows/go.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/zaccone/spf.svg)](https://pkg.go.dev/github.com/zaccone/spf)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/zaccone/spf/master)](go.mod)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## About
 This library evaluates Sender Policy Framework policies using its own lexer,
