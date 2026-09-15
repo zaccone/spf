@@ -199,7 +199,9 @@ func (r *MiekgDNSResolver) LookupAddrContext(ctx context.Context, addr string) (
 	var records []string
 	for _, rr := range rrs {
 		if ptr, ok := rr.(*dns.PTR); ok {
-			// Ignore excess candidates before conversion: an unrepresentable
+			// RFC 7208 section 4.6.4 limits PTR validation to the first ten
+			// candidates for both the ptr mechanism and the %{p} macro.
+			// Ignore further candidates before conversion: an unrepresentable
 			// name beyond the limit must not invalidate the usable candidates.
 			if len(records) == 10 {
 				break
