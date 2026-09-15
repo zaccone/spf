@@ -19,7 +19,7 @@ func newTestDNS(t *testing.T) (*dns.ServeMux, Resolver) {
 		writeDNSResponse(t, w, response)
 	})
 	addr := startTestDNS(t, mux)
-	resolver, err := NewMiekgDNSResolver(addr)
+	resolver, err := NewServerResolver(addr)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -84,8 +84,8 @@ not invalidate that answer. Missing `error.*` names simulate DNS timeouts.
 
 These are logical-answer tests, not wire-protocol or system-DNS conformance.
 Separate tests exercise both built-in resolvers on loopback UDP/TCP: cancellation,
-truncation, errors, family selection, split TXT, and PTR. The miekg backend also
-has alias-bound and literal-label tests. Corpus-driven fixes permit DNS labels
+truncation, errors, family selection, split TXT, and PTR. The configured server
+backend also has alias-bound and literal-label tests. Corpus-driven fixes permit DNS labels
 containing punctuation/spaces, preserve literal backslashes on the wire, and
 prevent re-expansion of inherited policy names in recursive checks.
 
@@ -93,7 +93,7 @@ Known limits remain explicit:
 
 - Go's system resolver rejects some legal utility labels, such as spaces or
   colons, before DNS dispatch. `TestSystemResolverUtilityLabelLimit` records this
-  restriction. Use `NewMiekgDNSResolverContext` for these policies. Passing the
+  restriction. Use `NewServerResolver` for these policies. Passing the
   logical corpus is not a claim that the default system backend supports them.
 - Initial SMTP identity domains retain ASCII hostname checks. SMTPUTF8/IDNA
   conversion and arbitrary binary DNS labels are not implemented.

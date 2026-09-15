@@ -271,7 +271,7 @@ func TestStep6PTRErrorsAndLimits(t *testing.T) {
 }
 
 func TestStep6PTRBackends(t *testing.T) {
-	for _, backend := range []string{"standard", "miekg"} {
+	for _, backend := range []string{"standard", "server"} {
 		for _, client := range []string{"192.0.2.1", "2001:db8::1"} {
 			t.Run(backend+client, func(t *testing.T) {
 				reverse, _ := dns.ReverseAddr(client)

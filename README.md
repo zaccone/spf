@@ -88,7 +88,7 @@ Existing `CheckHost` and `CheckHostWithResolver` calls remain available. For
 cancellation or a custom context-aware resolver, use the additive API:
 
 ```go
-resolver, err := spf.NewMiekgDNSResolverContext("127.0.0.1:53")
+resolver, err := spf.NewServerResolver("127.0.0.1:53")
 if err != nil {
     return err
 }
@@ -115,15 +115,19 @@ More than ten MX exchanges produces Permerror before any address dispatch;
 multiple addresses returned for one exchange do not consume extra terms.
 Address matching queries the client's family; `exists` always queries A.
 
-Both built-in resolvers support `ContextResolver`. The miekg backend follows
-at most ten CNAME hops, detects cycles, and retries truncated UDP once over
+`DNSResolver` uses system DNS; `ServerResolver` uses the configured DNS server.
+Both implement `Resolver` and `ContextResolver`. The `NewServerResolver` constructor
+returns a concrete pointer usable with either interface. The former `MiekgDNSResolver`
+type and constructors remain available as deprecated compatibility entrypoints.
+
+The configured server backend follows at most ten CNAME hops, detects cycles, and retries truncated UDP once over
 TCP. The system backend uses Go's resolver and configured system DNS servers
 (or the configured `net.DefaultResolver.Dial`). It uses the Go DNS path so
 connections can be canceled; platform-native resolver behavior, including
 native split-DNS routing, may differ. It relies on the recursive DNS server
 for complete alias answers instead of issuing its own CNAME follow-up queries.
 For explicit server selection, client-side alias traversal, and utility labels
-containing punctuation/spaces rejected by Go's system resolver, use miekg.
+containing punctuation/spaces rejected by Go's system resolver, use `ServerResolver`.
 Neither interface exposes intermediate wire responses or retries: void limits
 count logical lookups after alias processing, not individual DNS packets.
 

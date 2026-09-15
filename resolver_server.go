@@ -10,28 +10,59 @@ import (
 	"github.com/miekg/dns"
 )
 
-// NewMiekgDNSResolver returns a resolver using the specified DNS server.
-func NewMiekgDNSResolver(addr string) (Resolver, error) { return newMiekgResolver(addr) }
-
-// NewMiekgDNSResolverContext returns the context-capable view of the resolver.
-func NewMiekgDNSResolverContext(addr string) (ContextResolver, error) { return newMiekgResolver(addr) }
-
-func newMiekgResolver(addr string) (*MiekgDNSResolver, error) {
+// NewServerResolver returns a resolver using the specified DNS server address,
+// in host:port form. It supports both Resolver and ContextResolver. Construction
+// validates the address format without connecting to the server.
+func NewServerResolver(addr string) (*ServerResolver, error) {
 	if _, _, err := net.SplitHostPort(addr); err != nil {
 		return nil, err
 	}
-	return &MiekgDNSResolver{client: new(dns.Client), serverAddr: addr}, nil
+	return &ServerResolver{client: new(dns.Client), serverAddr: addr}, nil
 }
 
-// MiekgDNSResolver implements Resolver and ContextResolver using miekg/dns.
+// ServerResolver implements Resolver and ContextResolver using a configured DNS
+// server. It is safe for concurrent lookups and must be created with
+// NewServerResolver. Use DNSResolver to query through the system resolver.
 // Each query owns its connection. Aliases are limited to ten hops, including
 // aliases present in a single response. Truncated UDP is retried once over TCP.
-type MiekgDNSResolver struct {
+type ServerResolver struct {
 	client     *dns.Client
 	serverAddr string
 }
 
-func (r *MiekgDNSResolver) exchangeContext(ctx context.Context, req *dns.Msg, tcp bool) (*dns.Msg, error) {
+var (
+	_ Resolver        = (*ServerResolver)(nil)
+	_ ContextResolver = (*ServerResolver)(nil)
+)
+
+// MiekgDNSResolver is the former name of ServerResolver.
+//
+// Deprecated: Use ServerResolver.
+type MiekgDNSResolver = ServerResolver
+
+// NewMiekgDNSResolver returns a resolver using the specified DNS server.
+//
+// Deprecated: Use NewServerResolver.
+func NewMiekgDNSResolver(addr string) (Resolver, error) {
+	r, err := NewServerResolver(addr)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+// NewMiekgDNSResolverContext returns the context-capable view of the resolver.
+//
+// Deprecated: Use NewServerResolver.
+func NewMiekgDNSResolverContext(addr string) (ContextResolver, error) {
+	r, err := NewServerResolver(addr)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (r *ServerResolver) exchangeContext(ctx context.Context, req *dns.Msg, tcp bool) (*dns.Msg, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, wrapDNSError(ctx, err)
 	}
@@ -78,7 +109,7 @@ func (r *MiekgDNSResolver) exchangeContext(ctx context.Context, req *dns.Msg, tc
 
 // lookup only accepts records whose owner is the queried name or a validated
 // alias target. Unrelated records in Answer (or Additional) cannot cause a match.
-func (r *MiekgDNSResolver) lookup(ctx context.Context, name string, qtype uint16) ([]dns.RR, error) {
+func (r *ServerResolver) lookup(ctx context.Context, name string, qtype uint16) ([]dns.RR, error) {
 	ctx, cancel := context.WithTimeout(ctx, evaluationTimeout)
 	defer cancel()
 	// Normalize presentation escaping once at the API boundary. DNS replies
@@ -138,7 +169,7 @@ func (r *MiekgDNSResolver) lookup(ctx context.Context, name string, qtype uint16
 }
 
 // LookupTXTContext returns one string per TXT RR, joining its component strings.
-func (r *MiekgDNSResolver) LookupTXTContext(ctx context.Context, name string) ([]string, error) {
+func (r *ServerResolver) LookupTXTContext(ctx context.Context, name string) ([]string, error) {
 	rrs, err := r.lookup(ctx, name, dns.TypeTXT)
 	var records []string
 	for _, rr := range rrs {
@@ -150,7 +181,7 @@ func (r *MiekgDNSResolver) LookupTXTContext(ctx context.Context, name string) ([
 }
 
 // LookupIPContext queries only the selected address family.
-func (r *MiekgDNSResolver) LookupIPContext(ctx context.Context, network, name string) ([]net.IP, error) {
+func (r *ServerResolver) LookupIPContext(ctx context.Context, network, name string) ([]net.IP, error) {
 	qtype := uint16(dns.TypeA)
 	switch network {
 	case "ip4":
@@ -173,7 +204,7 @@ func (r *MiekgDNSResolver) LookupIPContext(ctx context.Context, network, name st
 }
 
 // LookupMXContext returns exchanges before address resolution.
-func (r *MiekgDNSResolver) LookupMXContext(ctx context.Context, name string) ([]*net.MX, error) {
+func (r *ServerResolver) LookupMXContext(ctx context.Context, name string) ([]*net.MX, error) {
 	rrs, err := r.lookup(ctx, name, dns.TypeMX)
 	var records []*net.MX
 	for _, rr := range rrs {
@@ -190,7 +221,7 @@ func (r *MiekgDNSResolver) LookupMXContext(ctx context.Context, name string) ([]
 
 // LookupAddrContext performs the IPv4 or IPv6 reverse query, without forward
 // validation. Only the first ten PTR candidates are returned (RFC 7208, 4.6.4).
-func (r *MiekgDNSResolver) LookupAddrContext(ctx context.Context, addr string) ([]string, error) {
+func (r *ServerResolver) LookupAddrContext(ctx context.Context, addr string) ([]string, error) {
 	name, err := dns.ReverseAddr(addr)
 	if err != nil {
 		return nil, err
@@ -216,15 +247,15 @@ func (r *MiekgDNSResolver) LookupAddrContext(ctx context.Context, addr string) (
 	return records, err
 }
 
-func (r *MiekgDNSResolver) LookupTXTStrict(name string) ([]string, error) {
+func (r *ServerResolver) LookupTXTStrict(name string) ([]string, error) {
 	return legacyTXT(r, name, true)
 }
-func (r *MiekgDNSResolver) LookupTXT(name string) ([]string, error) { return legacyTXT(r, name, false) }
-func (r *MiekgDNSResolver) Exists(name string) (bool, error)        { return legacyExists(r, name) }
-func (r *MiekgDNSResolver) MatchIP(name string, matcher IPMatcherFunc) (bool, error) {
+func (r *ServerResolver) LookupTXT(name string) ([]string, error) { return legacyTXT(r, name, false) }
+func (r *ServerResolver) Exists(name string) (bool, error)        { return legacyExists(r, name) }
+func (r *ServerResolver) MatchIP(name string, matcher IPMatcherFunc) (bool, error) {
 	return legacyMatchIP(r, name, matcher)
 }
-func (r *MiekgDNSResolver) MatchMX(name string, matcher IPMatcherFunc) (bool, error) {
+func (r *ServerResolver) MatchMX(name string, matcher IPMatcherFunc) (bool, error) {
 	return legacyMatchMX(r, name, matcher)
 }
 

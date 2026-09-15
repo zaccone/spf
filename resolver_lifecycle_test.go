@@ -11,7 +11,7 @@ import (
 
 func TestResolverMatcherLifecycle(t *testing.T) {
 	stop := errors.New("stop matching")
-	for _, backend := range []string{"miekg", "standard"} {
+	for _, backend := range []string{"server", "standard"} {
 		t.Run(backend, func(t *testing.T) {
 			mux, resolver := newTestDNS(t)
 			mux.HandleFunc("example.test.", zone(t, map[uint16][]string{
@@ -21,7 +21,7 @@ func TestResolverMatcherLifecycle(t *testing.T) {
 			}))
 			if backend == "standard" {
 				// These tests are intentionally not parallel: net.Lookup* uses this global.
-				addr := resolver.(*MiekgDNSResolver).serverAddr
+				addr := resolver.(*ServerResolver).serverAddr
 				original := net.DefaultResolver
 				net.DefaultResolver = &net.Resolver{PreferGo: true, Dial: func(ctx context.Context, network, _ string) (net.Conn, error) {
 					return (&net.Dialer{}).DialContext(ctx, network, addr)

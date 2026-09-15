@@ -22,8 +22,22 @@ with another DNS source.
 
 [Runnable examples](example_test.go) demonstrate options and cancellation
 without public DNS. In production, select an explicit DNS server with
-`NewMiekgDNSResolverContext("192.0.2.53:53")`, using your actual DNS server address.
+`NewServerResolver("192.0.2.53:53")`, using your actual DNS server address.
 This backend supports utility labels that Go's system resolver rejects.
+
+## Resolver names
+
+Use `NewServerResolver(addr)` to query a configured DNS server. It returns a
+`*ServerResolver` that implements both `Resolver` and `ContextResolver`, so one
+constructor serves both entrypoints. `DNSResolver` continues to use system DNS.
+
+`MiekgDNSResolver` is a deprecated type alias for `ServerResolver`.
+`NewMiekgDNSResolver` and `NewMiekgDNSResolverContext` remain available with their
+original signatures; both delegate to `NewServerResolver`. Existing type
+assertions continue to work, but diagnostic output such as `%T` and reflection
+now reports the concrete name `ServerResolver`. Invalid constructor addresses
+return a nil resolver and an error, including through the deprecated interfaces.
+The underlying DNS dependency is unchanged in this API migration.
 
 ## Implementing ContextResolver
 

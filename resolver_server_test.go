@@ -9,7 +9,7 @@ import (
 	"github.com/miekg/dns"
 )
 
-func TestMiekgPTRCandidateLimit(t *testing.T) {
+func TestServerPTRCandidateLimit(t *testing.T) {
 	for _, mechanism := range []string{"ptr", "exists:%{p}.check.test"} {
 		for _, tc := range []struct {
 			name     string
@@ -56,7 +56,7 @@ func TestMiekgPTRCandidateLimit(t *testing.T) {
 						t.Error(err)
 					}
 				}))
-				result, _, err := CheckHostWithOptions(context.Background(), client, "example.test", "", Options{Resolver: contextBackend(t, "miekg", addr)})
+				result, _, err := CheckHostWithOptions(context.Background(), client, "example.test", "", Options{Resolver: contextBackend(t, "server", addr)})
 				if result != tc.want || err != nil {
 					t.Fatalf("got %v, %v; want %v", result, err, tc.want)
 				}
@@ -65,14 +65,14 @@ func TestMiekgPTRCandidateLimit(t *testing.T) {
 	}
 }
 
-func TestMiekgDNSResolver(t *testing.T) {
-	_, e := NewMiekgDNSResolver("8.8.8.8") // invalid TCP address, no port specified
+func TestServerResolver(t *testing.T) {
+	_, e := NewServerResolver("8.8.8.8") // invalid TCP address, no port specified
 	if e == nil {
 		t.Errorf(`want "address 8.8.8.8: missing port in address"`)
 	}
 }
 
-func TestMiekgDNSResolver_LookupTXTStrict_Multiline(t *testing.T) {
+func TestServerResolver_LookupTXTStrict_Multiline(t *testing.T) {
 	mux, testResolver := newTestDNS(t)
 	mux.HandleFunc("multiline.test.", zone(t, map[uint16][]string{
 		dns.TypeTXT: {
@@ -91,7 +91,7 @@ func TestMiekgDNSResolver_LookupTXTStrict_Multiline(t *testing.T) {
 	}
 }
 
-func TestMiekgDNSResolver_LookupTXT_Multiline(t *testing.T) {
+func TestServerResolver_LookupTXT_Multiline(t *testing.T) {
 	mux, testResolver := newTestDNS(t)
 	mux.HandleFunc("multiline.test.", zone(t, map[uint16][]string{
 		dns.TypeTXT: {

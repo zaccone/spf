@@ -2,7 +2,7 @@
 
 `spfd` wraps this repository's library. It has two subcommands: `check` prints
 one SPF result as JSON; `serve` handles concurrent Postfix access-policy requests.
-It uses the miekg resolver with an explicitly configured recursive DNS server.
+It uses `ServerResolver` with an explicitly configured recursive DNS server.
 
 ## Build and basic usage
 
