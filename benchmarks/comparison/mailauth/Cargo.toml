@@ -1,0 +1,9 @@
+[package]
+name = "spf-mailauth-bench"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+mail-auth = { path = "../mail-auth" }
+tokio = { version = "1.51", features = ["rt-multi-thread", "macros", "sync", "time"] }
+serde_json = "1"
