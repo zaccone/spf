@@ -1,0 +1,4 @@
+ok  	github.com/zaccone/spf	0.141s
+?   	github.com/zaccone/spf/benchmarks/unbound	[no test files]
+?   	github.com/zaccone/spf/benchmarks/vm	[no test files]
+ok  	github.com/zaccone/spf/cmd/spfd	0.114s
