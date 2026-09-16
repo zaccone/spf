@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	spf "github.com/wttw/spf"
 	"github.com/miekg/dns"
+	spf "github.com/wttw/spf"
 )
 
 type resolver struct{ scenario string }
@@ -47,7 +47,9 @@ func main() {
 			panic(r.String())
 		}
 	}
-	for i := 0; i < 100; i++ { check() }
+	for i := 0; i < 100; i++ {
+		check()
+	}
 	samples := make([]float64, *n)
 	var wg sync.WaitGroup
 	start := time.Now()
@@ -56,7 +58,8 @@ func main() {
 		go func(worker int) {
 			defer wg.Done()
 			for i := worker; i < *n; i += *workers {
-				t := time.Now(); check()
+				t := time.Now()
+				check()
 				samples[i] = float64(time.Since(t).Nanoseconds()) / 1000
 			}
 		}(w)
