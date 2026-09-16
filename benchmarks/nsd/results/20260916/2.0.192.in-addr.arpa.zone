@@ -1,0 +1,5 @@
+$ORIGIN 2.0.192.in-addr.arpa.
+$TTL 86400
+@ IN SOA ns.spfbench.test. hostmaster.spfbench.test. (1 3600 600 604800 86400)
+@ IN NS ns.spfbench.test.
+1 IN PTR ptr1.spfbench.test.

@@ -1,0 +1,20 @@
+server:
+    interface: 127.0.0.1
+    port: 53
+    username: ""
+    chroot: ""
+    directory: "@RUN_DIR@"
+    pidfile: "@RUN_DIR@/unbound.pid"
+    use-syslog: no
+    do-not-query-localhost: no
+    access-control: 127.0.0.0/8 allow
+    prefetch: no
+    serve-expired: no
+    rrset-roundrobin: no
+    statistics-cumulative: yes
+    extended-statistics: yes
+    local-zone: "." refuse
+remote-control:
+    control-enable: yes
+    control-interface: "@RUN_DIR@/control.sock"
+    control-use-cert: no

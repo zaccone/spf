@@ -1,0 +1,5 @@
+$ORIGIN 8.b.d.0.1.0.0.2.ip6.arpa.
+$TTL 86400
+@ IN SOA ns.spfbench.test. hostmaster.spfbench.test. (1 3600 600 604800 86400)
+@ IN NS ns.spfbench.test.
+1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0 IN PTR ptr1.spfbench.test.

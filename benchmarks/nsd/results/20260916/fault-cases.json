@@ -1,0 +1,23 @@
+[
+  {
+    "name": "servfail",
+    "domain": "servfail.fault.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "temperror",
+    "queries": 0
+  },
+  {
+    "name": "drop",
+    "domain": "drop.fault.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "temperror",
+    "queries": 0
+  },
+  {
+    "name": "slow",
+    "domain": "slow.fault.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 0
+  }
+]
