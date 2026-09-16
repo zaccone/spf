@@ -1,5 +1,8 @@
 # Cached Unbound benchmark
 
+For the portable mixed-result corpus, NSD configuration, cold-cache checks and
+daemon resilience tests, use the [NSD readiness suite](../nsd/README.md).
+
 See [REPORT.md](REPORT.md) for results, limitations, and proposed follow-ups.
 The harness benchmarks the unmodified SPF library and daemon plus two DNS
 controls. No benchmark dependencies are added to the Go module.

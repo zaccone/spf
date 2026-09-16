@@ -1,0 +1,7240 @@
+[
+  {
+    "name": "simple-pass",
+    "domain": "simple-pass.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "simple-fail",
+    "domain": "simple-fail.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "softfail",
+    "domain": "softfail.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "neutral",
+    "domain": "neutral.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "missing",
+    "domain": "missing.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "nodata",
+    "domain": "nodata.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "invalid",
+    "domain": "invalid.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "duplicate",
+    "domain": "duplicate.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "ipv6",
+    "domain": "ipv6.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "include-one",
+    "domain": "include-one.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "redirect",
+    "domain": "redirect.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "include-missing",
+    "domain": "include-missing.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "include-depth-9",
+    "domain": "include-depth-9.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "include-depth-10",
+    "domain": "include-depth-10.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "include-depth-11",
+    "domain": "include-depth-11.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "void-limit",
+    "domain": "void-limit.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "a-v4",
+    "domain": "a-v4.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "ptr-v4",
+    "domain": "ptr-v4.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "macro-p-v4",
+    "domain": "macro-p-v4.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "a-v6",
+    "domain": "a-v6.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "ptr-v6",
+    "domain": "ptr-v6.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "macro-p-v6",
+    "domain": "macro-p-v6.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "mx-five-last-match",
+    "domain": "mx-five-last-match.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "cname",
+    "domain": "cname.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "split-txt",
+    "domain": "split-txt.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "large-txt",
+    "domain": "large-txt.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "complex",
+    "domain": "complex.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "void-two",
+    "domain": "void-two.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "include-cycle",
+    "domain": "include-cycle.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "redirect-missing",
+    "domain": "redirect-missing.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "fail-exp",
+    "domain": "fail-exp.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "unknown-modifier",
+    "domain": "unknown-modifier.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "mx-eleven",
+    "domain": "mx-eleven.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "long-policy",
+    "domain": "long-policy.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00000",
+    "domain": "tenant-00000.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00001",
+    "domain": "tenant-00001.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00002",
+    "domain": "tenant-00002.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00003",
+    "domain": "tenant-00003.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00004",
+    "domain": "tenant-00004.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00005",
+    "domain": "tenant-00005.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00006",
+    "domain": "tenant-00006.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00007",
+    "domain": "tenant-00007.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00008",
+    "domain": "tenant-00008.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00009",
+    "domain": "tenant-00009.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00010",
+    "domain": "tenant-00010.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00011",
+    "domain": "tenant-00011.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00012",
+    "domain": "tenant-00012.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00013",
+    "domain": "tenant-00013.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00014",
+    "domain": "tenant-00014.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00015",
+    "domain": "tenant-00015.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00016",
+    "domain": "tenant-00016.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00017",
+    "domain": "tenant-00017.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00018",
+    "domain": "tenant-00018.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00019",
+    "domain": "tenant-00019.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00020",
+    "domain": "tenant-00020.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00021",
+    "domain": "tenant-00021.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00022",
+    "domain": "tenant-00022.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00023",
+    "domain": "tenant-00023.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00024",
+    "domain": "tenant-00024.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00025",
+    "domain": "tenant-00025.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00026",
+    "domain": "tenant-00026.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00027",
+    "domain": "tenant-00027.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00028",
+    "domain": "tenant-00028.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00029",
+    "domain": "tenant-00029.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00030",
+    "domain": "tenant-00030.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00031",
+    "domain": "tenant-00031.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00032",
+    "domain": "tenant-00032.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00033",
+    "domain": "tenant-00033.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00034",
+    "domain": "tenant-00034.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00035",
+    "domain": "tenant-00035.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00036",
+    "domain": "tenant-00036.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00037",
+    "domain": "tenant-00037.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00038",
+    "domain": "tenant-00038.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00039",
+    "domain": "tenant-00039.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00040",
+    "domain": "tenant-00040.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00041",
+    "domain": "tenant-00041.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00042",
+    "domain": "tenant-00042.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00043",
+    "domain": "tenant-00043.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00044",
+    "domain": "tenant-00044.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00045",
+    "domain": "tenant-00045.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00046",
+    "domain": "tenant-00046.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00047",
+    "domain": "tenant-00047.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00048",
+    "domain": "tenant-00048.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00049",
+    "domain": "tenant-00049.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00050",
+    "domain": "tenant-00050.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00051",
+    "domain": "tenant-00051.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00052",
+    "domain": "tenant-00052.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00053",
+    "domain": "tenant-00053.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00054",
+    "domain": "tenant-00054.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00055",
+    "domain": "tenant-00055.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00056",
+    "domain": "tenant-00056.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00057",
+    "domain": "tenant-00057.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00058",
+    "domain": "tenant-00058.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00059",
+    "domain": "tenant-00059.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00060",
+    "domain": "tenant-00060.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00061",
+    "domain": "tenant-00061.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00062",
+    "domain": "tenant-00062.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00063",
+    "domain": "tenant-00063.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00064",
+    "domain": "tenant-00064.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00065",
+    "domain": "tenant-00065.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00066",
+    "domain": "tenant-00066.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00067",
+    "domain": "tenant-00067.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00068",
+    "domain": "tenant-00068.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00069",
+    "domain": "tenant-00069.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00070",
+    "domain": "tenant-00070.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00071",
+    "domain": "tenant-00071.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00072",
+    "domain": "tenant-00072.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00073",
+    "domain": "tenant-00073.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00074",
+    "domain": "tenant-00074.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00075",
+    "domain": "tenant-00075.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00076",
+    "domain": "tenant-00076.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00077",
+    "domain": "tenant-00077.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00078",
+    "domain": "tenant-00078.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00079",
+    "domain": "tenant-00079.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00080",
+    "domain": "tenant-00080.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00081",
+    "domain": "tenant-00081.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00082",
+    "domain": "tenant-00082.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00083",
+    "domain": "tenant-00083.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00084",
+    "domain": "tenant-00084.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00085",
+    "domain": "tenant-00085.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00086",
+    "domain": "tenant-00086.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00087",
+    "domain": "tenant-00087.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00088",
+    "domain": "tenant-00088.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00089",
+    "domain": "tenant-00089.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00090",
+    "domain": "tenant-00090.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00091",
+    "domain": "tenant-00091.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00092",
+    "domain": "tenant-00092.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00093",
+    "domain": "tenant-00093.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00094",
+    "domain": "tenant-00094.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00095",
+    "domain": "tenant-00095.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00096",
+    "domain": "tenant-00096.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00097",
+    "domain": "tenant-00097.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00098",
+    "domain": "tenant-00098.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00099",
+    "domain": "tenant-00099.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00100",
+    "domain": "tenant-00100.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00101",
+    "domain": "tenant-00101.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00102",
+    "domain": "tenant-00102.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00103",
+    "domain": "tenant-00103.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00104",
+    "domain": "tenant-00104.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00105",
+    "domain": "tenant-00105.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00106",
+    "domain": "tenant-00106.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00107",
+    "domain": "tenant-00107.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00108",
+    "domain": "tenant-00108.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00109",
+    "domain": "tenant-00109.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00110",
+    "domain": "tenant-00110.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00111",
+    "domain": "tenant-00111.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00112",
+    "domain": "tenant-00112.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00113",
+    "domain": "tenant-00113.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00114",
+    "domain": "tenant-00114.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00115",
+    "domain": "tenant-00115.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00116",
+    "domain": "tenant-00116.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00117",
+    "domain": "tenant-00117.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00118",
+    "domain": "tenant-00118.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00119",
+    "domain": "tenant-00119.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00120",
+    "domain": "tenant-00120.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00121",
+    "domain": "tenant-00121.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00122",
+    "domain": "tenant-00122.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00123",
+    "domain": "tenant-00123.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00124",
+    "domain": "tenant-00124.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00125",
+    "domain": "tenant-00125.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00126",
+    "domain": "tenant-00126.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00127",
+    "domain": "tenant-00127.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00128",
+    "domain": "tenant-00128.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00129",
+    "domain": "tenant-00129.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00130",
+    "domain": "tenant-00130.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00131",
+    "domain": "tenant-00131.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00132",
+    "domain": "tenant-00132.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00133",
+    "domain": "tenant-00133.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00134",
+    "domain": "tenant-00134.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00135",
+    "domain": "tenant-00135.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00136",
+    "domain": "tenant-00136.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00137",
+    "domain": "tenant-00137.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00138",
+    "domain": "tenant-00138.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00139",
+    "domain": "tenant-00139.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00140",
+    "domain": "tenant-00140.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00141",
+    "domain": "tenant-00141.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00142",
+    "domain": "tenant-00142.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00143",
+    "domain": "tenant-00143.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00144",
+    "domain": "tenant-00144.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00145",
+    "domain": "tenant-00145.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00146",
+    "domain": "tenant-00146.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00147",
+    "domain": "tenant-00147.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00148",
+    "domain": "tenant-00148.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00149",
+    "domain": "tenant-00149.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00150",
+    "domain": "tenant-00150.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00151",
+    "domain": "tenant-00151.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00152",
+    "domain": "tenant-00152.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00153",
+    "domain": "tenant-00153.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00154",
+    "domain": "tenant-00154.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00155",
+    "domain": "tenant-00155.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00156",
+    "domain": "tenant-00156.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00157",
+    "domain": "tenant-00157.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00158",
+    "domain": "tenant-00158.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00159",
+    "domain": "tenant-00159.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00160",
+    "domain": "tenant-00160.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00161",
+    "domain": "tenant-00161.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00162",
+    "domain": "tenant-00162.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00163",
+    "domain": "tenant-00163.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00164",
+    "domain": "tenant-00164.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00165",
+    "domain": "tenant-00165.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00166",
+    "domain": "tenant-00166.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00167",
+    "domain": "tenant-00167.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00168",
+    "domain": "tenant-00168.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00169",
+    "domain": "tenant-00169.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00170",
+    "domain": "tenant-00170.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00171",
+    "domain": "tenant-00171.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00172",
+    "domain": "tenant-00172.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00173",
+    "domain": "tenant-00173.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00174",
+    "domain": "tenant-00174.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00175",
+    "domain": "tenant-00175.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00176",
+    "domain": "tenant-00176.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00177",
+    "domain": "tenant-00177.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00178",
+    "domain": "tenant-00178.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00179",
+    "domain": "tenant-00179.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00180",
+    "domain": "tenant-00180.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00181",
+    "domain": "tenant-00181.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00182",
+    "domain": "tenant-00182.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00183",
+    "domain": "tenant-00183.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00184",
+    "domain": "tenant-00184.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00185",
+    "domain": "tenant-00185.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00186",
+    "domain": "tenant-00186.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00187",
+    "domain": "tenant-00187.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00188",
+    "domain": "tenant-00188.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00189",
+    "domain": "tenant-00189.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00190",
+    "domain": "tenant-00190.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00191",
+    "domain": "tenant-00191.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00192",
+    "domain": "tenant-00192.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00193",
+    "domain": "tenant-00193.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00194",
+    "domain": "tenant-00194.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00195",
+    "domain": "tenant-00195.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00196",
+    "domain": "tenant-00196.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00197",
+    "domain": "tenant-00197.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00198",
+    "domain": "tenant-00198.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00199",
+    "domain": "tenant-00199.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00200",
+    "domain": "tenant-00200.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00201",
+    "domain": "tenant-00201.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00202",
+    "domain": "tenant-00202.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00203",
+    "domain": "tenant-00203.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00204",
+    "domain": "tenant-00204.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00205",
+    "domain": "tenant-00205.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00206",
+    "domain": "tenant-00206.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00207",
+    "domain": "tenant-00207.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00208",
+    "domain": "tenant-00208.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00209",
+    "domain": "tenant-00209.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00210",
+    "domain": "tenant-00210.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00211",
+    "domain": "tenant-00211.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00212",
+    "domain": "tenant-00212.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00213",
+    "domain": "tenant-00213.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00214",
+    "domain": "tenant-00214.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00215",
+    "domain": "tenant-00215.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00216",
+    "domain": "tenant-00216.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00217",
+    "domain": "tenant-00217.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00218",
+    "domain": "tenant-00218.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00219",
+    "domain": "tenant-00219.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00220",
+    "domain": "tenant-00220.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00221",
+    "domain": "tenant-00221.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00222",
+    "domain": "tenant-00222.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00223",
+    "domain": "tenant-00223.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00224",
+    "domain": "tenant-00224.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00225",
+    "domain": "tenant-00225.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00226",
+    "domain": "tenant-00226.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00227",
+    "domain": "tenant-00227.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00228",
+    "domain": "tenant-00228.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00229",
+    "domain": "tenant-00229.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00230",
+    "domain": "tenant-00230.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00231",
+    "domain": "tenant-00231.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00232",
+    "domain": "tenant-00232.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00233",
+    "domain": "tenant-00233.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00234",
+    "domain": "tenant-00234.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00235",
+    "domain": "tenant-00235.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00236",
+    "domain": "tenant-00236.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00237",
+    "domain": "tenant-00237.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00238",
+    "domain": "tenant-00238.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00239",
+    "domain": "tenant-00239.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00240",
+    "domain": "tenant-00240.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00241",
+    "domain": "tenant-00241.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00242",
+    "domain": "tenant-00242.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00243",
+    "domain": "tenant-00243.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00244",
+    "domain": "tenant-00244.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00245",
+    "domain": "tenant-00245.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00246",
+    "domain": "tenant-00246.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00247",
+    "domain": "tenant-00247.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00248",
+    "domain": "tenant-00248.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00249",
+    "domain": "tenant-00249.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00250",
+    "domain": "tenant-00250.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00251",
+    "domain": "tenant-00251.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00252",
+    "domain": "tenant-00252.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00253",
+    "domain": "tenant-00253.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00254",
+    "domain": "tenant-00254.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00255",
+    "domain": "tenant-00255.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00256",
+    "domain": "tenant-00256.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00257",
+    "domain": "tenant-00257.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00258",
+    "domain": "tenant-00258.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00259",
+    "domain": "tenant-00259.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00260",
+    "domain": "tenant-00260.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00261",
+    "domain": "tenant-00261.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00262",
+    "domain": "tenant-00262.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00263",
+    "domain": "tenant-00263.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00264",
+    "domain": "tenant-00264.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00265",
+    "domain": "tenant-00265.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00266",
+    "domain": "tenant-00266.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00267",
+    "domain": "tenant-00267.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00268",
+    "domain": "tenant-00268.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00269",
+    "domain": "tenant-00269.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00270",
+    "domain": "tenant-00270.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00271",
+    "domain": "tenant-00271.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00272",
+    "domain": "tenant-00272.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00273",
+    "domain": "tenant-00273.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00274",
+    "domain": "tenant-00274.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00275",
+    "domain": "tenant-00275.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00276",
+    "domain": "tenant-00276.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00277",
+    "domain": "tenant-00277.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00278",
+    "domain": "tenant-00278.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00279",
+    "domain": "tenant-00279.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00280",
+    "domain": "tenant-00280.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00281",
+    "domain": "tenant-00281.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00282",
+    "domain": "tenant-00282.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00283",
+    "domain": "tenant-00283.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00284",
+    "domain": "tenant-00284.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00285",
+    "domain": "tenant-00285.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00286",
+    "domain": "tenant-00286.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00287",
+    "domain": "tenant-00287.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00288",
+    "domain": "tenant-00288.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00289",
+    "domain": "tenant-00289.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00290",
+    "domain": "tenant-00290.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00291",
+    "domain": "tenant-00291.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00292",
+    "domain": "tenant-00292.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00293",
+    "domain": "tenant-00293.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00294",
+    "domain": "tenant-00294.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00295",
+    "domain": "tenant-00295.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00296",
+    "domain": "tenant-00296.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00297",
+    "domain": "tenant-00297.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00298",
+    "domain": "tenant-00298.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00299",
+    "domain": "tenant-00299.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00300",
+    "domain": "tenant-00300.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00301",
+    "domain": "tenant-00301.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00302",
+    "domain": "tenant-00302.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00303",
+    "domain": "tenant-00303.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00304",
+    "domain": "tenant-00304.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00305",
+    "domain": "tenant-00305.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00306",
+    "domain": "tenant-00306.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00307",
+    "domain": "tenant-00307.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00308",
+    "domain": "tenant-00308.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00309",
+    "domain": "tenant-00309.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00310",
+    "domain": "tenant-00310.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00311",
+    "domain": "tenant-00311.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00312",
+    "domain": "tenant-00312.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00313",
+    "domain": "tenant-00313.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00314",
+    "domain": "tenant-00314.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00315",
+    "domain": "tenant-00315.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00316",
+    "domain": "tenant-00316.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00317",
+    "domain": "tenant-00317.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00318",
+    "domain": "tenant-00318.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00319",
+    "domain": "tenant-00319.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00320",
+    "domain": "tenant-00320.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00321",
+    "domain": "tenant-00321.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00322",
+    "domain": "tenant-00322.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00323",
+    "domain": "tenant-00323.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00324",
+    "domain": "tenant-00324.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00325",
+    "domain": "tenant-00325.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00326",
+    "domain": "tenant-00326.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00327",
+    "domain": "tenant-00327.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00328",
+    "domain": "tenant-00328.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00329",
+    "domain": "tenant-00329.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00330",
+    "domain": "tenant-00330.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00331",
+    "domain": "tenant-00331.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00332",
+    "domain": "tenant-00332.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00333",
+    "domain": "tenant-00333.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00334",
+    "domain": "tenant-00334.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00335",
+    "domain": "tenant-00335.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00336",
+    "domain": "tenant-00336.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00337",
+    "domain": "tenant-00337.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00338",
+    "domain": "tenant-00338.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00339",
+    "domain": "tenant-00339.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00340",
+    "domain": "tenant-00340.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00341",
+    "domain": "tenant-00341.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00342",
+    "domain": "tenant-00342.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00343",
+    "domain": "tenant-00343.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00344",
+    "domain": "tenant-00344.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00345",
+    "domain": "tenant-00345.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00346",
+    "domain": "tenant-00346.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00347",
+    "domain": "tenant-00347.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00348",
+    "domain": "tenant-00348.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00349",
+    "domain": "tenant-00349.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00350",
+    "domain": "tenant-00350.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00351",
+    "domain": "tenant-00351.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00352",
+    "domain": "tenant-00352.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00353",
+    "domain": "tenant-00353.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00354",
+    "domain": "tenant-00354.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00355",
+    "domain": "tenant-00355.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00356",
+    "domain": "tenant-00356.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00357",
+    "domain": "tenant-00357.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00358",
+    "domain": "tenant-00358.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00359",
+    "domain": "tenant-00359.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00360",
+    "domain": "tenant-00360.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00361",
+    "domain": "tenant-00361.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00362",
+    "domain": "tenant-00362.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00363",
+    "domain": "tenant-00363.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00364",
+    "domain": "tenant-00364.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00365",
+    "domain": "tenant-00365.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00366",
+    "domain": "tenant-00366.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00367",
+    "domain": "tenant-00367.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00368",
+    "domain": "tenant-00368.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00369",
+    "domain": "tenant-00369.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00370",
+    "domain": "tenant-00370.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00371",
+    "domain": "tenant-00371.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00372",
+    "domain": "tenant-00372.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00373",
+    "domain": "tenant-00373.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00374",
+    "domain": "tenant-00374.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00375",
+    "domain": "tenant-00375.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00376",
+    "domain": "tenant-00376.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00377",
+    "domain": "tenant-00377.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00378",
+    "domain": "tenant-00378.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00379",
+    "domain": "tenant-00379.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00380",
+    "domain": "tenant-00380.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00381",
+    "domain": "tenant-00381.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00382",
+    "domain": "tenant-00382.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00383",
+    "domain": "tenant-00383.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00384",
+    "domain": "tenant-00384.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00385",
+    "domain": "tenant-00385.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00386",
+    "domain": "tenant-00386.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00387",
+    "domain": "tenant-00387.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00388",
+    "domain": "tenant-00388.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00389",
+    "domain": "tenant-00389.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00390",
+    "domain": "tenant-00390.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00391",
+    "domain": "tenant-00391.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00392",
+    "domain": "tenant-00392.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00393",
+    "domain": "tenant-00393.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00394",
+    "domain": "tenant-00394.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00395",
+    "domain": "tenant-00395.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00396",
+    "domain": "tenant-00396.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00397",
+    "domain": "tenant-00397.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00398",
+    "domain": "tenant-00398.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00399",
+    "domain": "tenant-00399.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00400",
+    "domain": "tenant-00400.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00401",
+    "domain": "tenant-00401.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00402",
+    "domain": "tenant-00402.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00403",
+    "domain": "tenant-00403.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00404",
+    "domain": "tenant-00404.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00405",
+    "domain": "tenant-00405.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00406",
+    "domain": "tenant-00406.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00407",
+    "domain": "tenant-00407.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00408",
+    "domain": "tenant-00408.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00409",
+    "domain": "tenant-00409.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00410",
+    "domain": "tenant-00410.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00411",
+    "domain": "tenant-00411.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00412",
+    "domain": "tenant-00412.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00413",
+    "domain": "tenant-00413.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00414",
+    "domain": "tenant-00414.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00415",
+    "domain": "tenant-00415.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00416",
+    "domain": "tenant-00416.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00417",
+    "domain": "tenant-00417.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00418",
+    "domain": "tenant-00418.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00419",
+    "domain": "tenant-00419.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00420",
+    "domain": "tenant-00420.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00421",
+    "domain": "tenant-00421.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00422",
+    "domain": "tenant-00422.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00423",
+    "domain": "tenant-00423.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00424",
+    "domain": "tenant-00424.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00425",
+    "domain": "tenant-00425.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00426",
+    "domain": "tenant-00426.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00427",
+    "domain": "tenant-00427.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00428",
+    "domain": "tenant-00428.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00429",
+    "domain": "tenant-00429.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00430",
+    "domain": "tenant-00430.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00431",
+    "domain": "tenant-00431.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00432",
+    "domain": "tenant-00432.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00433",
+    "domain": "tenant-00433.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00434",
+    "domain": "tenant-00434.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00435",
+    "domain": "tenant-00435.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00436",
+    "domain": "tenant-00436.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00437",
+    "domain": "tenant-00437.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00438",
+    "domain": "tenant-00438.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00439",
+    "domain": "tenant-00439.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00440",
+    "domain": "tenant-00440.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00441",
+    "domain": "tenant-00441.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00442",
+    "domain": "tenant-00442.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00443",
+    "domain": "tenant-00443.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00444",
+    "domain": "tenant-00444.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00445",
+    "domain": "tenant-00445.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00446",
+    "domain": "tenant-00446.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00447",
+    "domain": "tenant-00447.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00448",
+    "domain": "tenant-00448.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00449",
+    "domain": "tenant-00449.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00450",
+    "domain": "tenant-00450.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00451",
+    "domain": "tenant-00451.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00452",
+    "domain": "tenant-00452.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00453",
+    "domain": "tenant-00453.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00454",
+    "domain": "tenant-00454.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00455",
+    "domain": "tenant-00455.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00456",
+    "domain": "tenant-00456.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00457",
+    "domain": "tenant-00457.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00458",
+    "domain": "tenant-00458.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00459",
+    "domain": "tenant-00459.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00460",
+    "domain": "tenant-00460.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00461",
+    "domain": "tenant-00461.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00462",
+    "domain": "tenant-00462.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00463",
+    "domain": "tenant-00463.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00464",
+    "domain": "tenant-00464.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00465",
+    "domain": "tenant-00465.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00466",
+    "domain": "tenant-00466.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00467",
+    "domain": "tenant-00467.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00468",
+    "domain": "tenant-00468.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00469",
+    "domain": "tenant-00469.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00470",
+    "domain": "tenant-00470.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00471",
+    "domain": "tenant-00471.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00472",
+    "domain": "tenant-00472.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00473",
+    "domain": "tenant-00473.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00474",
+    "domain": "tenant-00474.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00475",
+    "domain": "tenant-00475.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00476",
+    "domain": "tenant-00476.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00477",
+    "domain": "tenant-00477.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00478",
+    "domain": "tenant-00478.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00479",
+    "domain": "tenant-00479.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00480",
+    "domain": "tenant-00480.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00481",
+    "domain": "tenant-00481.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00482",
+    "domain": "tenant-00482.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00483",
+    "domain": "tenant-00483.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00484",
+    "domain": "tenant-00484.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00485",
+    "domain": "tenant-00485.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00486",
+    "domain": "tenant-00486.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00487",
+    "domain": "tenant-00487.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00488",
+    "domain": "tenant-00488.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00489",
+    "domain": "tenant-00489.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00490",
+    "domain": "tenant-00490.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00491",
+    "domain": "tenant-00491.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00492",
+    "domain": "tenant-00492.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00493",
+    "domain": "tenant-00493.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00494",
+    "domain": "tenant-00494.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00495",
+    "domain": "tenant-00495.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00496",
+    "domain": "tenant-00496.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00497",
+    "domain": "tenant-00497.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00498",
+    "domain": "tenant-00498.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00499",
+    "domain": "tenant-00499.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00500",
+    "domain": "tenant-00500.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00501",
+    "domain": "tenant-00501.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00502",
+    "domain": "tenant-00502.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00503",
+    "domain": "tenant-00503.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00504",
+    "domain": "tenant-00504.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00505",
+    "domain": "tenant-00505.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00506",
+    "domain": "tenant-00506.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00507",
+    "domain": "tenant-00507.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00508",
+    "domain": "tenant-00508.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00509",
+    "domain": "tenant-00509.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00510",
+    "domain": "tenant-00510.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00511",
+    "domain": "tenant-00511.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00512",
+    "domain": "tenant-00512.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00513",
+    "domain": "tenant-00513.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00514",
+    "domain": "tenant-00514.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00515",
+    "domain": "tenant-00515.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00516",
+    "domain": "tenant-00516.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00517",
+    "domain": "tenant-00517.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00518",
+    "domain": "tenant-00518.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00519",
+    "domain": "tenant-00519.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00520",
+    "domain": "tenant-00520.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00521",
+    "domain": "tenant-00521.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00522",
+    "domain": "tenant-00522.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00523",
+    "domain": "tenant-00523.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00524",
+    "domain": "tenant-00524.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00525",
+    "domain": "tenant-00525.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00526",
+    "domain": "tenant-00526.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00527",
+    "domain": "tenant-00527.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00528",
+    "domain": "tenant-00528.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00529",
+    "domain": "tenant-00529.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00530",
+    "domain": "tenant-00530.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00531",
+    "domain": "tenant-00531.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00532",
+    "domain": "tenant-00532.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00533",
+    "domain": "tenant-00533.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00534",
+    "domain": "tenant-00534.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00535",
+    "domain": "tenant-00535.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00536",
+    "domain": "tenant-00536.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00537",
+    "domain": "tenant-00537.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00538",
+    "domain": "tenant-00538.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00539",
+    "domain": "tenant-00539.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00540",
+    "domain": "tenant-00540.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00541",
+    "domain": "tenant-00541.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00542",
+    "domain": "tenant-00542.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00543",
+    "domain": "tenant-00543.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00544",
+    "domain": "tenant-00544.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00545",
+    "domain": "tenant-00545.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00546",
+    "domain": "tenant-00546.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00547",
+    "domain": "tenant-00547.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00548",
+    "domain": "tenant-00548.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00549",
+    "domain": "tenant-00549.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00550",
+    "domain": "tenant-00550.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00551",
+    "domain": "tenant-00551.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00552",
+    "domain": "tenant-00552.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00553",
+    "domain": "tenant-00553.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00554",
+    "domain": "tenant-00554.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00555",
+    "domain": "tenant-00555.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00556",
+    "domain": "tenant-00556.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00557",
+    "domain": "tenant-00557.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00558",
+    "domain": "tenant-00558.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00559",
+    "domain": "tenant-00559.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00560",
+    "domain": "tenant-00560.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00561",
+    "domain": "tenant-00561.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00562",
+    "domain": "tenant-00562.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00563",
+    "domain": "tenant-00563.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00564",
+    "domain": "tenant-00564.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00565",
+    "domain": "tenant-00565.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00566",
+    "domain": "tenant-00566.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00567",
+    "domain": "tenant-00567.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00568",
+    "domain": "tenant-00568.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00569",
+    "domain": "tenant-00569.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00570",
+    "domain": "tenant-00570.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00571",
+    "domain": "tenant-00571.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00572",
+    "domain": "tenant-00572.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00573",
+    "domain": "tenant-00573.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00574",
+    "domain": "tenant-00574.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00575",
+    "domain": "tenant-00575.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00576",
+    "domain": "tenant-00576.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00577",
+    "domain": "tenant-00577.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00578",
+    "domain": "tenant-00578.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00579",
+    "domain": "tenant-00579.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00580",
+    "domain": "tenant-00580.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00581",
+    "domain": "tenant-00581.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00582",
+    "domain": "tenant-00582.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00583",
+    "domain": "tenant-00583.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00584",
+    "domain": "tenant-00584.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00585",
+    "domain": "tenant-00585.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00586",
+    "domain": "tenant-00586.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00587",
+    "domain": "tenant-00587.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00588",
+    "domain": "tenant-00588.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00589",
+    "domain": "tenant-00589.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00590",
+    "domain": "tenant-00590.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00591",
+    "domain": "tenant-00591.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00592",
+    "domain": "tenant-00592.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00593",
+    "domain": "tenant-00593.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00594",
+    "domain": "tenant-00594.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00595",
+    "domain": "tenant-00595.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00596",
+    "domain": "tenant-00596.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00597",
+    "domain": "tenant-00597.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00598",
+    "domain": "tenant-00598.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00599",
+    "domain": "tenant-00599.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00600",
+    "domain": "tenant-00600.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00601",
+    "domain": "tenant-00601.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00602",
+    "domain": "tenant-00602.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00603",
+    "domain": "tenant-00603.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00604",
+    "domain": "tenant-00604.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00605",
+    "domain": "tenant-00605.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00606",
+    "domain": "tenant-00606.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00607",
+    "domain": "tenant-00607.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00608",
+    "domain": "tenant-00608.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00609",
+    "domain": "tenant-00609.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00610",
+    "domain": "tenant-00610.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00611",
+    "domain": "tenant-00611.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00612",
+    "domain": "tenant-00612.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00613",
+    "domain": "tenant-00613.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00614",
+    "domain": "tenant-00614.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00615",
+    "domain": "tenant-00615.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00616",
+    "domain": "tenant-00616.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00617",
+    "domain": "tenant-00617.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00618",
+    "domain": "tenant-00618.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00619",
+    "domain": "tenant-00619.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00620",
+    "domain": "tenant-00620.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00621",
+    "domain": "tenant-00621.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00622",
+    "domain": "tenant-00622.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00623",
+    "domain": "tenant-00623.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00624",
+    "domain": "tenant-00624.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00625",
+    "domain": "tenant-00625.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00626",
+    "domain": "tenant-00626.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00627",
+    "domain": "tenant-00627.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00628",
+    "domain": "tenant-00628.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00629",
+    "domain": "tenant-00629.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00630",
+    "domain": "tenant-00630.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00631",
+    "domain": "tenant-00631.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00632",
+    "domain": "tenant-00632.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00633",
+    "domain": "tenant-00633.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00634",
+    "domain": "tenant-00634.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00635",
+    "domain": "tenant-00635.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00636",
+    "domain": "tenant-00636.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00637",
+    "domain": "tenant-00637.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00638",
+    "domain": "tenant-00638.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00639",
+    "domain": "tenant-00639.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00640",
+    "domain": "tenant-00640.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00641",
+    "domain": "tenant-00641.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00642",
+    "domain": "tenant-00642.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00643",
+    "domain": "tenant-00643.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00644",
+    "domain": "tenant-00644.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00645",
+    "domain": "tenant-00645.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00646",
+    "domain": "tenant-00646.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00647",
+    "domain": "tenant-00647.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00648",
+    "domain": "tenant-00648.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00649",
+    "domain": "tenant-00649.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00650",
+    "domain": "tenant-00650.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00651",
+    "domain": "tenant-00651.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00652",
+    "domain": "tenant-00652.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00653",
+    "domain": "tenant-00653.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00654",
+    "domain": "tenant-00654.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00655",
+    "domain": "tenant-00655.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00656",
+    "domain": "tenant-00656.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00657",
+    "domain": "tenant-00657.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00658",
+    "domain": "tenant-00658.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00659",
+    "domain": "tenant-00659.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00660",
+    "domain": "tenant-00660.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00661",
+    "domain": "tenant-00661.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00662",
+    "domain": "tenant-00662.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00663",
+    "domain": "tenant-00663.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00664",
+    "domain": "tenant-00664.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00665",
+    "domain": "tenant-00665.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00666",
+    "domain": "tenant-00666.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00667",
+    "domain": "tenant-00667.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00668",
+    "domain": "tenant-00668.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00669",
+    "domain": "tenant-00669.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00670",
+    "domain": "tenant-00670.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00671",
+    "domain": "tenant-00671.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00672",
+    "domain": "tenant-00672.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00673",
+    "domain": "tenant-00673.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00674",
+    "domain": "tenant-00674.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00675",
+    "domain": "tenant-00675.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00676",
+    "domain": "tenant-00676.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00677",
+    "domain": "tenant-00677.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00678",
+    "domain": "tenant-00678.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00679",
+    "domain": "tenant-00679.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00680",
+    "domain": "tenant-00680.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00681",
+    "domain": "tenant-00681.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00682",
+    "domain": "tenant-00682.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00683",
+    "domain": "tenant-00683.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00684",
+    "domain": "tenant-00684.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00685",
+    "domain": "tenant-00685.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00686",
+    "domain": "tenant-00686.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00687",
+    "domain": "tenant-00687.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00688",
+    "domain": "tenant-00688.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00689",
+    "domain": "tenant-00689.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00690",
+    "domain": "tenant-00690.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00691",
+    "domain": "tenant-00691.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00692",
+    "domain": "tenant-00692.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00693",
+    "domain": "tenant-00693.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00694",
+    "domain": "tenant-00694.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00695",
+    "domain": "tenant-00695.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00696",
+    "domain": "tenant-00696.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00697",
+    "domain": "tenant-00697.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00698",
+    "domain": "tenant-00698.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00699",
+    "domain": "tenant-00699.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00700",
+    "domain": "tenant-00700.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00701",
+    "domain": "tenant-00701.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00702",
+    "domain": "tenant-00702.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00703",
+    "domain": "tenant-00703.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00704",
+    "domain": "tenant-00704.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00705",
+    "domain": "tenant-00705.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00706",
+    "domain": "tenant-00706.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00707",
+    "domain": "tenant-00707.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00708",
+    "domain": "tenant-00708.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00709",
+    "domain": "tenant-00709.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00710",
+    "domain": "tenant-00710.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00711",
+    "domain": "tenant-00711.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00712",
+    "domain": "tenant-00712.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00713",
+    "domain": "tenant-00713.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00714",
+    "domain": "tenant-00714.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00715",
+    "domain": "tenant-00715.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00716",
+    "domain": "tenant-00716.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00717",
+    "domain": "tenant-00717.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00718",
+    "domain": "tenant-00718.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00719",
+    "domain": "tenant-00719.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00720",
+    "domain": "tenant-00720.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00721",
+    "domain": "tenant-00721.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00722",
+    "domain": "tenant-00722.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00723",
+    "domain": "tenant-00723.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00724",
+    "domain": "tenant-00724.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00725",
+    "domain": "tenant-00725.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00726",
+    "domain": "tenant-00726.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00727",
+    "domain": "tenant-00727.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00728",
+    "domain": "tenant-00728.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00729",
+    "domain": "tenant-00729.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00730",
+    "domain": "tenant-00730.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00731",
+    "domain": "tenant-00731.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00732",
+    "domain": "tenant-00732.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00733",
+    "domain": "tenant-00733.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00734",
+    "domain": "tenant-00734.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00735",
+    "domain": "tenant-00735.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00736",
+    "domain": "tenant-00736.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00737",
+    "domain": "tenant-00737.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00738",
+    "domain": "tenant-00738.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00739",
+    "domain": "tenant-00739.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00740",
+    "domain": "tenant-00740.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00741",
+    "domain": "tenant-00741.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00742",
+    "domain": "tenant-00742.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00743",
+    "domain": "tenant-00743.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00744",
+    "domain": "tenant-00744.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00745",
+    "domain": "tenant-00745.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00746",
+    "domain": "tenant-00746.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00747",
+    "domain": "tenant-00747.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00748",
+    "domain": "tenant-00748.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00749",
+    "domain": "tenant-00749.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00750",
+    "domain": "tenant-00750.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00751",
+    "domain": "tenant-00751.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00752",
+    "domain": "tenant-00752.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00753",
+    "domain": "tenant-00753.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00754",
+    "domain": "tenant-00754.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00755",
+    "domain": "tenant-00755.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00756",
+    "domain": "tenant-00756.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00757",
+    "domain": "tenant-00757.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00758",
+    "domain": "tenant-00758.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00759",
+    "domain": "tenant-00759.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00760",
+    "domain": "tenant-00760.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00761",
+    "domain": "tenant-00761.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00762",
+    "domain": "tenant-00762.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00763",
+    "domain": "tenant-00763.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00764",
+    "domain": "tenant-00764.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00765",
+    "domain": "tenant-00765.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00766",
+    "domain": "tenant-00766.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00767",
+    "domain": "tenant-00767.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00768",
+    "domain": "tenant-00768.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00769",
+    "domain": "tenant-00769.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00770",
+    "domain": "tenant-00770.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00771",
+    "domain": "tenant-00771.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00772",
+    "domain": "tenant-00772.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00773",
+    "domain": "tenant-00773.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00774",
+    "domain": "tenant-00774.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00775",
+    "domain": "tenant-00775.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00776",
+    "domain": "tenant-00776.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00777",
+    "domain": "tenant-00777.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00778",
+    "domain": "tenant-00778.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00779",
+    "domain": "tenant-00779.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00780",
+    "domain": "tenant-00780.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00781",
+    "domain": "tenant-00781.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00782",
+    "domain": "tenant-00782.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00783",
+    "domain": "tenant-00783.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00784",
+    "domain": "tenant-00784.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00785",
+    "domain": "tenant-00785.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00786",
+    "domain": "tenant-00786.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00787",
+    "domain": "tenant-00787.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00788",
+    "domain": "tenant-00788.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00789",
+    "domain": "tenant-00789.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00790",
+    "domain": "tenant-00790.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00791",
+    "domain": "tenant-00791.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00792",
+    "domain": "tenant-00792.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00793",
+    "domain": "tenant-00793.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00794",
+    "domain": "tenant-00794.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00795",
+    "domain": "tenant-00795.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00796",
+    "domain": "tenant-00796.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00797",
+    "domain": "tenant-00797.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00798",
+    "domain": "tenant-00798.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00799",
+    "domain": "tenant-00799.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00800",
+    "domain": "tenant-00800.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00801",
+    "domain": "tenant-00801.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00802",
+    "domain": "tenant-00802.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00803",
+    "domain": "tenant-00803.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00804",
+    "domain": "tenant-00804.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00805",
+    "domain": "tenant-00805.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00806",
+    "domain": "tenant-00806.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00807",
+    "domain": "tenant-00807.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00808",
+    "domain": "tenant-00808.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00809",
+    "domain": "tenant-00809.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00810",
+    "domain": "tenant-00810.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00811",
+    "domain": "tenant-00811.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00812",
+    "domain": "tenant-00812.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00813",
+    "domain": "tenant-00813.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00814",
+    "domain": "tenant-00814.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00815",
+    "domain": "tenant-00815.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00816",
+    "domain": "tenant-00816.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00817",
+    "domain": "tenant-00817.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00818",
+    "domain": "tenant-00818.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00819",
+    "domain": "tenant-00819.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00820",
+    "domain": "tenant-00820.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00821",
+    "domain": "tenant-00821.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00822",
+    "domain": "tenant-00822.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00823",
+    "domain": "tenant-00823.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00824",
+    "domain": "tenant-00824.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00825",
+    "domain": "tenant-00825.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00826",
+    "domain": "tenant-00826.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00827",
+    "domain": "tenant-00827.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00828",
+    "domain": "tenant-00828.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00829",
+    "domain": "tenant-00829.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00830",
+    "domain": "tenant-00830.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00831",
+    "domain": "tenant-00831.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00832",
+    "domain": "tenant-00832.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00833",
+    "domain": "tenant-00833.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00834",
+    "domain": "tenant-00834.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00835",
+    "domain": "tenant-00835.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00836",
+    "domain": "tenant-00836.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00837",
+    "domain": "tenant-00837.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00838",
+    "domain": "tenant-00838.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00839",
+    "domain": "tenant-00839.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00840",
+    "domain": "tenant-00840.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00841",
+    "domain": "tenant-00841.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00842",
+    "domain": "tenant-00842.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00843",
+    "domain": "tenant-00843.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00844",
+    "domain": "tenant-00844.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00845",
+    "domain": "tenant-00845.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00846",
+    "domain": "tenant-00846.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00847",
+    "domain": "tenant-00847.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00848",
+    "domain": "tenant-00848.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00849",
+    "domain": "tenant-00849.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00850",
+    "domain": "tenant-00850.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00851",
+    "domain": "tenant-00851.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00852",
+    "domain": "tenant-00852.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00853",
+    "domain": "tenant-00853.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00854",
+    "domain": "tenant-00854.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00855",
+    "domain": "tenant-00855.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00856",
+    "domain": "tenant-00856.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00857",
+    "domain": "tenant-00857.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00858",
+    "domain": "tenant-00858.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00859",
+    "domain": "tenant-00859.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00860",
+    "domain": "tenant-00860.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00861",
+    "domain": "tenant-00861.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00862",
+    "domain": "tenant-00862.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00863",
+    "domain": "tenant-00863.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00864",
+    "domain": "tenant-00864.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00865",
+    "domain": "tenant-00865.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00866",
+    "domain": "tenant-00866.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00867",
+    "domain": "tenant-00867.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00868",
+    "domain": "tenant-00868.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00869",
+    "domain": "tenant-00869.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00870",
+    "domain": "tenant-00870.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00871",
+    "domain": "tenant-00871.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00872",
+    "domain": "tenant-00872.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00873",
+    "domain": "tenant-00873.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00874",
+    "domain": "tenant-00874.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00875",
+    "domain": "tenant-00875.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00876",
+    "domain": "tenant-00876.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00877",
+    "domain": "tenant-00877.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00878",
+    "domain": "tenant-00878.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00879",
+    "domain": "tenant-00879.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00880",
+    "domain": "tenant-00880.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00881",
+    "domain": "tenant-00881.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00882",
+    "domain": "tenant-00882.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00883",
+    "domain": "tenant-00883.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00884",
+    "domain": "tenant-00884.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00885",
+    "domain": "tenant-00885.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00886",
+    "domain": "tenant-00886.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00887",
+    "domain": "tenant-00887.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00888",
+    "domain": "tenant-00888.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00889",
+    "domain": "tenant-00889.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00890",
+    "domain": "tenant-00890.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00891",
+    "domain": "tenant-00891.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00892",
+    "domain": "tenant-00892.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00893",
+    "domain": "tenant-00893.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00894",
+    "domain": "tenant-00894.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00895",
+    "domain": "tenant-00895.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00896",
+    "domain": "tenant-00896.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00897",
+    "domain": "tenant-00897.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00898",
+    "domain": "tenant-00898.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00899",
+    "domain": "tenant-00899.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00900",
+    "domain": "tenant-00900.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00901",
+    "domain": "tenant-00901.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00902",
+    "domain": "tenant-00902.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00903",
+    "domain": "tenant-00903.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00904",
+    "domain": "tenant-00904.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00905",
+    "domain": "tenant-00905.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00906",
+    "domain": "tenant-00906.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00907",
+    "domain": "tenant-00907.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00908",
+    "domain": "tenant-00908.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00909",
+    "domain": "tenant-00909.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00910",
+    "domain": "tenant-00910.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00911",
+    "domain": "tenant-00911.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00912",
+    "domain": "tenant-00912.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00913",
+    "domain": "tenant-00913.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00914",
+    "domain": "tenant-00914.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00915",
+    "domain": "tenant-00915.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00916",
+    "domain": "tenant-00916.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00917",
+    "domain": "tenant-00917.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00918",
+    "domain": "tenant-00918.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00919",
+    "domain": "tenant-00919.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00920",
+    "domain": "tenant-00920.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00921",
+    "domain": "tenant-00921.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00922",
+    "domain": "tenant-00922.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00923",
+    "domain": "tenant-00923.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00924",
+    "domain": "tenant-00924.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00925",
+    "domain": "tenant-00925.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00926",
+    "domain": "tenant-00926.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00927",
+    "domain": "tenant-00927.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00928",
+    "domain": "tenant-00928.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00929",
+    "domain": "tenant-00929.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00930",
+    "domain": "tenant-00930.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00931",
+    "domain": "tenant-00931.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00932",
+    "domain": "tenant-00932.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00933",
+    "domain": "tenant-00933.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00934",
+    "domain": "tenant-00934.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00935",
+    "domain": "tenant-00935.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00936",
+    "domain": "tenant-00936.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00937",
+    "domain": "tenant-00937.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00938",
+    "domain": "tenant-00938.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00939",
+    "domain": "tenant-00939.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00940",
+    "domain": "tenant-00940.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00941",
+    "domain": "tenant-00941.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00942",
+    "domain": "tenant-00942.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00943",
+    "domain": "tenant-00943.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00944",
+    "domain": "tenant-00944.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00945",
+    "domain": "tenant-00945.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00946",
+    "domain": "tenant-00946.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00947",
+    "domain": "tenant-00947.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00948",
+    "domain": "tenant-00948.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00949",
+    "domain": "tenant-00949.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00950",
+    "domain": "tenant-00950.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00951",
+    "domain": "tenant-00951.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00952",
+    "domain": "tenant-00952.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00953",
+    "domain": "tenant-00953.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00954",
+    "domain": "tenant-00954.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00955",
+    "domain": "tenant-00955.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00956",
+    "domain": "tenant-00956.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00957",
+    "domain": "tenant-00957.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00958",
+    "domain": "tenant-00958.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00959",
+    "domain": "tenant-00959.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00960",
+    "domain": "tenant-00960.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00961",
+    "domain": "tenant-00961.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00962",
+    "domain": "tenant-00962.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00963",
+    "domain": "tenant-00963.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00964",
+    "domain": "tenant-00964.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00965",
+    "domain": "tenant-00965.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00966",
+    "domain": "tenant-00966.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00967",
+    "domain": "tenant-00967.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00968",
+    "domain": "tenant-00968.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00969",
+    "domain": "tenant-00969.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00970",
+    "domain": "tenant-00970.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00971",
+    "domain": "tenant-00971.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00972",
+    "domain": "tenant-00972.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00973",
+    "domain": "tenant-00973.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 4
+  },
+  {
+    "name": "tenant-00974",
+    "domain": "tenant-00974.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 7
+  },
+  {
+    "name": "tenant-00975",
+    "domain": "tenant-00975.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00976",
+    "domain": "tenant-00976.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00977",
+    "domain": "tenant-00977.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00978",
+    "domain": "tenant-00978.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 8
+  },
+  {
+    "name": "tenant-00979",
+    "domain": "tenant-00979.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 3
+  },
+  {
+    "name": "tenant-00980",
+    "domain": "tenant-00980.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 11
+  },
+  {
+    "name": "tenant-00981",
+    "domain": "tenant-00981.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00982",
+    "domain": "tenant-00982.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00983",
+    "domain": "tenant-00983.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00984",
+    "domain": "tenant-00984.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00985",
+    "domain": "tenant-00985.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00986",
+    "domain": "tenant-00986.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00987",
+    "domain": "tenant-00987.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "fail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00988",
+    "domain": "tenant-00988.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "softfail",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00989",
+    "domain": "tenant-00989.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "neutral",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00990",
+    "domain": "tenant-00990.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00991",
+    "domain": "tenant-00991.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "none",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00992",
+    "domain": "tenant-00992.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00993",
+    "domain": "tenant-00993.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00994",
+    "domain": "tenant-00994.spfbench.test",
+    "ip": "2001:db8::1",
+    "expected": "pass",
+    "queries": 1
+  },
+  {
+    "name": "tenant-00995",
+    "domain": "tenant-00995.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00996",
+    "domain": "tenant-00996.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00997",
+    "domain": "tenant-00997.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "permerror",
+    "queries": 2
+  },
+  {
+    "name": "tenant-00998",
+    "domain": "tenant-00998.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 10
+  },
+  {
+    "name": "tenant-00999",
+    "domain": "tenant-00999.spfbench.test",
+    "ip": "192.0.2.1",
+    "expected": "pass",
+    "queries": 11
+  }
+]

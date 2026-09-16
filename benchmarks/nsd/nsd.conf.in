@@ -1,0 +1,13 @@
+server:
+    ip-address: 127.0.0.1@15353
+    username: ""
+    chroot: ""
+    zonesdir: "@RUN_DIR@"
+    pidfile: "@RUN_DIR@/nsd.pid"
+    database: ""
+    server-count: 1
+    hide-version: yes
+    hide-identity: yes
+    round-robin: no
+remote-control:
+    control-enable: no
