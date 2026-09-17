@@ -1,8 +1,7 @@
 # Conformance evidence
 
-Status: step 7 working-tree implementation, verified locally on 2026-09-14.
 This document describes tested behavior, not a declaration of complete RFC
-conformance or release stability. Hosted CI must run on the published change.
+conformance or release stability.
 
 ## Corpus scope and results
 
@@ -108,35 +107,9 @@ Known limits remain explicit:
 - Received-SPF / Authentication-Results formatting, SMTP policy decisions,
   DNSSEC validation, and release publication are outside the evaluator.
 
-## Validation and release gate
-
-The final local ordinary/race suites, executable examples, build, vet, module
-verification/tidy, formatting, corpus regeneration, and actionlint v1.7.12 passed.
-New corpus, recursion, and wire-label regressions fail against step 6 commit
-`adc8c10` and pass with this diff.
-
-| Bounded fuzz target | Executions | Outcome |
-| --- | ---: | --- |
-| `FuzzLexer` | 327,193 | Pass |
-| `FuzzParserSyntax` | 288,330 | Pass |
-| `FuzzMacroExpansion` | 341,348 | Pass |
-| `FuzzStep6Evaluation` | 325,955 | Pass |
-| `FuzzDNSLiteralNames` | 220,513 | Pass |
-
-Local validation uses Go 1.27.1 on macOS arm64. Ordinary/race suites, examples,
-build, vet, module verification/tidy, formatting, fixture regeneration, and
-bounded fuzz targets are required. `govulncheck` v1.8.0 queries the Go vulnerability
-database; the local scan found no reachable vulnerabilities. That observation
-is dated and must be refreshed before a release.
+## Continuous validation
 
 GitHub Actions runs tests on Linux, macOS, and Windows, plus Linux race/quality,
 a pinned vulnerability scanner, and five bounded fuzz smoke targets. Each fuzz
 run is limited to 10 seconds with two workers and a 60-second process timeout.
 The scan fails on findings or database/network errors; failures are not hidden.
-
-Before an owner approves a release: obtain green hosted CI for the actual final
-commit, review these scope limits and migration notes, ensure the intended
-branch stack has reached the release base, refresh vulnerability results, and
-review the public API/versioning decision. Corpus counts or coverage percentages
-alone do not establish release readiness. Publishing a release is a separate
-owner-authorized action.

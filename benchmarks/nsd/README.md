@@ -1,7 +1,6 @@
 # SPF / spfd real-DNS benchmark suite
 
-This suite turns the Unbound + NSD design in the local
-`codex/SPF_UNBOUND_NSD_BENCHMARK_CONFIG.md` into a reproducible Linux test run.
+This suite provides a reproducible Linux benchmark using Unbound and NSD.
 It tests the library and the **Postfix policy protocol**, not gRPC. See
 [REPORT.md](REPORT.md) for the recorded VM results and readiness limits.
 
