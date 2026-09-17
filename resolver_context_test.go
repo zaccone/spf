@@ -7,8 +7,10 @@ import (
 	"io"
 	"net"
 	"reflect"
+	"runtime"
 	"strings"
 	"sync"
+	"syscall"
 	"testing"
 	"time"
 
@@ -18,16 +20,91 @@ import (
 var _ ContextResolver = (*DNSResolver)(nil)
 var _ ContextResolver = (*ServerResolver)(nil)
 
-// Both transports share one port so truncated UDP can retry against TCP.
-func startDualDNS(t *testing.T, handler dns.Handler) string {
-	t.Helper()
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
+// A free TCP port may already be occupied by UDP. Keep both sockets reserved
+// once a pair succeeds, and release the TCP listener before retrying a collision.
+func listenDualDNS(listenPacket func(string, string) (net.PacketConn, error)) (net.Listener, net.PacketConn, error) {
+	var err error
+	for attempt := 0; attempt < 32; attempt++ {
+		listener, listenErr := net.Listen("tcp", "127.0.0.1:0")
+		if listenErr != nil {
+			return nil, nil, listenErr
+		}
+		var packet net.PacketConn
+		packet, err = listenPacket("udp", listener.Addr().String())
+		if err == nil {
+			return listener, packet, nil
+		}
+		listener.Close()
+		// Windows returns Winsock WSAEADDRINUSE (10048), not the synthetic
+		// POSIX EADDRINUSE constant provided by its syscall package.
+		addressInUse := errors.Is(err, syscall.EADDRINUSE) ||
+			(runtime.GOOS == "windows" && errors.Is(err, syscall.Errno(10048)))
+		if !addressInUse {
+			return nil, nil, err
+		}
+	}
+	return nil, nil, fmt.Errorf("reserving a TCP/UDP DNS port after 32 attempts: %w", err)
+}
+
+func TestListenDualDNSPortCollision(t *testing.T) {
+	attempts := 0
+	var firstAddress string
+	listener, packet, err := listenDualDNS(func(network, address string) (net.PacketConn, error) {
+		attempts++
+		if attempts == 1 {
+			firstAddress = address
+			occupied, err := net.ListenPacket(network, address)
+			if err != nil {
+				return nil, err
+			}
+			defer occupied.Close()
+			return net.ListenPacket(network, address)
+		}
+		return net.ListenPacket(network, address)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	packet, err := net.ListenPacket("udp", listener.Addr().String())
+	listener.Close()
+	packet.Close()
+	if attempts < 2 {
+		t.Fatal("did not retry the UDP port collision")
+	}
+	// The unsuccessful attempt must not leak its TCP listener.
+	reopened, err := net.Listen("tcp", firstAddress)
 	if err != nil {
-		listener.Close()
+		t.Fatalf("first TCP listener was not released: %v", err)
+	}
+	reopened.Close()
+}
+
+func TestListenDualDNSFailure(t *testing.T) {
+	for _, test := range []struct {
+		name     string
+		cause    error
+		attempts int
+	}{
+		{"collision limit", syscall.EADDRINUSE, 32},
+		{"other error", errors.New("not a port collision"), 1},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			attempts := 0
+			listener, packet, err := listenDualDNS(func(string, string) (net.PacketConn, error) {
+				attempts++
+				return nil, &net.OpError{Op: "listen", Net: "udp", Err: test.cause}
+			})
+			if listener != nil || packet != nil || !errors.Is(err, test.cause) || attempts != test.attempts {
+				t.Fatalf("listener=%v packet=%v err=%v attempts=%d", listener, packet, err, attempts)
+			}
+		})
+	}
+}
+
+// Both transports share one port so truncated UDP can retry against TCP.
+func startDualDNS(t *testing.T, handler dns.Handler) string {
+	t.Helper()
+	listener, packet, err := listenDualDNS(net.ListenPacket)
+	if err != nil {
 		t.Fatal(err)
 	}
 	for _, server := range []*dns.Server{{Listener: listener, Handler: handler}, {PacketConn: packet, Handler: handler}} {
