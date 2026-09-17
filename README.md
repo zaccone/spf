@@ -65,8 +65,10 @@ Add `-enforce` to reject SPF fail and temporarily defer SPF temperror. See the
 [Postfix integration instructions](cmd/spfd/README.md#postfix-integration) for
 configuration and response behavior.
 
-A gRPC API layer is planned to support integrations beyond the current policy
-protocol. It is not available yet.
+`spfd grpc` exposes the versioned `spf.v1.SPFService/Check` API for local
+integrations. It returns SPF results; callers choose mail policy. Run it as a
+separate process alongside the Postfix service using the same binary. See the
+[gRPC deployment guide](deploy/GRPC.md) and [API contract](api/spf/v1/README.md).
 
 ## Performance and benchmarks
 

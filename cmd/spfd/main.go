@@ -1,4 +1,4 @@
-// Command spfd evaluates SPF directly or serves Postfix access-policy requests.
+// Command spfd evaluates SPF directly or serves Postfix and gRPC requests.
 package main
 
 import (
@@ -23,7 +23,7 @@ func main() {
 
 func run(ctx context.Context, args []string, out, errout io.Writer) error {
 	if len(args) == 0 {
-		return errors.New("usage: spfd check|serve [options]; use check -h or serve -h")
+		return errors.New("usage: spfd check|serve|grpc [options]; use <command> -h")
 	}
 	command := args[0]
 	commandArgs := args[1:]
@@ -32,10 +32,12 @@ func run(ctx context.Context, args []string, out, errout io.Writer) error {
 	switch command {
 	case "check":
 		err = runCheck(ctx, commandArgs, out, errout)
+	case "grpc":
+		err = runGRPC(ctx, commandArgs, errout)
 	case "serve":
 		err = runServe(ctx, commandArgs, errout)
 	default:
-		return fmt.Errorf("unknown command %q; use check or serve", command)
+		return fmt.Errorf("unknown command %q; use check, serve, or grpc", command)
 	}
 	if errors.Is(err, flag.ErrHelp) {
 		return nil

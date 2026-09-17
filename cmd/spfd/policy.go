@@ -14,6 +14,7 @@ import (
 	"time"
 
 	spf "github.com/zaccone/spf"
+	"github.com/zaccone/spf/internal/identity"
 )
 
 const unavailable = "451 4.3.0 SPF policy service unavailable"
@@ -64,20 +65,6 @@ func readRequest(r *bufio.Reader) (map[string]string, error) {
 	return nil, errors.New("too many policy attributes")
 }
 
-func identity(sender, helo string) (string, error) {
-	if sender == "" || sender == "<>" {
-		if helo == "" {
-			return "", errors.New("null sender requires HELO")
-		}
-		return helo, nil
-	}
-	i := strings.LastIndexByte(sender, '@')
-	if i <= 0 || i == len(sender)-1 || strings.ContainsAny(sender, "\r\n\x00") {
-		return "", errors.New("invalid envelope sender")
-	}
-	return sender[i+1:], nil
-}
-
 func disposition(result spf.Result, enforce bool) string {
 	if enforce {
 		switch result {
@@ -102,7 +89,7 @@ func (s *server) policy(ctx context.Context, attrs map[string]string) string {
 	if !present {
 		return unavailable
 	}
-	domain, err := identity(sender, attrs["helo_name"])
+	domain, err := identity.Domain(sender, attrs["helo_name"])
 	ip := net.ParseIP(attrs["client_address"])
 	if err != nil || ip == nil {
 		return unavailable
@@ -117,9 +104,7 @@ func (s *server) policy(ctx context.Context, attrs map[string]string) string {
 	checkctx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 	start := time.Now()
-	if sender == "<>" {
-		sender = ""
-	}
+	sender = identity.NormalizeSender(sender)
 	result, _, _ := spf.CheckHostWithOptions(checkctx, ip, domain, sender, spf.Options{Resolver: s.resolver, HELO: attrs["helo_name"], Receiver: s.receiver})
 	// Invalid SPF domains (including HELO address literals) yield none,
 	// not a service failure. Preserve that result's DUNNO disposition.

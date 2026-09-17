@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package spf.v1;
+option go_package = "github.com/zaccone/spf/api/spf/v1;spfv1";
+
+// SPFService evaluates SPF; mail acceptance policy belongs to the caller.
+service SPFService {
+  rpc Check(CheckRequest) returns (CheckResponse);
+}
+
+message CheckRequest {
+  // Literal IPv4 or IPv6 address of the SMTP client. Required.
+  string client_ip = 1;
+  // Envelope sender; empty or "<>" means the null reverse path.
+  string sender = 2;
+  // HELO/EHLO identity; required for null sender unless domain is set.
+  string helo = 3;
+  // Optional policy-domain override; otherwise derived from sender or HELO.
+  string domain = 4;
+}
+
+message CheckResponse {
+  Result result = 1;
+  // Untrusted DNS text. Never use directly as an SMTP response or log message.
+  string explanation = 2;
+}
+
+// These wire values are independent of the Go library's Result values.
+enum Result {
+  RESULT_UNSPECIFIED = 0;
+  RESULT_NONE = 1;
+  RESULT_NEUTRAL = 2;
+  RESULT_PASS = 3;
+  RESULT_FAIL = 4;
+  RESULT_SOFTFAIL = 5;
+  RESULT_TEMPERROR = 6;
+  RESULT_PERMERROR = 7;
+}

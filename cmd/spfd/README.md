@@ -1,7 +1,8 @@
-# spfd: runnable SPF checks and Postfix policy service
+# spfd: SPF checks, Postfix policy, and gRPC
 
-`spfd` wraps this repository's library. It has two subcommands: `check` prints
-one SPF result as JSON; `serve` handles concurrent Postfix access-policy requests.
+`spfd` wraps this repository's library. It has three subcommands: `check` prints
+one SPF result as JSON; `serve` handles concurrent Postfix access-policy requests;
+`grpc` serves the versioned SPF evaluation API.
 It uses `ServerResolver` with an explicitly configured recursive DNS server.
 
 ## Build and basic usage
@@ -137,3 +138,29 @@ use a local DNS fixture: `python3 tools/smoke_spfd.py /tmp/spfd` (Python standar
 library only). Production Postfix delivery and qmail integration still
 need deployment-specific validation; library microbenchmarks do not establish
 this daemon's end-to-end capacity.
+
+## gRPC evaluation API
+
+```sh
+/tmp/spfd grpc -dns 127.0.0.1:5335 -listen 127.0.0.1:50051
+```
+
+Run this as a separate process from `spfd serve`. Each process has its own resource
+limits. The root SPF library package does not import gRPC; the shared executable
+includes both adapters. There is no combined-listener mode.
+
+`grpc` shares `-dns`, `-receiver`, `-timeout`, `-network`, `-listen`,
+`-max-checks`, `-max-connections`, and `-shutdown-timeout` conventions with the
+Postfix service. TCP is loopback-only; Unix sockets use 0660 permissions.
+It has no `-enforce` flag: the caller decides mail policy. `-connection-timeout`
+(default 10s) bounds transport handshakes. Each connection allows at most
+`-max-checks` simultaneous HTTP/2 streams, including health RPCs; SPF evaluations
+are also bounded globally by `-max-checks` with no application queue. gRPC clients
+may wait for an available transport stream, so always set caller deadlines.
+Messages are limited to 64 KiB in either direction. Connections with no active
+RPCs are closed after 30s of idleness. SIGINT/SIGTERM drains RPCs for the configured
+grace period (default 5s), then force-stops the server and cancels outstanding work.
+
+See the [API contract](../../api/spf/v1/README.md) for validation and error semantics,
+the [Go client example](../../examples/grpc-client/main.go), and the
+[deployment guide](../../deploy/GRPC.md) for the separate systemd unit and smoke test.
