@@ -1,0 +1,13 @@
+# Merge into /etc/postfix/main.cf; do not replace the site's existing file.
+# Preserve existing relay protection, trusted networks, and other restrictions.
+# Apply to inbound SMTP; authenticated submission should bypass SPF checking.
+smtpd_recipient_restrictions =
+    permit_mynetworks,
+    permit_sasl_authenticated,
+    reject_unauth_destination,
+    check_policy_service inet:127.0.0.1:10023
+
+# Greater than spfd's 20-second evaluation deadline.
+# These settings apply to ALL smtpd policy services on this Postfix instance.
+smtpd_policy_service_timeout = 30s
+smtpd_policy_service_default_action = 451 4.3.5 SPF policy service unavailable
