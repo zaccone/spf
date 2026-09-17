@@ -1,214 +1,111 @@
 # Sender Policy Framework
 
-SPF policy evaluation in Go, with explicit conformance evidence and resolver limits.
+An implementation of Sender Policy Framework (SPF), defined in RFC 7208.
+It evaluates a domain’s DNS-published policy against an SMTP client’s IP address
+and envelope sender to determine whether that client is authorized to send mail
+for the domain.
 
 [![CI](https://github.com/zaccone/spf/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/zaccone/spf/actions/workflows/go.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/zaccone/spf.svg)](https://pkg.go.dev/github.com/zaccone/spf)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/zaccone/spf/master)](go.mod)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## About
-This library evaluates Sender Policy Framework policies using its own lexer,
-parser, and macro implementation. It returns the SPF result, optional explanation,
-and diagnostic error; SMTP disposition and header generation belong to the caller.
+Use `spf` directly as a library in your application, or run the included `spfd`
+binary as a standalone service.
 
-## Current status
+The evaluator implements the RFC 7208 mechanisms (`all`, `ip4`, `ip6`, `a`,
+`mx`, `include`, `exists`, and `ptr`), redirects, macro expansion, and failure
+explanations. Context-aware evaluation shares a ten-term DNS budget, a two-void
+lookup limit, and a 20-second deadline across nested policies; an earlier caller
+deadline takes precedence.
 
-The local conformance runner covers all 203 cases in the pinned RFC 7208 suite
-and 14 applicable pySPF development cases. Two pySPF-only compatibility modes
-are explicitly excluded. This is not a full-conformance or stability claim:
-see the [conformance matrix and known limits](CONFORMANCE.md),
-[migration notes](MIGRATION.md), and [runnable examples](example_test.go).
-Release readiness requires owner review and green hosted CI for the final commit.
+All 203 cases in the pinned RFC 7208 test suite pass, alongside 14 applicable
+pySPF development cases. See [conformance evidence](CONFORMANCE.md) for assertion
+scope, adaptations, and known resolver limitations. Custom DNS resolvers can be
+injected for deterministic tests without network access.
 
-## Runnable binary
+## Use the standalone binary
 
-Build `spfd` with `go build -o /tmp/spfd ./cmd/spfd`. Use `spfd check` for a
-single JSON result, or `spfd serve` for a bounded concurrent Postfix policy
-service over loopback TCP or a Unix socket. The service logs SPF results by
-default; `-enforce` enables fail rejection and temporary-error deferral. See
-[the binary usage and deployment guide](cmd/spfd/README.md) for flags, Postfix
-configuration, Linux builds and a systemd unit.
-
-## Building and testing
-
-Go 1.27 or later is required. Use the latest patch release of Go 1.27;
-this build setup was verified with Go 1.27.1.
-
-From the repository root:
+Build from this repository with Go 1.27 or later:
 
 ```sh
-go mod download
-go mod verify
-go build ./...
+go build -o spfd ./cmd/spfd
+./spfd check -dns 127.0.0.1:53 -ip 192.0.2.1 -sender sender@example.com
+./spfd serve -dns 127.0.0.1:53 -listen 127.0.0.1:10023
+```
+
+Set `-dns` to your recursive DNS server. `check` prints a JSON result; `serve`
+runs a Postfix policy service in monitor mode by default. Add `-enforce` to
+reject SPF fail and defer temporary errors. See the
+[deployment guide](cmd/spfd/README.md) for Postfix configuration and service setup.
+
+## Use the Go library
+
+Requires Go 1.27 or later. The library returns an SPF result, an optional
+explanation, and a diagnostic error; your application decides how to handle mail.
+
+```sh
+go get github.com/zaccone/spf
+```
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "net"
+
+    "github.com/zaccone/spf"
+)
+
+func main() {
+    result, explanation, err := spf.CheckHostWithOptions(
+        context.Background(),
+        net.ParseIP("192.0.2.1"), // connecting client's IP
+        "example.com",         // envelope sender's domain
+        "sender@example.com",  // envelope sender
+        spf.Options{},         // use system DNS
+    )
+    fmt.Println(result, explanation, err)
+}
+```
+
+Replace the example IP and sender with the SMTP client's values. Inspect
+`result` when deciding how to handle mail: an SPF `fail` normally has no Go error.
+To select a DNS server, create a resolver with `spf.NewServerResolver("127.0.0.1:53")`
+and pass it through `Options.Resolver`.
+
+See the [API reference](https://pkg.go.dev/github.com/zaccone/spf)
+and [runnable examples](example_test.go).
+
+## Performance
+
+On a shared four-vCPU Ubuntu VM with warmed local Unbound DNS, the archived
+15 September 2026 run measured these simple-policy results (one DNS query per check):
+
+| Interface | Throughput | p99 latency |
+| --- | ---: | ---: |
+| Library | 232,517 checks/s | 1.69 ms |
+| Standalone `spfd` | 98,860 requests/s | 3.46 ms |
+
+Values are medians of three ten-second trials with 64 workers/connections.
+The daemon used persistent loopback TCP connections and JSON logging to
+`/dev/null`. These cache-hit fixtures exclude public DNS misses and production
+log backpressure. See the [benchmark report](benchmarks/unbound/REPORT.md) for
+other policies, concurrency settings, and latency measurements, and the
+[reproduction guide](benchmarks/unbound/README.md) for scripts and raw results.
+
+## Development
+
+```sh
 go test -count=1 -timeout=60s ./...
 go vet ./...
 ```
 
-DNS tests each own servers on ephemeral UDP/TCP ports on loopback. They require
-local socket access, but no public DNS or installed resolver. For deployments,
-`_etc/unbound` contains a loopback-only recursive cache configuration. Install
-it as `/etc/unbound/unbound.conf`, validate it with `unbound-checkconf`, and
-point `NewServerResolver` or `spfd -dns` at `127.0.0.1:53`.
+The conformance corpus uses deterministic in-memory DNS fixtures. Resolver
+integration tests use local DNS servers on ephemeral loopback ports; neither
+requires public DNS access. See the [test case inventory](testdata/pyspf/CASES.md)
+and [fixture documentation](testdata/pyspf/README.md). Run `go test -race -count=1 -timeout=60s ./...` to check for races.
 
-To check for races:
-
-```sh
-go test -race -count=1 -timeout=60s ./...
-```
-
-GitHub Actions runs ordinary tests on Linux, macOS, and Windows, plus race
-tests, vet, formatting, and module consistency checks on Linux. Resolver
-callbacks finish before a lookup returns. Passing these checks does not
-establish complete RFC 7208 conformance; see [CONFORMANCE.md](CONFORMANCE.md)
-for evidence and limitations. CI also runs bounded fuzz smoke tests and pinned
-`govulncheck` v1.8.0. The corpus runs offline as part of ordinary `go test`;
-Python is needed only to regenerate the vendored JSON fixtures.
-
-## Benchmarks
-
-The latest archived run (15 September 2026) measured the Go library, `spfd`,
-and pyspf 2.0.14 against the same warmed local Unbound on a shared four-vCPU
-Ubuntu VM. At independently selected peak settings (64 Go goroutines and eight
-Python processes), library throughput was:
-
-| Policy / DNS queries per check | Go checks/s | pyspf checks/s | Go / pyspf |
-|---|---:|---:|---:|
-| Simple / 1 | 232,517 | 24,801 | 9.38× |
-| Include / 2 | 117,541 | 12,761 | 9.21× |
-| Include chain / 10 | 24,127 | 2,684 | 8.99× |
-
-Values are medians of three ten-second trials. These peak settings use different
-concurrency: Go had higher p99 latency than pyspf in all three rows. At matched
-four-worker concurrency, exploratory single trials showed 5.55–5.90× Go
-throughput with lower p50 and p99 latency.
-
-`spfd` reached 98,860 policy requests/s for the simple policy over persistent
-loopback TCP connections, including protocol handling and JSON logging to
-`/dev/null`. This is not a service-to-service pyspf comparison. Lower concurrency
-traded little throughput for better tail latency: at 16 workers/connections,
-the simple policy reached 225,256 library checks/s at p99 404 µs and 93,082
-`spfd` requests/s at p99 1,037 µs.
-
-Profiles and DNS controls identify per-query DNS transport work as the main
-library bottleneck in this fixture; reusable-socket controls suggest an
-optimization to investigate, not a demonstrated SPF speedup. All measured DNS
-answers were cache hits. These small, closed-loop fixtures exclude public DNS
-misses, realistic mail policy mixes, and log backpressure, so they do not
-establish production SMTP capacity or latency guarantees. See the
-[cached Unbound report](benchmarks/unbound/REPORT.md) for the measured revision,
-methodology, latency tables, CPU profiles and limitations, and its
-[reproduction guide](benchmarks/unbound/README.md) for scripts and raw results.
-
-The [earlier synthetic benchmark](benchmarks/vm/REPORT.md) remains a separate
-baseline: Go achieved about 5.4× the throughput of four pyspf processes on two
-CPU-bound policies, while both implementations performed similarly at low
-concurrency with simulated DNS delay. Those tests used resolver callbacks rather
-than real DNS transport; their ratios are not directly comparable to the cached
-Unbound results. See the [synthetic reproduction guide](benchmarks/vm/README.md).
-
-## Dependencies
-The library uses [miekg/dns](https://github.com/miekg/dns) for its configurable
-DNS resolver. The SPF lexer, parser, and macro implementation remain part of
-this project. Dependency versions and checksums are recorded in `go.mod` and
-`go.sum`; normal builds do not need `go get` or a GOPATH checkout.
-
-## Pull requests & code review
-If you have any comments about code structure feel free to reach out or simply make a Pull Request
-
-## Evaluation options and DNS limits
-
-Existing `CheckHost` and `CheckHostWithResolver` calls remain available. For
-cancellation or a custom context-aware resolver, use the additive API:
-
-```go
-resolver, err := spf.NewServerResolver("127.0.0.1:53")
-if err != nil {
-    return err
-}
-result, explanation, err := spf.CheckHostWithOptions(
-    ctx, net.ParseIP("192.0.2.1"), "example.com", "sender@example.com",
-    spf.Options{Resolver: resolver},
-)
-```
-
-A nil `Options.Resolver` selects `DNSResolver`. A supplied resolver is the sole
-DNS source: missing capabilities never trigger a fallback to public DNS.
-`ContextResolver` provides context-aware TXT, family-specific IP, MX, and
-reverse lookups. TXT results contain one string per resource record, joining
-only that record's component strings. MX and reverse results are returned
-before forward address resolution, so the evaluator can bound that work.
-
-Each evaluation shares a 20-second deadline, shortened by an earlier caller
-deadline, through includes and redirects. It permits ten evaluated
-DNS-causing terms and two void logical lookups. A non-matching address answer
-is not a void lookup; a missing requested RRset is. The initial TXT lookup
-and explanation retrieval consume no terms. Explanation retrieval happens
-after the SPF decision and cannot replace a Fail result with a DNS error.
-More than ten MX exchanges produces Permerror before any address dispatch;
-multiple addresses returned for one exchange do not consume extra terms.
-Address matching queries the client's family; `exists` always queries A.
-
-`DNSResolver` uses system DNS; `ServerResolver` uses the configured DNS server.
-Both implement `Resolver` and `ContextResolver`. The `NewServerResolver` constructor
-returns a concrete pointer usable with either interface. The former `MiekgDNSResolver`
-type and constructors remain available as deprecated compatibility entrypoints.
-
-The configured server backend follows at most ten CNAME hops, detects cycles, and retries truncated UDP once over
-TCP. The system backend uses Go's resolver and configured system DNS servers
-(or the configured `net.DefaultResolver.Dial`). It uses the Go DNS path so
-connections can be canceled; platform-native resolver behavior, including
-native split-DNS routing, may differ. It relies on the recursive DNS server
-for complete alias answers instead of issuing its own CNAME follow-up queries.
-For explicit server selection, client-side alias traversal, and utility labels
-containing punctuation/spaces rejected by Go's system resolver, use `ServerResolver`.
-Neither interface exposes intermediate wire responses or retries: void limits
-count logical lookups after alias processing, not individual DNS packets.
-
-Errors retain their underlying causes. Use `errors.Is` for
-`ErrDNSTemperror`, `ErrDNSPermerror`, `ErrDNSLimitExceeded`,
-`context.Canceled`, and `context.DeadlineExceeded`, and `errors.As` for typed
-DNS/transport errors. Direct equality against a wrapped sentinel is insufficient.
-
-`CheckHostWithResolver` automatically uses the context-aware path when its
-resolver implements both interfaces. Legacy-only custom resolvers retain
-synchronous callbacks and shared term limits, but cannot guarantee
-cancellation inside a call, family-specific dispatch, full void accounting,
-or pre-dispatch MX/PTR limits. Wrapping a built-in resolver in
-`LimitedResolver` selects this legacy path: that wrapper limits method calls
-and MX matcher callbacks, not SPF terms. Its configured limit is inclusive.
-
-## Macros and PTR
-
-Domain-specs in `a`, `mx`, `include`, `exists`, `ptr`, `redirect`, and `exp`
-are expanded before use. Macro transformations support IPv6 nibbles, multiple
-delimiters (including empty parts), reversal, rightmost-part selection, and
-uppercase URL escaping. Names exceeding 253 characters lose complete labels
-from the left. Expanded labels may contain punctuation and spaces; dots separate labels and
-backslashes are literal. Empty/oversized labels and non-printable/non-ASCII
-output produce Permerror, or the empty explanation fallback for `exp`. Initial
-identity domains retain the stricter hostname checks.
-
-Pass SMTP identities through `Options.HELO` and `Options.Receiver`. They remain
-unchanged through includes and redirects; `%{d}` follows the current policy
-domain. Missing identities expand to `unknown`. `Options.Time` supplies the
-explanation timestamp; a zero value captures the time once at entry. The
-`c`, `r`, and `t` macros are accepted only in fetched explanation text.
-
-`ptr` and `%{p}` validate reverse names through same-family forward lookups,
-processing at most the first ten PTR candidates. Matching uses DNS label
-boundaries and ignores case. Completed reverse validation is reused within
-one evaluation; `%{p}` prefers the current domain, then its subdomains, then
-another validated name. Each evaluated `%{p}` counts toward the shared ten-term
-budget in addition to its containing mechanism or redirect; explanation work
-has no term charge and uses a separate void allowance. Ordinary reverse DNS
-errors make `ptr` a non-match; forward DNS errors skip that candidate. For
-`%{p}`, DNS errors or no validated names produce `unknown`. Cancellation and
-exhausted budgets still stop evaluation, while explanation failures leave
-Fail unchanged.
-
-Legacy-only resolvers cannot perform reverse validation: `ptr` returns
-Permerror with `ErrUnsupportedResolver`, and `%{p}` expands to `unknown`.
-No other DNS source is consulted. PTR is supported for existing policies,
-though RFC 7208 discourages publishing it. See [CONFORMANCE.md](CONFORMANCE.md)
-for the corpus results, explicit exceptions, and release gate.
+Licensed under [MIT](LICENSE). Issues and pull requests are welcome.

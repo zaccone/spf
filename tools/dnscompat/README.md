@@ -27,7 +27,7 @@ An ordinary diagnostic PASS means the probes ran successfully; it does **not**
 mean the backend is compatible. The GitHub Actions workflow runs diagnostics
 on changes here and offers a strict gate through its manual-run input.
 Even a future strict PASS is necessary but insufficient: the full resolver
-integration suite and remaining migration-plan gates must pass too.
+integration, race, fuzz, and performance checks must pass too.
 
 ## Findings
 
@@ -106,8 +106,7 @@ go -C tools/dnscompat mod why -m github.com/miekg/dns
    records must not dictate whether usable answers succeed.
 4. Then port the production client against the existing independent v1 test
    servers, preserve cancellation and validation, migrate fixtures, and complete
-   the integration/race/fuzz/performance gates in
-   [the migration plan](../../DNS_V2_MIGRATION.md).
+   integration, race, fuzz, and performance checks.
 
 No upstream issue or message has been sent as part of this spike. No production
 wire validator, dependency switch, or performance claim is included.

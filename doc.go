@@ -14,6 +14,6 @@
 // headers, perform SMTP transactions, or decide whether to reject a message.
 // The system resolver cannot query every legal utility label; select the configured server
 // resolver for those names. Legacy resolvers cannot provide complete DNS
-// accounting or PTR validation. See CONFORMANCE.md and MIGRATION.md in the
+// accounting or PTR validation. See CONFORMANCE.md in the
 // repository for the tested scope, evidence, and compatibility details.
 package spf
