@@ -55,6 +55,12 @@ jobs:
           cache-dependency-path: go.sum
       - run: go test -race -count=1 -timeout=60s ./...
       - run: go vet ./...
+      - name: Verify generated gRPC bindings
+        run: |
+          curl --fail --location --retry 3 https://github.com/protocolbuffers/protobuf/releases/download/v35.1/protoc-35.1-linux-x86_64.zip -o /tmp/protoc.zip
+          unzip -q /tmp/protoc.zip -d /tmp/protoc
+          PATH="/tmp/protoc/bin:$PATH" sh tools/proto/generate.sh
+          git diff --exit-code -- api/spf/v1
       - name: Smoke test the runnable policy service
         run: |
           go build -o /tmp/spfd ./cmd/spfd
