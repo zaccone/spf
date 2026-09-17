@@ -1,0 +1,21 @@
+[Unit]
+Description=SPF gRPC evaluation service
+Wants=unbound.service
+After=network.target unbound.service
+
+[Service]
+Type=simple
+DynamicUser=yes
+EnvironmentFile=/etc/default/spfd-grpc
+ExecStart=/usr/local/bin/spfd grpc -dns ${SPFD_DNS} -listen ${SPFD_LISTEN} -receiver ${SPFD_RECEIVER} -timeout ${SPFD_TIMEOUT} -max-checks ${SPFD_MAX_CHECKS} -max-connections ${SPFD_MAX_CONNECTIONS} -connection-timeout 10s -shutdown-timeout 5s
+Restart=on-failure
+RestartSec=2s
+TimeoutStopSec=10s
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

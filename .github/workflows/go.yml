@@ -65,6 +65,7 @@ jobs:
         run: |
           go build -o /tmp/spfd ./cmd/spfd
           python3 tools/smoke_spfd.py /tmp/spfd
+          go run ./tools/smoke_grpc /tmp/spfd
       - name: Validate the deployment with Unbound
         run: |
           sudo apt-get update
@@ -74,7 +75,8 @@ jobs:
           sudo unbound-checkconf
           sudo install -m 0755 /tmp/spfd /usr/local/bin/spfd
           sudo install -m 0644 deploy/spfd.env /etc/default/spfd
-          sudo systemd-analyze verify deploy/spfd.service
+          sudo install -m 0644 deploy/spfd-grpc.env /etc/default/spfd-grpc
+          sudo systemd-analyze verify deploy/spfd.service deploy/spfd-grpc.service
           # Ubuntu's Unbound AppArmor profile permits this tree, not /tmp.
           sudo install -d -m 0700 -o "$(id -un)" -g "$(id -gn)" /var/lib/unbound/spfd-smoke
           TMPDIR=/var/lib/unbound/spfd-smoke python3 tools/smoke_spfd_unbound.py /tmp/spfd
