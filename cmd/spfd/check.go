@@ -9,6 +9,7 @@ import (
 	"net"
 
 	spf "github.com/zaccone/spf"
+	"github.com/zaccone/spf/internal/identity"
 )
 
 func runCheck(ctx context.Context, args []string, out, errout io.Writer) error {
@@ -35,16 +36,14 @@ func runCheck(ctx context.Context, args []string, out, errout io.Writer) error {
 		return errors.New("-ip must be an IP address")
 	}
 	if *domain == "" {
-		*domain, err = identity(*sender, *helo)
+		*domain, err = identity.Domain(*sender, *helo)
 		if err != nil {
 			return err
 		}
 	}
 	checkctx, cancel := context.WithTimeout(ctx, opts.timeout)
 	defer cancel()
-	if *sender == "<>" {
-		*sender = ""
-	}
+	*sender = identity.NormalizeSender(*sender)
 	result, explanation, diagnostic := spf.CheckHostWithOptions(checkctx, address, *domain, *sender, spf.Options{Resolver: r, HELO: *helo, Receiver: opts.receiver})
 	message := ""
 	if diagnostic != nil {
