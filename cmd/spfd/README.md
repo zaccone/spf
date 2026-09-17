@@ -120,21 +120,13 @@ policy cache and rate limiting beyond concurrency bounds are future work.
 
 ## Linux service
 
-A sample [systemd unit](../../deploy/spfd.service) runs in monitor mode, uses a
-dynamic unprivileged user, and expects the native Linux binary at
-`/usr/local/bin/spfd`. Review the DNS address and flags for your host:
-
-```sh
-sudo install -m 0755 /tmp/spfd-linux-amd64 /usr/local/bin/spfd
-sudo install -m 0644 deploy/spfd.service /etc/systemd/system/spfd.service
-sudo systemctl daemon-reload
-sudo systemctl enable --now spfd
-journalctl -u spfd
-```
-
-Use the arm64 binary on an arm64 host. Add a systemd override to change flags;
-when overriding `ExecStart`, clear the original `ExecStart=` first. The example
-unit does not install or reconfigure Postfix or a DNS resolver.
+Follow the [Postfix + spfd + Unbound deployment guide](../../deploy/README.md)
+for package installation, a validating local DNS cache, service configuration,
+Postfix restrictions, acceptance tests, enforcement, and rollback. The supplied
+[systemd unit](../../deploy/spfd.service) requires
+[`/etc/default/spfd`](../../deploy/spfd.env) and uses Unbound at `127.0.0.1:5335`.
+Install both files before starting or upgrading the service. Set the receiving
+MTA hostname in the environment file and start in monitor mode.
 
 ## Validation and scope
 

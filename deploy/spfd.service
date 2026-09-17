@@ -1,11 +1,13 @@
 [Unit]
 Description=SPF Postfix policy service
-After=network.target
+Wants=unbound.service
+After=network.target unbound.service
 
 [Service]
 Type=simple
 DynamicUser=yes
-ExecStart=/usr/local/bin/spfd serve -dns 127.0.0.53:53 -listen 127.0.0.1:10023
+EnvironmentFile=/etc/default/spfd
+ExecStart=/usr/local/bin/spfd serve -dns ${SPFD_DNS} -listen ${SPFD_LISTEN} -receiver ${SPFD_RECEIVER} -timeout ${SPFD_TIMEOUT} -max-checks ${SPFD_MAX_CHECKS} -max-connections ${SPFD_MAX_CONNECTIONS} -io-timeout 30s -shutdown-timeout 5s $SPFD_ENFORCE
 Restart=on-failure
 RestartSec=2s
 TimeoutStopSec=10s
